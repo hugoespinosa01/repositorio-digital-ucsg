@@ -4,13 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useDropzone } from 'react-dropzone';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { Inbox } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 
+const MAX_FILE_SIZE = '10MB';
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -71,7 +69,7 @@ export default function UploadPage() {
   return (
     <Card className='p-5 mt-5'>
       <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Subir Documento</h1>
+      <h1 className="text-2xl font-bold mb-4">Carga de documentos digitalizados</h1>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className='p-2 bg-white rounded-xl'>
           <div {...getRootProps()} className="border-dashed border-2 rounded-xl cursor-pointer bg-gray-50 py-8 flex justify-center items-center flex-col">
@@ -88,14 +86,8 @@ export default function UploadPage() {
         </div>
         {file && <p>Archivo seleccionado: {file.name}</p>}
         <div>
-          <Label htmlFor="title">Título</Label>
-          <Input id="title" {...register('title')} />
+          <p><strong>Consideraciones:</strong><br/>El tamaño máximo del archivo debe ser de {MAX_FILE_SIZE}</p>
         </div>
-        <div>
-          <Label htmlFor="description">Descripción</Label>
-          <Input id="description" {...register('description')} />
-        </div>
-        <Button type="submit">Subir Documento</Button>
       </form>
     </div>
     </Card>

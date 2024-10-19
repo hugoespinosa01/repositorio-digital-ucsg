@@ -51,7 +51,8 @@ export default function DocumentsPage() {
   }, [toast]);
 
   return (
-    <div className="container mx-auto p-4">
+   <Card className='p-5 mt-5'>
+     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Documentos</h1>
       {isLoading ? (
         <p>Cargando documentos...</p>
@@ -75,9 +76,10 @@ export default function DocumentsPage() {
       ) : (
         <p>No hay documentos disponibles.</p>
       )}
-      <Link href="/upload">
+      <Link href="/subirDocumento">
         <Button className="mt-4">Subir Nuevo Documento</Button>
       </Link>
     </div>
+   </Card>
   );
 }
