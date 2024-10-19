@@ -6,19 +6,22 @@ export default function Home() {
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
         <h1 className="text-6xl font-bold">
-          Bienvenido al Repositorio Digital Documental
+          Repositorio Digital Documental
         </h1>
-        <p className="mt-3 text-2xl">
-          Gestiona tus documentos con inteligencia artificial
-        </p>
+
+        <span className="max-w-[750px] mt-3 text-center text-lg font-light text-foreground">Gestiona tus documentos con inteligencia artificial</span>
         <div className="flex mt-6">
           <Link href="/upload">
-            <Button>Subir Documento</Button>
+            <Button>Acceder</Button>
           </Link>
           <Link href="/documents">
             <Button variant="outline" className="ml-4">
               Ver Documentos
             </Button>
+          </Link>
+          <Link href="/dashboard">
+            <Button variant="outline" className="ml-4">
+              Ir a panel de control            </Button>
           </Link>
         </div>
       </main>

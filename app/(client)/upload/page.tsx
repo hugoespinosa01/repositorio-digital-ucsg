@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
+import { Inbox } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -66,16 +69,22 @@ export default function UploadPage() {
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <Card className='p-5 mt-5'>
+      <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Subir Documento</h1>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div {...getRootProps()} className="border-2 border-dashed p-4 text-center cursor-pointer">
-          <input {...getInputProps()} />
-          {isDragActive ? (
-            <p>Suelta el archivo aquí...</p>
-          ) : (
-            <p>Arrastra y suelta un archivo PDF aquí, o haz clic para seleccionar</p>
-          )}
+        <div className='p-2 bg-white rounded-xl'>
+          <div {...getRootProps()} className="border-dashed border-2 rounded-xl cursor-pointer bg-gray-50 py-8 flex justify-center items-center flex-col">
+            <input {...getInputProps()} />
+            {isDragActive ? (
+              <p className='mt-2 text-sm text-slate-500'>Suelta el archivo aquí...</p>
+            ) : (
+            <>
+              <Inbox className='w-10 h-10 text-slate-500' />
+              <p className='mt-2 text-sm text-slate-400'>Arrastra y suelta un archivo PDF aquí, o haz clic para seleccionar</p>
+            </>
+            )}
+          </div>
         </div>
         {file && <p>Archivo seleccionado: {file.name}</p>}
         <div>
@@ -89,5 +98,6 @@ export default function UploadPage() {
         <Button type="submit">Subir Documento</Button>
       </form>
     </div>
+    </Card>
   );
 }
