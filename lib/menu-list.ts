@@ -31,27 +31,22 @@ type Group = {
 export function getMenuList(pathname: string): Group[] {
   return [
     {
-      groupLabel: "",
-      menus: [
-        {
-          href: "/dashboard",
-          label: "Panel de control",
-          active: pathname.includes("/dashboard"),
-          icon: LayoutGrid,
-          submenus: []
-        }
-      ]
-    },
-    {
       groupLabel: "Documentos",
       menus: [
+        {
+          href: "/documents",
+          label: "Ver documentos",
+          active: pathname.includes("/documents"),
+          icon: List,
+          submenus: []
+        },
         {
           href: "/subirDocumento",
           label: "Subir documentos",
           active: pathname.includes("/subirDocumento"),
           icon: File,
           submenus: []
-        },
+        }
       ]
     },
     {

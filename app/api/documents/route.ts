@@ -1,27 +1,18 @@
 import { NextResponse } from 'next/server';
-import { BlobServiceClient, StorageSharedKeyCredential } from '@azure/storage-blob';
+import { BlobServiceClient } from '@azure/storage-blob';
 
-const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
-const accountKey = process.env.AZURE_STORAGE_ACCOUNT_KEY;
-const containerName = 'documents';
+const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
+const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME || '';
 
 export async function GET() {
-  if (!accountName || !accountKey) {
-    console.error('Azure Storage credentials are not set');
-    return NextResponse.json({ error: 'Configuration error' }, { status: 500 });
-  }
 
   try {
-    const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey);
-    const blobServiceClient = new BlobServiceClient(
-      `https://${accountName}.blob.core.windows.net`,
-      sharedKeyCredential
-    );
-
+    const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
     const containerClient = blobServiceClient.getContainerClient(containerName);
 
     // Check if the container exists
     const containerExists = await containerClient.exists();
+    
     if (!containerExists) {
       console.error(`Container '${containerName}' does not exist`);
       return NextResponse.json({ error: 'Container not found' }, { status: 404 });
