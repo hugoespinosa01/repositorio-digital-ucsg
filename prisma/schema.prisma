@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model Carpeta {
+  Id                 Int         @id(map: "PK__Carpeta__3214EC071E03CBC5") @default(autoincrement())
+  Nombre             String?     @db.VarChar(255)
+  IdCarpetaPadre     Int?
+  FechaCreacion      DateTime?   @db.DateTime
+  FechaActualizacion DateTime?   @db.DateTime
+  IdCarrera          Int?
+  Estado             Int?
+  Carpeta            Carpeta?    @relation("CarpetaToCarpeta", fields: [IdCarpetaPadre], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "Carpeta_IdCarpetaPadre_fk")
+  other_Carpeta      Carpeta[]   @relation("CarpetaToCarpeta")
+  Carrera            Carrera?    @relation(fields: [IdCarrera], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "Carpeta_IdCarrera_fk")
+  Documento          Documento[]
+}
+
+model Carrera {
+  Id             Int              @id(map: "PK__Carrera__3214EC07DEC958CF") @default(autoincrement())
+  Nombre         String?          @db.VarChar(255)
+  Carpeta        Carpeta[]
+  UsuarioCarrera UsuarioCarrera[]
+}
+
+model Documento {
+  Id               Int                @id(map: "PK__Document__3214EC07C0425F0D") @default(autoincrement())
+  IdCarpeta        Int?
+  NombreArchivo    String?            @db.VarChar(255)
+  Alumno           String?            @db.VarChar(255)
+  NoIdentificacion String?            @db.VarChar(255)
+  Ruta             String?            @db.VarChar(255)
+  RefArchivo       String?            @db.VarChar(255)
+  FechaCarga       DateTime?          @db.DateTime
+  Tamano           Decimal?           @db.Decimal(18, 2)
+  Extension        String?            @db.VarChar(10)
+  Estado           Int?
+  Carpeta          Carpeta?           @relation(fields: [IdCarpeta], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "Documento_IdCarpeta_fk")
+  DocumentoDetalle DocumentoDetalle[]
+}
+
+model DocumentoDetalle {
+  Id           Int        @id(map: "PK__Document__3214EC070298C3F5") @default(autoincrement())
+  Ciclo        String?    @db.VarChar(255)
+  Materia      String?    @db.VarChar(255)
+  Periodo      BigInt?
+  Calificacion Decimal?   @db.Decimal(18, 2)
+  NoMatricula  BigInt?
+  IdDocumento  Int?
+  Estado       Int?
+  Documento    Documento? @relation(fields: [IdDocumento], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "DocumentoDetalle_IdDocumento_fk")
+}
+
+model sysdiagrams {
+  name         String @db.NVarChar(128)
+  principal_id Int
+  diagram_id   Int    @id(map: "PK__sysdiagr__C2B05B61D1625058") @default(autoincrement())
+  version      Int?
+  definition   Bytes?
+
+  @@unique([principal_id, name], map: "UK_principal_name")
+}
+
+model Usuario {
+  Id             Int              @id(map: "PK__Usuario__3214EC071D0F22F9") @default(autoincrement())
+  Nombre         String?          @db.VarChar(255)
+  Apellido       BigInt?
+  Email          String?          @db.VarChar(255)
+  Contrasena     String?          @db.VarChar(255)
+  Estado         Int?
+  UsuarioCarrera UsuarioCarrera[]
+}
+
+model UsuarioCarrera {
+  Id        Int      @id(map: "PK__UsuarioC__3214EC07514C68B8") @default(autoincrement())
+  IdUsuario Int?
+  IdCarrera Int?
+  Estado    BigInt?
+  Carrera   Carrera? @relation(fields: [IdCarrera], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "UsuarioCarrera_IdCarrera_fk")
+  Usuario   Usuario? @relation(fields: [IdUsuario], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "UsuarioCarrera_IdUsuario_fk")
+}

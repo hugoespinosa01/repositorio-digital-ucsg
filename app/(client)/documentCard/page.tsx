@@ -5,48 +5,57 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
-import { Plus } from 'lucide-react';
+import { FolderOpen, Plus } from 'lucide-react';
+import LoadingDocuments from './loading';
+import Image from 'next/image';
+import noDocuments from '../../../img/no_documents.png';
 
 interface Document {
-  id: string;
-  title: string;
-  description: string;
-  uploadDate: string;
+  Id: string;
+  Nombre: string;
+  IdCarpetaPadre: string;
+  FechaCreacion: string;
+  FechaActualizacion: string;
+  IdCarrera: string;
 }
 
 export default function DocumentsPage() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
 
+  const fetchDocuments = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/documents');
+      if (response.ok) {
+        const res = await response.json();
+
+        if (Array.isArray(res.data)) {
+          setDocuments(res.data);
+        } else {
+          console.error('Unexpected response format:', res);
+          throw new Error('Formato de respuesta inesperado');
+        }
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al obtener los documentos');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los documentos. Por favor, intenta de nuevo más tarde.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDocuments = async () => {
-      try {
-        const response = await fetch('/api/documents');
-        if (response.ok) {
-          const data = await response.json();
-          if (Array.isArray(data)) {
-            setDocuments(data);
-          } else {
-            console.error('Unexpected response format:', data);
-            throw new Error('Formato de respuesta inesperado');
-          }
-        } else {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Error al obtener los documentos');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        toast({
-          title: "Error",
-          description: "No se pudieron cargar los documentos. Por favor, intenta de nuevo más tarde.",
-          variant: "destructive",
-        });
-      } 
-    };
-
     fetchDocuments();
-  }, [toast]);
+  }, []);
 
   return (
     <Card className='p-5 mt-5'>
@@ -60,28 +69,41 @@ export default function DocumentsPage() {
         </Link>
       </CardHeader>
       <CardContent>
-        <div className="container mx-auto p-4">
-          {documents.length > 0  && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {documents.map((doc) => (
-                <Card key={doc.id}>
-                  <CardHeader>
-                    <CardTitle>{doc.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p>{doc.description}</p>
-                    <p className="text-sm text-gray-500">Subido el: {new Date(doc.uploadDate).toLocaleDateString()}</p>
-                    <Link href={`/documents/${doc.id}`}>
-                      <Button className="mt-2">Ver Detalles</Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
+        {loading ? (
+          <div className="container mx-auto p-4">
+            <LoadingDocuments />
+          </div>
+        ) : (
+          <div className="container mx-auto p-4">
+            {documents.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {documents.map((doc) => (
+                  <Card key={doc.Id}>
+                    <CardHeader>
+                      <FolderOpen className='size-6'></FolderOpen>
+                      <CardTitle>{doc.Nombre}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {/* <p>{doc.description}</p> */}
+                      <p className="text-sm text-gray-500">Subido el: {new Date(doc.FechaCreacion).toLocaleDateString()}</p>
+                      <Link href={`/documents/${doc.Id}`}>
+                        <Button className="mt-2">Ver Detalles</Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className='flex flex-col items-center justify-center'>
+                <Image src={noDocuments} alt="No hay documentos" width={500} height={500} />
+                <p className='text-2xl text-gray-500'>No se encontraron documentos.</p>
+              </div>
+            )}
+          </div>
+        )}
+
       </CardContent>
 
-    </Card>
+    </Card >
   );
 }
