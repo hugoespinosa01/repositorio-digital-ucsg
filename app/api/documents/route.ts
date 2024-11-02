@@ -23,7 +23,12 @@ export async function GET() {
     // const result = await pool.request().query("SELECT * FROM Carpeta WHERE IdCarpetaPadre IS NULL");
 
 
-    const carpetas = await prisma.carpeta.findMany();
+    const carpetas = await prisma.carpeta.findMany({
+      where: {
+        IdCarpetaPadre: null,
+        Estado: 1
+      }
+    });
 
     const result = {
       message: 'Consulta exitosa',
