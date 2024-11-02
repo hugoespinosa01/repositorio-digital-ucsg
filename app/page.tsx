@@ -16,7 +16,7 @@ export default function Home() {
           </Link>
           <Link href="/documents">
             <Button variant="outline" className="ml-4">
-              Ir a panel de control            
+              Ir a panel de control
             </Button>
           </Link>
         </div>
