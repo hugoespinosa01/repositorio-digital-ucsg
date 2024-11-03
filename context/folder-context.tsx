@@ -76,6 +76,7 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
 
             const body = {
                 Nombre: nombre,
+                Tipo: "Carpeta",
             }
 
             const response = await fetch("/api/folders", {

@@ -4,7 +4,7 @@ import { useState, useEffect, Fragment } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus } from 'lucide-react';
+import { ArrowLeft, Plus } from 'lucide-react';
 import LoadingDocuments from './loading';
 import Image from 'next/image';
 import noDocuments from '../../../img/no_documents.png';
@@ -19,6 +19,8 @@ import MoveFolderModal from './moveFolderModal';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { PaginationWithLinks } from '@/components/custom-pagination';
+import { SearchInput } from '@/components/custom-command-search';
+import { Input } from '@/components/ui/input';
 
 const PAGE_SIZE = 6;
 
@@ -82,11 +84,26 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
     router.push(`/documents/${id}?page=1`);
   }
 
+  const handleBackButton = () => {
+    router.back();
+  }
+
   return (
     <Card className='p-5 mt-5'>
       <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between'>
-        <CardTitle> <h1 className="text-2xl font-bold mb-4">Documentos</h1>
+        <CardTitle>
+          <h1 className="text-2xl font-bold mb-4">Documentos</h1>
+          <div className='flex justify-start'>
+            <Button onClick={handleBackButton} variant={'link'}>
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Volver
+            </Button>
+          </div>
         </CardTitle>
+
+          <div className='flex justify-center w-full'>
+            <Input placeholder='Buscar documento' />
+          </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -110,7 +127,6 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
         </DropdownMenu>
 
         <CreateFolderModal openModal={openModal} setOpenModal={setOpenModal} editMode={editMode} folder={folder} />
-
         <MoveFolderModal openModal={openMoveModal} setOpenModal={setOpenMoveModal} idFolder={idFolder} />
 
       </CardHeader>
