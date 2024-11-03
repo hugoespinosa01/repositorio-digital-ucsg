@@ -1,5 +1,5 @@
 import React from 'react';
-import { FolderOpen, Pencil, Trash2 } from 'lucide-react';
+import { FolderArchive, FolderInput, FolderOpen, Pencil, Trash2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { Folder } from '@/types/folder';
 
@@ -10,9 +10,10 @@ interface FileCardProps {
     onEdit?: (folder: Folder) => void;
     onDelete?: (id: number) => void;
     onClick?: (id: number) => void;
+    onMove?: (id: number) => void;
 }
 
-export function FolderCard({ folder, fileName, creationDate, onEdit, onDelete, onClick }: FileCardProps) {
+export function FolderCard({ folder, fileName, creationDate, onEdit, onDelete, onMove, onClick }: FileCardProps) {
     const [showActions, setShowActions] = React.useState(false);
 
     const handleActionClick = (e: React.MouseEvent, action: () => void) => {
@@ -71,6 +72,22 @@ export function FolderCard({ folder, fileName, creationDate, onEdit, onDelete, o
                                 </TooltipTrigger>
                                 <TooltipContent>
                                     Eliminar
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <button
+                                        onClick={(e) => onMove && handleActionClick(e, () => onMove(folder.Id))}
+                                        className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                                    >
+                                        <FolderInput className="w-4 h-4 text-gray-600 hover:text-blue-600" />
+                                    </button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    Mover
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>

@@ -14,7 +14,7 @@ export default function Home() {
           <Link href="/login">
             <Button>Acceder</Button>
           </Link>
-          <Link href="/documents">
+          <Link href="/documents?page=1">
             <Button variant="outline" className="ml-4">
               Ir a panel de control
             </Button>

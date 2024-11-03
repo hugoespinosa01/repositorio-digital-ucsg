@@ -12,6 +12,7 @@ import {
 import DocumentsPage from "../documentCard/page";
 
 export default function DashboardPage() {
+
   return (
     <ContentLayout title="Dashboard">
       <Breadcrumb>

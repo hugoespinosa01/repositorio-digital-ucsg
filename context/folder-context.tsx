@@ -5,12 +5,15 @@ import { Folder } from "@/types/folder";
 
 export const FolderContext = createContext<{
     folders: any[];
-    fetchFolders: () => Promise<void>;
+    fetchFolders: (currentPage: number, pageSize: number) => Promise<void>;
     loading: boolean;
     createFolder: (nombre: string, setOpenModal: (open: boolean) => void) => Promise<void>;
     updateFolder: (id: number, nombre: string, setOpenModal: (open: boolean) => void) => Promise<void>;
-    deleteFolder: (id: number) => Promise<void>;
+    deleteFolder: (id: number, currentPage: number, pageSize: number) => Promise<void>;
+    moveFolder: (id: number, newId: number, setOpenModal: (open: boolean) => void, pageSize: number) => Promise<void>;
     isSubmitting: boolean;
+    totalFolders: number;
+    pageSize: number;
 }>({
     folders: [],
     fetchFolders: async () => { },
@@ -18,25 +21,34 @@ export const FolderContext = createContext<{
     createFolder: async () => { },
     updateFolder: async () => { },
     deleteFolder: async () => { },
+    moveFolder: async () => { },
     isSubmitting: false,
+    totalFolders: 0,
+    pageSize: 6,
 });
 
 export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
 
     const [folders, setFolders] = useState<Folder[]>([]);
+    const [totalFolders, setTotalFolders] = useState<number>(0);
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [pageSize, setPageSize] = useState(6);
 
-    async function fetchFolders() {
+    async function fetchFolders(currentPage: number, pageSize: number) {
         setLoading(true);
+        setPageSize(pageSize);
         try {
-            const response = await fetch('/api/documents');
+            const response = await fetch(`/api/folders?page=${currentPage}&page_size=${pageSize}`, {
+                method: 'GET',
+            });
             if (response.ok) {
                 const res = await response.json();
 
                 if (Array.isArray(res.data)) {
                     setFolders(res.data);
+                    setTotalFolders(res.length);
                 } else {
                     console.error('Unexpected response format:', res);
                     throw new Error('Formato de respuesta inesperado');
@@ -66,7 +78,7 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
                 Nombre: nombre,
             }
 
-            const response = await fetch("/api/documents", {
+            const response = await fetch("/api/folders", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -86,7 +98,8 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
                 variant: "default",
             });
 
-            setFolders([...folders, data.data]);
+            //setFolders([...folders, data.data]);
+            fetchFolders(1, pageSize);
             setOpenModal(false);
 
         } catch (error) {
@@ -110,7 +123,7 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
                 Nombre: nombre,
             }
 
-            const response = await fetch(`/api/documents/${id}`, {
+            const response = await fetch(`/api/folders/${id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -152,14 +165,14 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }
 
-    async function deleteFolder(id: number) {
+    async function deleteFolder(id: number, currentPage: number, pageSize: number) {
         try {
             setLoading(true);
-            const response = await fetch(`/api/documents/${id}`, {
+            const response = await fetch(`/api/folders/${id}`, {
                 method: 'DELETE'
             });
             if (response.ok) {
-                fetchFolders();
+                fetchFolders(currentPage, pageSize);
             }
             toast({
                 title: "Carpeta eliminada",
@@ -177,8 +190,45 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }
 
+    async function moveFolder(id: number, newId: number, setOpenModal: (open: boolean) => void, pageSize: number) {
+        try {
+
+            setIsSubmitting(true);
+
+            const response = await fetch(`/api/folders/${id}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ IdCarpetaPadre: newId })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setIsSubmitting(false);
+                throw new Error(data.error || "Error al mover la carpeta");
+            }
+
+            toast({
+                title: "Carpeta movida",
+                description: "La carpeta ha sido movida exitosamente",
+                variant: "default",
+            });
+
+            setIsSubmitting(false);
+            setOpenModal(false);
+            fetchFolders(1, pageSize);
+
+        } catch (err) {
+            console.error(err);
+            toast({
+                title: "Error",
+                description: "Error al mover la carpeta",
+                variant: "destructive",
+            });
+        }
+    }
+
     return (
-        <FolderContext.Provider value={{ folders, fetchFolders, loading, createFolder, isSubmitting, updateFolder, deleteFolder }}>
+        <FolderContext.Provider value={{ folders, fetchFolders, loading, createFolder, isSubmitting, updateFolder, deleteFolder, moveFolder, totalFolders, pageSize }}>
             {children}
         </FolderContext.Provider>
     )

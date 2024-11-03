@@ -1,16 +1,46 @@
+'use client';
 
-export default function DocumentDetail({params}: any) {
+import Link from "next/link";
 
-    // if (router.isFallback){
-    //     return <div>Loading...</div>
-    // }
+import { ContentLayout } from "@/components/admin-panel/content-layout";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator
+} from "@/components/ui/breadcrumb";
+import { Card } from "@/components/ui/card";
+import DocumentsPage from "../../documentCard/page";
+import { useParams } from "next/navigation";
 
+export default function DocumentDetail() {
 
-    return (
-    <div>
-        <h1>DocumentDetailed {params.documentId}</h1>
-    </div>
-  )
+const params = useParams<{ documentId: string }>()
 
-}
+ return (
+    <ContentLayout title="Dashboard">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/">Inicio</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Panel de control</BreadcrumbPage>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>ucsg</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      <Card>
+        <DocumentsPage documentId={params.documentId}/>
+      </Card>
+    </ContentLayout>
+  )}
 

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FolderOpen, Pencil, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import LoadingDocuments from './loading';
 import Image from 'next/image';
 import noDocuments from '../../../img/no_documents.png';
@@ -15,16 +15,34 @@ import { useContext } from 'react';
 import { FolderContext } from '@/context/folder-context';
 import { FolderCard } from '@/components/custom-folder-card';
 import { Folder } from '@/types/folder';
+import MoveFolderModal from './moveFolderModal';
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { PaginationWithLinks } from '@/components/custom-pagination';
 
-export default function DocumentsPage() {
+const PAGE_SIZE = 6;
+
+export default function DocumentsPage({ documentId } : { documentId?: string | null }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentPage = Number(searchParams.get('page'));
   const [openModal, setOpenModal] = useState(false);
+  const [openMoveModal, setOpenMoveModal] = useState(false);
   const [folder, setFolder] = useState<Folder | null>(null);
+  const [idFolder, setIdFolder] = useState<number>(0);
   const [editMode, setEditMode] = useState(false);
-  const { folders, fetchFolders, deleteFolder, loading } = useContext(FolderContext);
-
+  const { folders, fetchFolders, deleteFolder, loading, totalFolders} = useContext(FolderContext);
+  
+ 
   useEffect(() => {
-    fetchFolders();
-  }, []);
+    fetchFolders(currentPage, PAGE_SIZE);
+    if (documentId) {
+      router.push(`/documents?page=2`);
+    }
+    if ( currentPage < 1 ) {
+      router.push('/documents?page=1');
+    }
+  }, [currentPage]);
 
   const handleCreateFolder = () => {
     setEditMode(false);
@@ -37,8 +55,17 @@ export default function DocumentsPage() {
     setFolder(folder);
   }
 
-  const handleDeleteFolder  = (id: number) => {
-    deleteFolder(id);
+  const handleDeleteFolder = (id: number) => {
+    deleteFolder(id, currentPage, PAGE_SIZE);
+  }
+
+  const handleMoveFolder = (id: number) => {
+    setOpenMoveModal(true);
+    setIdFolder(id);
+  }
+
+  const handleClick = (id: number) => {
+    router.push(`/documents/${id}`);
   }
 
   return (
@@ -68,7 +95,9 @@ export default function DocumentsPage() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <CreateFolderModal openModal={openModal} setOpenModal={setOpenModal} editMode={editMode} folder={folder}/>
+        <CreateFolderModal openModal={openModal} setOpenModal={setOpenModal} editMode={editMode} folder={folder} />
+
+        <MoveFolderModal openModal={openMoveModal} setOpenModal={setOpenMoveModal} idFolder={idFolder} />
 
       </CardHeader>
       <CardContent>
@@ -79,21 +108,33 @@ export default function DocumentsPage() {
         ) : (
           <div className="container mx-auto p-4">
             {folders.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {folders.map((doc) => (
+              <Fragment>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {folders.map((doc) => (
 
-                  <FolderCard
-                    key={doc.Id}
-                    folder={doc}
-                    fileName={doc.Nombre}
-                    creationDate={doc.FechaCreacion}
-                    onEdit={handleEditFolder}
-                    onDelete={handleDeleteFolder}
-                    onClick={() => console.log('Abriendo')}
+                    <FolderCard
+                      key={doc.Id}
+                      folder={doc}
+                      fileName={doc.Nombre}
+                      creationDate={doc.FechaCreacion}
+                      onEdit={handleEditFolder}
+                      onDelete={handleDeleteFolder}
+                      onMove={handleMoveFolder}
+                      onClick={handleClick}
+                    />
+
+                  ))}
+
+                </div>
+                <div className='flex justify-center text-center mt-5'>  
+                  <PaginationWithLinks
+                    page={currentPage}
+                    pageSize={PAGE_SIZE}
+                    totalCount={totalFolders}
                   />
+                </div>
+              </Fragment>
 
-                ))}
-              </div>
             ) : (
               <div className='flex flex-col items-center justify-center'>
                 <Image src={noDocuments} alt="No hay documentos" width={500} height={500} />

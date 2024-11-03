@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { NextRequest } from "next/server";
 import { BlobServiceClient } from '@azure/storage-blob';
 import sql from 'mssql';
 import { prisma } from '@/lib/prisma';
@@ -14,7 +15,7 @@ const dbSettings = {
   database: process.env.DB_NAME || '',
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
 
   try {
     
@@ -22,8 +23,19 @@ export async function GET() {
     // const pool = await getConnection();
     // const result = await pool.request().query("SELECT * FROM Carpeta WHERE IdCarpetaPadre IS NULL");
 
+    const page =  Number(request.nextUrl.searchParams.get('page'));
+    const pageSize = Number(request.nextUrl.searchParams.get('page_size'));
 
     const carpetas = await prisma.carpeta.findMany({
+      where: {
+        IdCarpetaPadre: null,
+        Estado: 1
+      },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    });
+
+    const totalLength = await prisma.carpeta.count({
       where: {
         IdCarpetaPadre: null,
         Estado: 1
@@ -34,12 +46,10 @@ export async function GET() {
       message: 'Consulta exitosa',
       status: 200,
       data: carpetas,
-      length: carpetas.length,
-      currentPage: 1,
+      length: totalLength,
+      currentPage: page,
     }
     
-
-
 
     // const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
     // const containerClient = blobServiceClient.getContainerClient(containerName);
@@ -68,9 +78,9 @@ export async function GET() {
   
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Error fetching documents:', error);
+    console.error('Error fetching folders:', error);
     const errResponse = {
-      error: 'Error fetching documents',
+      error: 'Error fetching folders',
       status: 500,
       message: error,
     }
@@ -118,6 +128,7 @@ export async function POST(request: Request) {
     return NextResponse.json(errResponse);
   }
 }
+
 
 export async function getConnection () {
   try {
