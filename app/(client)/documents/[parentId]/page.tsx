@@ -17,7 +17,7 @@ import { useParams } from "next/navigation";
 
 export default function DocumentDetail() {
 
-const params = useParams<{ documentId: string }>()
+const params = useParams<{ parentId: string }>()
 
  return (
     <ContentLayout title="Dashboard">
@@ -39,7 +39,7 @@ const params = useParams<{ documentId: string }>()
         </BreadcrumbList>
       </Breadcrumb>
       <Card>
-        <DocumentsPage documentId={params.documentId}/>
+        <DocumentsPage parentId={params.parentId}/>
       </Card>
     </ContentLayout>
   )}

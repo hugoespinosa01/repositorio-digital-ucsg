@@ -22,26 +22,40 @@ import { PaginationWithLinks } from '@/components/custom-pagination';
 
 const PAGE_SIZE = 6;
 
-export default function DocumentsPage({ documentId } : { documentId?: string | null }) {
+export default function DocumentsPage({ parentId }: { parentId?: string | null }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get('page'));
   const [openModal, setOpenModal] = useState(false);
   const [openMoveModal, setOpenMoveModal] = useState(false);
   const [folder, setFolder] = useState<Folder | null>(null);
+  const [children, setChildren] = useState<any[]>([]);
   const [idFolder, setIdFolder] = useState<number>(0);
   const [editMode, setEditMode] = useState(false);
-  const { folders, fetchFolders, deleteFolder, loading, totalFolders} = useContext(FolderContext);
-  
- 
+  const { folders, fetchFolders, deleteFolder, loading, totalFolders } = useContext(FolderContext);
+
+  const fetchChildren = async (parentId: string | null) => {
+    try {
+      const response = await fetch(`/api/folders/${Number(parentId)}/children?page=${currentPage}&page_size=${PAGE_SIZE}`);
+      const data = await response.json();
+      setChildren(data.data);
+    } catch (error) {
+      console.error('Error fetching folders:', error);
+    }
+  }
+
   useEffect(() => {
-    fetchFolders(currentPage, PAGE_SIZE);
-    if (documentId) {
-      router.push(`/documents?page=2`);
+    if (currentPage < 1 || isNaN(currentPage)) {
+      router.push('/pageNotFound');
+      return;
     }
-    if ( currentPage < 1 ) {
-      router.push('/documents?page=1');
+    if (parentId) {
+      fetchChildren(parentId);
+    } else {
+      // Fetch root folders
+      fetchFolders(currentPage, PAGE_SIZE);
     }
+
   }, [currentPage]);
 
   const handleCreateFolder = () => {
@@ -65,7 +79,7 @@ export default function DocumentsPage({ documentId } : { documentId?: string | n
   }
 
   const handleClick = (id: number) => {
-    router.push(`/documents/${id}`);
+    router.push(`/documents/${id}?page=1`);
   }
 
   return (
@@ -107,11 +121,10 @@ export default function DocumentsPage({ documentId } : { documentId?: string | n
           </div>
         ) : (
           <div className="container mx-auto p-4">
-            {folders.length > 0 ? (
-              <Fragment>
+            {
+              parentId ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {folders.map((doc) => (
-
+                  {children.map((doc) => (
                     <FolderCard
                       key={doc.Id}
                       folder={doc}
@@ -122,27 +135,48 @@ export default function DocumentsPage({ documentId } : { documentId?: string | n
                       onMove={handleMoveFolder}
                       onClick={handleClick}
                     />
-
                   ))}
-
                 </div>
-                <div className='flex justify-center text-center mt-5'>  
-                  <PaginationWithLinks
-                    page={currentPage}
-                    pageSize={PAGE_SIZE}
-                    totalCount={totalFolders}
-                  />
-                </div>
-              </Fragment>
+              ) : folders.length > 0 ? (
+                <Fragment>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {folders.map((doc) => (
 
-            ) : (
-              <div className='flex flex-col items-center justify-center'>
-                <Image src={noDocuments} alt="No hay documentos" width={500} height={500} />
-                <p className='text-2xl'>No se encontraron documentos</p>
-              </div>
-            )}
+                      <FolderCard
+                        key={doc.Id}
+                        folder={doc}
+                        fileName={doc.Nombre}
+                        creationDate={doc.FechaCreacion}
+                        onEdit={handleEditFolder}
+                        onDelete={handleDeleteFolder}
+                        onMove={handleMoveFolder}
+                        onClick={handleClick}
+                      />
+
+                    ))}
+
+                  </div>
+
+                </Fragment>
+
+              ) : (
+                <div className='flex flex-col items-center justify-center'>
+                  <Image src={noDocuments} alt="No hay documentos" width={500} height={500} />
+                  <p className='text-2xl'>No se encontraron documentos</p>
+                </div>
+              )}
           </div>
         )}
+
+        <div className='flex justify-center text-center mt-5'>
+          <PaginationWithLinks
+            page={currentPage}
+            pageSize={PAGE_SIZE}
+            totalCount={totalFolders}
+          />
+        </div>
+
+
 
       </CardContent>
 

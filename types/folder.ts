@@ -5,4 +5,6 @@ export interface Folder {
     FechaCreacion: string;
     FechaActualizacion: string;
     IdCarrera: string;
+    Estado: number;
+    Tipo: string;
   }

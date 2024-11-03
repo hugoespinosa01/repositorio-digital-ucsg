@@ -1,51 +1,22 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 
 interface Params {
-  params: { id: string };
+    params: { id: string };
 }
 
-
-export async function GET(request: Request, {params} : Params) {
-  try {
-
-    const carpeta = await prisma.carpeta.findUnique({
-      where: {
-        Id: Number(params.id),
-        Estado: 1
-      }
-    });
-
-    if (!carpeta) {
-      return NextResponse.json({ error: 'Carpeta no encontrada' }, { status: 404 });
-    }
-
-    const response = {
-      message: 'Consulta exitosa',
-      status: 200,
-      data: carpeta
-    }
-
-    return NextResponse.json(response);
-  } catch (error) {
-    console.error('Error fetching folders:', error);
-  
-    return NextResponse.json({ error: 'Error fetching folders' }, { status: 500 });
-  }
-}
-
-export async function DELETE(request : Request, {params} : Params) {
+export async function DELETE(request: Request, { params }: Params) {
     try {
-      
+
         // Se hace un borrado lógico de la carpeta
         const softDeletedCarpeta = await prisma.carpeta.update({
             where: {
                 Id: Number(params.id)
             },
             data: {
-              Estado: 0,
-              FechaActualizacion: new Date()
+                Estado: 0,
+                FechaActualizacion: new Date()
             }
         })
 
@@ -100,15 +71,15 @@ export async function PUT(request: Request, { params }: Params) {
     } catch (error) {
         console.error('Error updating document:', error);
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
-          if (error.code === 'P2025') {
-              return NextResponse.json({ error: 'Carpeta o documento no encontrado' }, { status: 404 });
-          }
-      }
+            if (error.code === 'P2025') {
+                return NextResponse.json({ error: 'Carpeta o documento no encontrado' }, { status: 404 });
+            }
+        }
         return NextResponse.json({ error: 'Error updating document' }, { status: 500 });
     }
 }
 
-export async function PATCH(request: Request, {params}: Params){
+export async function PATCH(request: Request, { params }: Params) {
     try {
         const body = await request.json();
 
@@ -121,10 +92,10 @@ export async function PATCH(request: Request, {params}: Params){
         }
 
         const carpeta = await prisma.carpeta.findFirst({
-          where: {
-            IdCarpetaPadre: body.IdCarpetaPadre,
-            Estado: 1
-          }
+            where: {
+                IdCarpetaPadre: body.IdCarpetaPadre,
+                Estado: 1
+            }
         });
 
         if (!carpeta) {

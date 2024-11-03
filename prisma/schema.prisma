@@ -15,6 +15,7 @@ model Carpeta {
   FechaActualizacion DateTime?   @db.DateTime
   IdCarrera          Int?
   Estado             Int?
+  Tipo               String?     @db.VarChar(15)
   Carpeta            Carpeta?    @relation("CarpetaToCarpeta", fields: [IdCarpetaPadre], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "Carpeta_IdCarpetaPadre_fk")
   other_Carpeta      Carpeta[]   @relation("CarpetaToCarpeta")
   Carrera            Carrera?    @relation(fields: [IdCarrera], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "Carpeta_IdCarrera_fk")
@@ -29,31 +30,18 @@ model Carrera {
 }
 
 model Documento {
-  Id               Int                @id(map: "PK__Document__3214EC07C0425F0D") @default(autoincrement())
-  IdCarpeta        Int?
-  NombreArchivo    String?            @db.VarChar(255)
-  Alumno           String?            @db.VarChar(255)
-  NoIdentificacion String?            @db.VarChar(255)
-  Ruta             String?            @db.VarChar(255)
-  RefArchivo       String?            @db.VarChar(255)
-  FechaCarga       DateTime?          @db.DateTime
-  Tamano           Decimal?           @db.Decimal(18, 2)
-  Extension        String?            @db.VarChar(10)
-  Estado           Int?
-  Carpeta          Carpeta?           @relation(fields: [IdCarpeta], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "Documento_IdCarpeta_fk")
-  DocumentoDetalle DocumentoDetalle[]
-}
-
-model DocumentoDetalle {
-  Id           Int        @id(map: "PK__Document__3214EC070298C3F5") @default(autoincrement())
-  Ciclo        String?    @db.VarChar(255)
-  Materia      String?    @db.VarChar(255)
-  Periodo      BigInt?
-  Calificacion Decimal?   @db.Decimal(18, 2)
-  NoMatricula  BigInt?
-  IdDocumento  Int?
-  Estado       Int?
-  Documento    Documento? @relation(fields: [IdDocumento], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "DocumentoDetalle_IdDocumento_fk")
+  Id                  Int                   @id(map: "PK__Document__3214EC0705F3D70E") @default(autoincrement())
+  IdCarpeta           Int?
+  NombreArchivo       String?               @db.VarChar(255)
+  Ruta                String?               @db.VarChar(255)
+  RefArchivo          String?               @db.VarChar(255)
+  FechaCarga          DateTime?             @db.DateTime
+  Tamano              Decimal?              @db.Decimal(18, 2)
+  Extension           String?               @db.VarChar(10)
+  Estado              Int?
+  Tipo                String?               @db.VarChar(15)
+  Carpeta             Carpeta?              @relation(fields: [IdCarpeta], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "Documento_IdCarpeta_fk")
+  TipoDocumentoKardex TipoDocumentoKardex[]
 }
 
 model sysdiagrams {
@@ -83,4 +71,25 @@ model UsuarioCarrera {
   Estado    BigInt?
   Carrera   Carrera? @relation(fields: [IdCarrera], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "UsuarioCarrera_IdCarrera_fk")
   Usuario   Usuario? @relation(fields: [IdUsuario], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "UsuarioCarrera_IdUsuario_fk")
+}
+
+model DocumentoDetalleKardex {
+  Id                  Int                  @id(map: "PK__Document__3214EC073D3A0BBC") @default(autoincrement())
+  Ciclo               String?              @db.VarChar(255)
+  Materia             String?              @db.VarChar(255)
+  Periodo             String?              @db.VarChar(255)
+  Calificacion        Decimal?             @db.Decimal(18, 2)
+  NoMatricula         Int?
+  IdDocumentoKardex   Int?
+  Estado              Int?
+  TipoDocumentoKardex TipoDocumentoKardex? @relation(fields: [IdDocumentoKardex], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "IdDocumentoKardex_fk")
+}
+
+model TipoDocumentoKardex {
+  Id                     Int                      @id(map: "PK__TipoDocu__3214EC0758A323E6") @default(autoincrement())
+  IdDocumento            Int?
+  Alumno                 String?                  @db.VarChar(255)
+  NoIdentificacion       String?                  @db.VarChar(255)
+  DocumentoDetalleKardex DocumentoDetalleKardex[]
+  Documento              Documento?               @relation(fields: [IdDocumento], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "IdDocumento_fk")
 }
