@@ -37,7 +37,7 @@ export function FolderCard({ folder, fileName, creationDate, onEdit, onDelete, o
                         <h3 className="font-medium group-hover:text-yellow-700 transition-colors truncate">
                             {fileName}
                         </h3>
-                        <p className="text-sm text-gray-500 truncate">Subido el: {new Date(creationDate).toLocaleDateString()}</p>
+                        <p className="text-sm text-gray-500 truncate">Creado el: {new Date(creationDate).toLocaleDateString()}</p>
                     </div>
                 </div>
 
