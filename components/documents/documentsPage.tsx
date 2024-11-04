@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Plus } from 'lucide-react';
 import LoadingDocuments from './loading';
 import Image from 'next/image';
-import noDocuments from '../../../img/no_documents.png';
+import noDocuments from '@/img/no_documents.png';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { FolderPlus, Upload } from 'lucide-react';
 import CreateFolderModal from './createFolderModal';
@@ -19,8 +19,6 @@ import MoveFolderModal from './moveFolderModal';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { PaginationWithLinks } from '@/components/custom-pagination';
-import { SearchInput } from '@/components/custom-command-search';
-import { Input } from '@/components/ui/input';
 
 const PAGE_SIZE = 6;
 
@@ -101,10 +99,6 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
           </div>
         </CardTitle>
 
-          <div className='flex justify-center w-full'>
-            <Input placeholder='Buscar documento' />
-          </div>
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button className="gap-2">
@@ -113,7 +107,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <Link href="/subirDocumento">
+            <Link href="/upload">
               <DropdownMenuItem className="gap-2 cursor-pointer">
                 <Upload className="h-4 w-4" />
                 Subir documento
@@ -155,7 +149,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                 </div>
               ) : folders.length > 0 ? (
                 <Fragment>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {folders.map((doc) => (
 
                       <FolderCard

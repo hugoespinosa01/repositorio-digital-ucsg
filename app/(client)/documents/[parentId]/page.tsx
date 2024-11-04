@@ -12,7 +12,7 @@ import {
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
 import { Card } from "@/components/ui/card";
-import DocumentsPage from "../../documentCard/page";
+import DocumentsPage from "../../../../components/documents/documentsPage";
 import { useParams } from "next/navigation";
 
 export default function DocumentDetail() {

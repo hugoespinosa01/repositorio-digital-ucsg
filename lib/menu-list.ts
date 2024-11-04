@@ -34,16 +34,16 @@ export function getMenuList(pathname: string): Group[] {
       groupLabel: "Documentos",
       menus: [
         {
-          href: "/documents",
+          href: "/documents?page=1",
           label: "Ver documentos",
           active: pathname.includes("/documents"),
           icon: List,
           submenus: []
         },
         {
-          href: "/subirDocumento",
+          href: "/upload",
           label: "Subir documentos",
-          active: pathname.includes("/subirDocumento"),
+          active: pathname.includes("/upload"),
           icon: File,
           submenus: []
         }

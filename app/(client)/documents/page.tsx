@@ -9,12 +9,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
-import DocumentsPage from "../documentCard/page";
+import DocumentsPage from "@/components/documents/documentsPage";
 
 export default function DashboardPage() {
 
   return (
-    <ContentLayout title="Dashboard">
+    <ContentLayout title="Mis documentos">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -24,7 +24,7 @@ export default function DashboardPage() {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Panel de control</BreadcrumbPage>
+            <BreadcrumbPage>Mis documentos</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>

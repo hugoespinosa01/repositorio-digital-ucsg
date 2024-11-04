@@ -9,7 +9,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
-import UploadPage from "../uploadCard/page";
+import UploadPage from "../../../components/upload/uploadPage";
 
 export default function DashboardPage() {
   return (
