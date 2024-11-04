@@ -4,6 +4,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
 import { GeistSans } from 'geist/font/sans';
 import { FolderProvider } from '@/context/folder-context'
+import { ChildrenProvider } from '@/context/children-context';
 
 export const metadata: Metadata = {
   title: 'Repositorio Digital Documental',
@@ -20,9 +21,11 @@ export default function RootLayout({
       <body className={GeistSans.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <FolderProvider>
-            <div vaul-drawer-wrapper="" className="bg-background">
-              {children}
-            </div>
+            <ChildrenProvider>
+              <div vaul-drawer-wrapper="" className="bg-background">
+                {children}
+              </div>
+            </ChildrenProvider>
           </FolderProvider>
           <Toaster />
         </ThemeProvider>

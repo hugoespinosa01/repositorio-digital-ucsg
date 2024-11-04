@@ -24,6 +24,20 @@ export async function GET(request: NextRequest, { params }: Params) {
             }
         });
 
+        const countDocumentos = await prisma.documento.count({
+            where: {
+                IdCarpeta: Number(params.id),
+                Estado: 1
+            }
+        });
+
+        const countCarpetas = await prisma.carpeta.count({
+            where: {
+                IdCarpetaPadre: Number(params.id),
+                Estado: 1
+            }
+        });
+
         const data = new Array();
         data.push(...carpetas);
         data.push(...documentos);
@@ -35,6 +49,7 @@ export async function GET(request: NextRequest, { params }: Params) {
             data: resultData,
             page: page,
             pageSize: pageSize,
+            length: countDocumentos + countCarpetas
         }
 
         return NextResponse.json(response);

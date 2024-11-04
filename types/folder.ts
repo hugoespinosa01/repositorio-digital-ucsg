@@ -7,4 +7,5 @@ export interface Folder {
     IdCarrera: string;
     Estado: number;
     Tipo: string;
+    Ruta: string;
   }

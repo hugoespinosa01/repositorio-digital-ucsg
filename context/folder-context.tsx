@@ -37,12 +37,10 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
     const [pageSize, setPageSize] = useState(6);
 
     async function fetchFolders(currentPage: number, pageSize: number) {
-        setLoading(true);
-        setPageSize(pageSize);
         try {
-            const response = await fetch(`/api/folders?page=${currentPage}&page_size=${pageSize}`, {
-                method: 'GET',
-            });
+            setLoading(true);
+            setPageSize(pageSize);
+            const response = await fetch(`/api/folders?page=${currentPage}&page_size=${pageSize}`);
             if (response.ok) {
                 const res = await response.json();
 
@@ -174,12 +172,13 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
             });
             if (response.ok) {
                 fetchFolders(currentPage, pageSize);
+            } else {
+                const errorData = await response.json();
+                setLoading(false);
+                throw new Error(errorData.error || 'Error al eliminar la carpeta');
             }
-            toast({
-                title: "Carpeta eliminada",
-                description: "La carpeta ha sido eliminada exitosamente",
-                variant: "default",
-            })
+
+
             setLoading(false);
         } catch (error) {
             console.error(error);

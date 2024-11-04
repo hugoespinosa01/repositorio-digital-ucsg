@@ -42,6 +42,7 @@ BEGIN
         [IdCarrera] INT,
         [Estado] INT,
         Tipo VARCHAR(15);
+        Ruta VARCHAR(255);
     );
 END
 

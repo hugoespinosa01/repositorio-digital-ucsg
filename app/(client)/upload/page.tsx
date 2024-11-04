@@ -13,7 +13,7 @@ import UploadPage from "../../../components/upload/uploadPage";
 
 export default function DashboardPage() {
   return (
-    <ContentLayout title="Repo">
+    <ContentLayout title="Sinergia">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -23,7 +23,7 @@ export default function DashboardPage() {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Subir documento</BreadcrumbPage>
+            <BreadcrumbPage>Subir documentos</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>

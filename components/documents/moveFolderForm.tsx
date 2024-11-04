@@ -62,7 +62,7 @@ export default function MoveFolderForm({ idFolder, setOpenModal }: { idFolder: n
         }
     })
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
+    function onSubmit(values: z.infer<typeof formSchema>) {        
         moveFolder(idFolder, values.carpeta_destino, setOpenModal, pageSize);
     }
 

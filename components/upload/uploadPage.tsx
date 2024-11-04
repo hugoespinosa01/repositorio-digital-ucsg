@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/components/ui/use-toast';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import FileUpload from '@/components/custom-fileuploader';
+import GetBackButton from '../getback-button';
 
 const MAX_FILE_SIZE = 1024 * 1024 * 10; // 10MB
 
@@ -19,7 +20,7 @@ export default function UploadPage() {
 
   const onSubmit = async () => {
     if (!file) {
-      toast({ 
+      toast({
         title: "Error",
         description: "Por favor, selecciona un archivo PDF.",
         variant: "destructive",
@@ -38,16 +39,16 @@ export default function UploadPage() {
 
     try {
       //Aquí va el middleware para subir el archivo
-      
+
       console.log("Subiendo archivo...");
-      
+
       const formData = new FormData();
       formData.append("file", file);
 
       const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
-      }); 
+      });
 
       if (response.ok) {
         toast({
@@ -72,23 +73,32 @@ export default function UploadPage() {
 
   return (
     <Card className='p-5 mt-5'>
-      <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">Carga de documentos digitalizados</h1>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <FileUpload
-            file={file}
-            setFile={setFile}
-          />
-          <div>
-            <p>
-              <strong>Consideraciones:</strong><br />
-              • El tamaño máximo del archivo debe ser de 10MB<br />
-              • Solo se permiten archivos PDF
-            </p>
-          </div>
-          <Button type="submit">Cargar</Button>
-        </form>
-      </div>
+
+      <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between'>
+        <CardTitle>
+          <h1 className="text-2xl font-bold mb-4">Carga de documentos digitalizados</h1>
+          <GetBackButton />
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent>
+        <div className="container mx-auto p-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <FileUpload
+              file={file}
+              setFile={setFile}
+            />
+            <div>
+              <p>
+                <strong>Consideraciones:</strong><br />
+                • El tamaño máximo del archivo debe ser de 10MB<br />
+                • Solo se permiten archivos PDF
+              </p>
+            </div>
+            <Button type="submit">Cargar</Button>
+          </form>
+        </div>
+      </CardContent>
     </Card>
   );
 }
