@@ -16,11 +16,17 @@ export async function GET(request: Request, { params }: Params) {
             }
         });
 
+        const response = {
+            message: 'Carpeta encontrada',
+            status: 200,
+            data: carpeta
+        }
+
         if (!carpeta) {
             return NextResponse.json({ error: 'Carpeta no encontrada' }, { status: 404 });
         }
 
-        return NextResponse.json(carpeta);
+        return NextResponse.json(response);
     } catch (error) {
         console.error('Error fetching document:', error);
         return NextResponse.json({ error: 'Error fetching document' }, { status: 500 });

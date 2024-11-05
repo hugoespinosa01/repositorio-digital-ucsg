@@ -44,9 +44,10 @@ interface CreateFolderFormProps {
   editMode: boolean;
   setOpenModal: (open: boolean) => void;
   folder?: Folder | null;
+  parentId?: string | null | undefined;
 }
 
-export default function CreateFolderForm({editMode, setOpenModal, folder  }: CreateFolderFormProps) {
+export default function CreateFolderForm({editMode, setOpenModal, folder, parentId }: CreateFolderFormProps) {
 
   const { createFolder, isSubmitting, updateFolder} = useContext(FolderContext);
  
@@ -70,7 +71,7 @@ export default function CreateFolderForm({editMode, setOpenModal, folder  }: Cre
       return;
     }
     
-    createFolder(values.nombre, setOpenModal);
+    createFolder(values.nombre, setOpenModal, Number(parentId));
   }
 
   return (

@@ -43,6 +43,7 @@ BEGIN
         [Estado] INT,
         Tipo VARCHAR(15);
         Ruta VARCHAR(255);
+        IdHijos VARCHAR(255);
     );
 END
 

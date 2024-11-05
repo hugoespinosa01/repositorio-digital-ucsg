@@ -17,6 +17,7 @@ model Carpeta {
   Estado             Int?
   Tipo               String?     @db.VarChar(15)
   Ruta               String?     @db.VarChar(255)
+  IdHijos            String?     @db.VarChar(255)
   Carpeta            Carpeta?    @relation("CarpetaToCarpeta", fields: [IdCarpetaPadre], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "Carpeta_IdCarpetaPadre_fk")
   other_Carpeta      Carpeta[]   @relation("CarpetaToCarpeta")
   Carrera            Carrera?    @relation(fields: [IdCarrera], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "Carpeta_IdCarrera_fk")

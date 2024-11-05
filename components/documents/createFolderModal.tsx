@@ -14,9 +14,10 @@ interface CreateFolderModalProps {
     editMode: boolean;
     setOpenModal: (open: boolean) => void;
     folder? : Folder | null;
+    parentId? : string | null | undefined;
 }
 
-export default function CreateFolderModal({ openModal, editMode, setOpenModal, folder  }: CreateFolderModalProps) {
+export default function CreateFolderModal({ openModal, editMode, setOpenModal, folder, parentId }: CreateFolderModalProps) {
     return (
         <Credenza open={openModal} onOpenChange={setOpenModal}>
             <CredenzaContent>
@@ -35,7 +36,7 @@ export default function CreateFolderModal({ openModal, editMode, setOpenModal, f
                     </div>
                 </CredenzaDescription>
                 <CredenzaBody>
-                    <CreateFolderForm setOpenModal={setOpenModal} editMode={editMode} folder={folder}/>
+                    <CreateFolderForm setOpenModal={setOpenModal} editMode={editMode} folder={folder} parentId={parentId}/>
                 </CredenzaBody>
             </CredenzaContent>
         </Credenza>

@@ -7,7 +7,7 @@ export const FolderContext = createContext<{
     folders: any[];
     fetchFolders: (currentPage: number, pageSize: number) => Promise<void>;
     loading: boolean;
-    createFolder: (nombre: string, setOpenModal: (open: boolean) => void) => Promise<void>;
+    createFolder: (nombre: string, setOpenModal: (open: boolean) => void, parentId: number) => Promise<void>;
     updateFolder: (id: number, nombre: string, setOpenModal: (open: boolean) => void) => Promise<void>;
     deleteFolder: (id: number, currentPage: number, pageSize: number) => Promise<void>;
     moveFolder: (id: number, newId: number, setOpenModal: (open: boolean) => void, pageSize: number) => Promise<void>;
@@ -67,7 +67,7 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }
 
-    async function createFolder(nombre: string, setOpenModal: (open: boolean) => void) {
+    async function createFolder(nombre: string, setOpenModal: (open: boolean) => void, parentId: number) {
         try {
 
             setIsSubmitting(true);
@@ -75,6 +75,7 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
             const body = {
                 Nombre: nombre,
                 Tipo: "Carpeta",
+                IdCarpetaPadre: parentId ?? null,
             }
 
             const response = await fetch("/api/folders", {
@@ -99,6 +100,9 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
 
             //setFolders([...folders, data.data]);
             fetchFolders(1, pageSize);
+            if (parentId) {
+                
+            }
             setOpenModal(false);
 
         } catch (error) {

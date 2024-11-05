@@ -26,7 +26,7 @@ import ConfirmDeleteModal from './confirmDeleteModal';
 
 const PAGE_SIZE = 6;
 
-export default function DocumentsPage({ parentId }: { parentId?: string | null }) {
+export default function DocumentsPage({ parentId }: { parentId?: string | null}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get('page'));
@@ -38,7 +38,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
   const [editMode, setEditMode] = useState(false);
   const { folders, fetchFolders, loading, totalFolders } = useContext(FolderContext);
   const { fetchChildren, childrenDocsAndFiles, loadingChildren, totalChildren } = useContext(ChildrenContext);
-
+ 
 
   useEffect(() => {
     if (currentPage < 1 || isNaN(currentPage)) {
@@ -98,7 +98,9 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
           openModal={openModal}
           setOpenModal={setOpenModal}
           editMode={editMode}
-          folder={folder} />
+          folder={folder}
+          parentId={parentId} 
+        />
 
         <MoveFolderModal
           openModal={openMoveModal}

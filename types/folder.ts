@@ -8,4 +8,5 @@ export interface Folder {
     Estado: number;
     Tipo: string;
     Ruta: string;
+    IdHijos: string;
   }

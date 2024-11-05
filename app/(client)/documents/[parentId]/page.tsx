@@ -18,33 +18,38 @@ import { Folder } from "@/types/folder";
 export default function DocumentDetail() {
 
   const params = useParams<{ parentId: string }>();
-  const [parent, setParent] = useState<Folder|null>(null);
+  const [parent, setParent] = useState<Folder | null>(null);
+
+  const path = parent?.Ruta ?? '/';
+  const pathArray = path.split('/');
+
+  const parentIds = parent?.IdHijos ?? '';
+  const parentArray = parentIds.split(',');
+
+  const pathArrayWithoutEmpty = pathArray.filter(item => item !== '');
+
+  const pathsForBreadcrumb = pathArrayWithoutEmpty.map((item, index) => {
+    if (item !== '') {
+      return {
+        name: item,
+        id: parentArray[index] ? Number(parentArray[index]) : 0
+      }
+    }
+  });
+
 
   const fetchParent = async () => {
     // Fetch parent data
     const response = await fetch(`/api/folders/${params.parentId}`);
-    const data = await response.json();
-    setParent(data);
+    const res = await response.json();
+    setParent(res.data);
   }
 
   useEffect(() => {
     if (params.parentId) {
       fetchParent();
     }
-  }, [params.parentId])
-
-
-  const buildBreadcrumb = () => {
-    //path
-    const path = parent?.Ruta;
-    // const pathArray = path.split('/');
-    // const pathArrayFiltered = pathArray.filter((item) => item !== '');
-    // const pathArrayFilteredLength = pathArrayFiltered.length;
-    //name
-    //const name = parent.Nombre;
-  }
-
-
+  }, [params.parentId]);
 
   return (
     <ContentLayout title="Sinergia">
@@ -57,15 +62,43 @@ export default function DocumentDetail() {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Panel de control</BreadcrumbPage>
+            <BreadcrumbLink asChild>
+              <Link href={'/documents?page=1'}>Mis documentos</Link>
+            </BreadcrumbLink>
           </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>ucsg</BreadcrumbPage>
-          </BreadcrumbItem>
+          {
+            parent && pathsForBreadcrumb.map((item, index) => {
+              if (index === pathsForBreadcrumb.length - 1) {
+                return (
+                  <>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem key={index}>
+                      <BreadcrumbPage>
+                        {item?.name}
+                      </BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </>
+                )
+              } else {
+                return (
+                  <>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem key={index}>
+                      <BreadcrumbLink asChild>
+                        <Link href={`/documents/${item?.id}?page=1`}>{item?.name}</Link>
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                  </>
+                )
+              }
+
+
+            })
+          }
+
         </BreadcrumbList>
       </Breadcrumb>
-      <DocumentsPage parentId={params.parentId} />
+      <DocumentsPage parentId={params.parentId}/>
     </ContentLayout>
   )
 }

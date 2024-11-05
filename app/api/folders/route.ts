@@ -108,6 +108,7 @@ export async function POST(request: Request) {
         FechaActualizacion: new Date(),
         IdCarrera: body.IdCarrera || null,
         Estado: body.Estado || 1,
+        Tipo: 'Carpeta',
       }
     });
     
