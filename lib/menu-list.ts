@@ -6,7 +6,8 @@ import {
   Package,
   FileDigit,
   List,
-  File
+  File,
+  User
 } from "lucide-react";
 
 type Submenu = {
@@ -53,10 +54,10 @@ export function getMenuList(pathname: string): Group[] {
       groupLabel: "Configuración",
       menus: [
         {
-          href: "/users",
-          label: "Usuarios",
-          active: pathname.includes("/users"),
-          icon: Users,
+          href: "/account",
+          label: "Cuenta",
+          active: pathname.includes("/account"),
+          icon: User,
           submenus: []
         }
       ]

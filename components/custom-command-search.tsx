@@ -42,7 +42,7 @@ import {
           <CommandGroup heading="Settings">
             <CommandItem>
               <PersonIcon />
-              <span>Profile</span>
+              <span>Perfil</span>
               <CommandShortcut>⌘P</CommandShortcut>
             </CommandItem>
             <CommandItem>
