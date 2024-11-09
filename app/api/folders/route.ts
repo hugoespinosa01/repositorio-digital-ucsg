@@ -1,28 +1,10 @@
 import { NextResponse } from 'next/server';
 import { NextRequest } from "next/server";
-import { BlobServiceClient } from '@azure/storage-blob';
-import sql from 'mssql';
 import { prisma } from '@/lib/prisma';
 
-const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
-const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME || '';
-
-// Conexión a la base de datos
-const dbSettings = {
-  user: process.env.DB_USER || '',
-  password: process.env.DB_PASSWORD || '',
-  server: process.env.DB_SERVER || '',
-  database: process.env.DB_NAME || '',
-}
-
 export async function GET(request: NextRequest) {
-
   try {
     
-    //Utilizo la conexión a la base de datos
-    // const pool = await getConnection();
-    // const result = await pool.request().query("SELECT * FROM Carpeta WHERE IdCarpetaPadre IS NULL");
-
     const page =  Number(request.nextUrl.searchParams.get('page'));
     const pageSize = Number(request.nextUrl.searchParams.get('page_size'));
 
@@ -49,32 +31,6 @@ export async function GET(request: NextRequest) {
       length: totalLength,
       currentPage: page,
     }
-    
-
-    // const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
-    // const containerClient = blobServiceClient.getContainerClient(containerName);
-
-    // // Check if the container exists
-    // const containerExists = await containerClient.exists();
-    
-    // if (!containerExists) {
-    //   console.error(`Container '${containerName}' does not exist`);
-    //   return NextResponse.json({ error: 'Container not found' }, { status: 404 });
-    // }
-
-    // const documents = [];
-    // for await (const blob of containerClient.listBlobsFlat()) {
-    //   const blobClient = containerClient.getBlobClient(blob.name);
-    //   const properties = await blobClient.getProperties();
-      
-    //   documents.push({
-    //     id: blob.name,
-    //     title: properties.metadata?.title || 'Sin título',
-    //     description: properties.metadata?.description || 'Sin descripción',
-    //     uploadDate: properties.createdOn,
-    //   });
-    // }
-
   
     return NextResponse.json(result);
   } catch (error) {
@@ -127,18 +83,5 @@ export async function POST(request: Request) {
       message: err,
     }
     return NextResponse.json(errResponse);
-  }
-}
-
-
-export async function getConnection () {
-  try {
-    console.log('Conectando a la base de datos...');
-    const pool = await sql.connect(dbSettings);
-    return pool;
-
-  } catch(err){
-    console.error('Error connecting to database:', err);
-    throw new Error('Error connecting to database');
   }
 }

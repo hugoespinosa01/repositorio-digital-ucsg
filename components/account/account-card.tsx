@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
-import { Settings, Camera, Bell, Shield, Key, CreditCard, User, Mail, Phone, School } from 'lucide-react';
+import { Mail, School } from 'lucide-react';
 import { Input } from '../ui/input';
 import { useContext, useState } from 'react';
 import { AuthContext } from '@/context/auth-context';

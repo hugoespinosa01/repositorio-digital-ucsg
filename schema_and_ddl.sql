@@ -75,7 +75,8 @@ BEGIN
         Id int NOT NULL PRIMARY KEY IDENTITY(1,1),
         IdDocumento int,
         Alumno varchar(255),
-        NoIdentificacion varchar(255)
+        NoIdentificacion varchar(255),
+        Estado int
     );
 END
 
