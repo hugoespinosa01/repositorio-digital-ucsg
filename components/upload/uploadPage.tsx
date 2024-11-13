@@ -45,7 +45,7 @@ export default function UploadPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("/api/upload", {
+      const response = await fetch("/api/files", {
         method: "POST",
         body: formData,
       });
@@ -56,7 +56,7 @@ export default function UploadPage() {
           description: "El archivo se subió correctamente.",
           variant: "default",
         });
-        router.push("/documents");
+        router.push("/documents?page=1");
       }
 
       console.log(response);

@@ -1,25 +1,27 @@
 'use client';
 import React, { useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
-import { Mail, School } from 'lucide-react';
+import { IdCard, Mail, School } from 'lucide-react';
 import { Input } from '../ui/input';
 import { useContext, useState } from 'react';
 import { AuthContext } from '@/context/auth-context';
 
 interface UserInfo {
-  name: string;
+  given_name: string;
   email: string;
   familyName: string;
   career: string;
+  identification: string;
 }
 
 export default function AccountDetails() {
 
   const [userInfo, setUserInfo] = useState<UserInfo>({
-    name: '',
+    given_name: '',
     email: '',
     familyName: '',
-    career: ''
+    career: '',
+    identification: ''
   })
 
   const { keycloak } = useContext(AuthContext);
@@ -27,13 +29,17 @@ export default function AccountDetails() {
   useEffect(() => {
     if (keycloak) {
       setUserInfo({
-        name: keycloak.tokenParsed?.name,
+        given_name: keycloak.tokenParsed?.given_name,
         email: keycloak.tokenParsed?.email,
         familyName: keycloak.tokenParsed?.family_name,
-        career: keycloak.tokenParsed?.carrera
+        career: keycloak.tokenParsed?.carrera,
+        identification: keycloak.tokenParsed?.cedula
       })
     }
-  }, [])
+  }, [keycloak])
+
+  console.log(keycloak?.tokenParsed);
+  
 
   return (
     <Card className='p-5 mt-5'>
@@ -51,7 +57,7 @@ export default function AccountDetails() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
                     <Input
                       disabled
-                      value={userInfo.name}
+                      value={userInfo.given_name}
                     />
                   </div>
                   <div>
@@ -61,6 +67,19 @@ export default function AccountDetails() {
                       value={userInfo.familyName}
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="flex items-center gap-2">
+                      <IdCard size={16} />
+                      Cédula
+                    </div>
+                  </label>
+                  <Input
+                    value={userInfo.identification}
+                    disabled
+                  />
                 </div>
 
                 <div>
@@ -86,12 +105,9 @@ export default function AccountDetails() {
                   </label>
                   <Input
                     disabled
-                    value={userInfo.career == 'ing_computacion' ? 'Ingeniería en Computación' : 'Ingeniería Civil'}
+                    value={userInfo.career}
                   />
                 </div>
-
-
-
               </div>
             </div>
           </div>

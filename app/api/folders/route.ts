@@ -1,11 +1,23 @@
 import { NextResponse } from 'next/server';
 import { NextRequest } from "next/server";
 import { prisma } from '@/lib/prisma';
+import { headers } from 'next/headers'
+
 
 export async function GET(request: NextRequest) {
   try {
-    
-    const page =  Number(request.nextUrl.searchParams.get('page'));
+
+    const headersList = headers();
+    const bearerHeader = headersList.get("authorization");    
+    const token = bearerHeader && bearerHeader.split(" ")[1];
+
+    if (!token) {
+      return NextResponse.json({ "message": "No autorizado" }, {"status": 401})
+    }
+
+    const response = await fetch('http://localhost:3000/api/auth/verify')
+
+    const page = Number(request.nextUrl.searchParams.get('page'));
     const pageSize = Number(request.nextUrl.searchParams.get('page_size'));
 
     const carpetas = await prisma.carpeta.findMany({
@@ -31,7 +43,7 @@ export async function GET(request: NextRequest) {
       length: totalLength,
       currentPage: page,
     }
-  
+
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching folders:', error);
@@ -67,7 +79,7 @@ export async function POST(request: Request) {
         Tipo: 'Carpeta',
       }
     });
-    
+
     const result = {
       message: 'Documento creado',
       status: 200,
@@ -75,7 +87,7 @@ export async function POST(request: Request) {
     }
     return NextResponse.json(result);
 
-  }catch(err){
+  } catch (err) {
     console.error('Error creating document:', err);
     const errResponse = {
       error: 'Error creating document',

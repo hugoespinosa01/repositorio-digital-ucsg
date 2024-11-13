@@ -1,8 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { BlobServiceClient } from '@azure/storage-blob';
 import { prisma } from '@/lib/prisma';
 import { Documento } from '@/types/file';
+import dotenv from 'dotenv';
+import { v4 as uuidv4 } from 'uuid';
 
+dotenv.config();
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
 const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME || '';
 
@@ -37,23 +40,36 @@ export async function GET(request: Request) {
 
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
     try {
 
-        const body: Documento = await request.json();
+        const formData = await request.formData();
+        const file = formData.get('file') as File;
 
-        validateDocument(body);
+        if (!file) {
+            return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
+        }
+
+        // Procesar el PDF
+        const pdfData = await file.arrayBuffer();
 
         //Subo al blob storage
-        const blobResponse = await uploadToBlobStorage(body);
-
+        const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
+        const containerClient = blobServiceClient.getContainerClient(containerName);
+        const blobName = `${uuidv4()}.pdf`;
+        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+    
+        const blobResponse = await blockBlobClient.uploadData(pdfData, {
+          blobHTTPHeaders: { blobContentType: 'application/pdf' }
+        });
+        
         if (!blobResponse) {
             return NextResponse.json({ error: 'Error uploading to blob storage' }, { status: 500 });
         }
 
         //Extraigo datos del documento (producto de Azure AI Intelligence)
         const datosExtraidos = {
-            alumno: "Hugo Alejandro",
+            alumno: "Alejandro Martínez",
             noIdentificacion: "0926661265",
             materiasAprobadas: [
                 {
@@ -80,17 +96,22 @@ export async function POST(request: Request) {
             ]
         }
 
+        const ruta = '/ucsg/Computación/'
+        const idCarpeta = 26;
+        const extension = file.name.substring(file.name.lastIndexOf('.') + 1);
+
         // Creo el documento (archivo)
         const newDocumento = await prisma.documento.create({
             data: {
-                IdCarpeta: body.IdCarpeta,
-                NombreArchivo: body.NombreArchivo,
-                Ruta: body.Ruta,
+                IdCarpeta: idCarpeta,
+                NombreArchivo: datosExtraidos.alumno + ' - ' + datosExtraidos.noIdentificacion,
+                Ruta: ruta,
                 FechaCarga: new Date(),
                 Estado: 1,
-                Tamano: body.Tamano,
-                Extension: body.Extension,
+                Tamano: file.size,
+                Extension: extension,
                 Tipo: "Archivo",
+                RefArchivo: blobName
             }
         });
 
@@ -100,6 +121,7 @@ export async function POST(request: Request) {
                 IdDocumento: newDocumento.Id,
                 Alumno: datosExtraidos.alumno,
                 NoIdentificacion: datosExtraidos.noIdentificacion,
+                Estado: 1
             }
         });
 

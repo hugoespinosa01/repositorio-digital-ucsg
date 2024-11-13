@@ -1,11 +1,13 @@
 'use client';
-import React, { createContext, useState } from "react";
+import React, { createContext, useEffect, useState } from "react";
 import { useToast } from '@/components/ui/use-toast';
 import { Folder } from "@/types/folder";
+import { useContext } from "react";
+import { AuthContext } from "./auth-context";
 
 export const FolderContext = createContext<{
     folders: any[];
-    fetchFolders: (currentPage: number, pageSize: number) => Promise<void>;
+    fetchFolders: (currentPage: number, pageSize: number, token: string) => Promise<void>;
     loading: boolean;
     createFolder: (nombre: string, setOpenModal: (open: boolean) => void, parentId: number) => Promise<void>;
     updateFolder: (id: number, nombre: string, setOpenModal: (open: boolean) => void) => Promise<void>;
@@ -35,12 +37,19 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
     const [loading, setLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [pageSize, setPageSize] = useState(6);
+    const [token, setToken] = useState<string | null>(null);
 
-    async function fetchFolders(currentPage: number, pageSize: number) {
+
+    async function fetchFolders(currentPage: number, pageSize: number, token: string) {
         try {
             setLoading(true);
             setPageSize(pageSize);
-            const response = await fetch(`/api/folders?page=${currentPage}&page_size=${pageSize}`);
+
+            const response = await fetch(`/api/folders?page=${currentPage}&page_size=${pageSize}`, {
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                }
+            });
             if (response.ok) {
                 const res = await response.json();
 
@@ -99,9 +108,9 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
             });
 
             //setFolders([...folders, data.data]);
-            fetchFolders(1, pageSize);
+            //fetchFolders(1, pageSize, token);
             if (parentId) {
-                
+
             }
             setOpenModal(false);
 
@@ -175,7 +184,7 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
                 method: 'DELETE'
             });
             if (response.ok) {
-                fetchFolders(currentPage, pageSize);
+                //fetchFolders(currentPage, pageSize);
             } else {
                 const errorData = await response.json();
                 setLoading(false);
@@ -219,7 +228,7 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
 
             setIsSubmitting(false);
             setOpenModal(false);
-            fetchFolders(1, pageSize);
+            //fetchFolders(1, pageSize);
 
         } catch (err) {
             console.error(err);

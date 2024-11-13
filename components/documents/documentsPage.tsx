@@ -8,8 +8,6 @@ import { ArrowLeft, Plus } from 'lucide-react';
 import LoadingDocuments from './loading';
 import Image from 'next/image';
 import noDocuments from '@/img/no_documents.png';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { FolderPlus, Upload } from 'lucide-react';
 import CreateFolderModal from './createFolderModal';
 import { useContext } from 'react';
 import { FolderContext } from '@/context/folder-context';
@@ -23,10 +21,12 @@ import { PaginationWithLinks } from '@/components/custom-pagination';
 import DocumentHeader from './documentHeader';
 import GetBackButton from '../getback-button';
 import ConfirmDeleteModal from './confirmDeleteModal';
+import { FileCard } from '../custom-file-card';
+import { AuthContext } from '@/context/auth-context';
 
 const PAGE_SIZE = 6;
 
-export default function DocumentsPage({ parentId }: { parentId?: string | null}) {
+export default function DocumentsPage({ parentId }: { parentId?: string | null }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get('page'));
@@ -38,21 +38,29 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null})
   const [editMode, setEditMode] = useState(false);
   const { folders, fetchFolders, loading, totalFolders } = useContext(FolderContext);
   const { fetchChildren, childrenDocsAndFiles, loadingChildren, totalChildren } = useContext(ChildrenContext);
- 
+  
+  //Para autenticación
+  const { keycloak } = useContext(AuthContext);
 
   useEffect(() => {
     if (currentPage < 1 || isNaN(currentPage)) {
       router.push('/pageNotFound');
       return;
     }
-    if (parentId) {
-      fetchChildren(parentId, currentPage, PAGE_SIZE);
+    if (parentId && keycloak) {
+      if (keycloak.token) {
+        fetchChildren(parentId, currentPage, PAGE_SIZE, keycloak?.token);
+      }
     } else {
       // Fetch root folders
-      fetchFolders(currentPage, PAGE_SIZE);
+      if (keycloak) {
+        if (keycloak.token) {
+          fetchFolders(currentPage, PAGE_SIZE, keycloak?.token);
+        }
+      }
     }
 
-  }, [currentPage]);
+  }, [currentPage, keycloak]);
 
   const handleCreateFolder = () => {
     setEditMode(false);
@@ -99,7 +107,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null})
           setOpenModal={setOpenModal}
           editMode={editMode}
           folder={folder}
-          parentId={parentId} 
+          parentId={parentId}
         />
 
         <MoveFolderModal
@@ -135,18 +143,27 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null})
                     (
                       <>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {childrenDocsAndFiles.map((doc) => (
-                            <FolderCard
-                              key={doc.Id}
-                              folder={doc}
-                              fileName={doc.Nombre}
-                              creationDate={doc.FechaCreacion}
-                              onEdit={handleEditFolder}
-                              onDelete={handleDeleteFolder}
-                              onMove={handleMoveFolder}
-                              onClick={handleClick}
-                            />
-                          ))}
+                          {childrenDocsAndFiles.map((doc) =>
+                            doc.Tipo === 'Archivo' ? (
+                              <FileCard
+                                key={doc.Id}
+                                creationDate={doc.FechaCarga}
+                                fileName={doc.NombreArchivo}
+                              />
+                            ) : (
+                              <FolderCard
+                                key={doc.Id}
+                                folder={doc}
+                                fileName={doc.Nombre}
+                                creationDate={doc.FechaCreacion}
+                                onEdit={handleEditFolder}
+                                onDelete={handleDeleteFolder}
+                                onMove={handleMoveFolder}
+                                onClick={handleClick}
+                              />
+                            )
+                          )}
+
                         </div>
                         <div className='flex justify-center text-center mt-5'>
                           <PaginationWithLinks

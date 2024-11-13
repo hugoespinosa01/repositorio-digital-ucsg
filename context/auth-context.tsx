@@ -7,13 +7,16 @@ import Keycloak from 'keycloak-js'
 export const AuthContext = createContext<{
     keycloak: Keycloak | null;
     handleLogout: () => void;
+    token: string | null;
 }>({
     keycloak: null,
-    handleLogout: () => { }
+    handleLogout: () => { },
+    token: null
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [keycloak, setKeycloak] = useState<Keycloak | null>(null);
+    const [token, setToken] = useState<string | null>(null);
 
     useEffect(() => {
         const initKeycloak = async () => {
@@ -21,6 +24,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             try {
                 await keycloakInstance.init({ onLoad: 'login-required' });
                 setKeycloak(keycloakInstance);
+                
+                if (keycloakInstance.token) {
+                    setToken(keycloakInstance.token);
+                }
             } catch (error) {
                 console.error(error)
             }
@@ -43,7 +50,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return (
         <AuthContext.Provider value={{
             keycloak,
-            handleLogout
+            handleLogout,
+            token
         }}>
             {children}
         </AuthContext.Provider>
