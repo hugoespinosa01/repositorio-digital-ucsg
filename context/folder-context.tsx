@@ -2,17 +2,15 @@
 import React, { createContext, useEffect, useState } from "react";
 import { useToast } from '@/components/ui/use-toast';
 import { Folder } from "@/types/folder";
-import { useContext } from "react";
-import { AuthContext } from "./auth-context";
 
 export const FolderContext = createContext<{
     folders: any[];
     fetchFolders: (currentPage: number, pageSize: number, token: string) => Promise<void>;
     loading: boolean;
-    createFolder: (nombre: string, setOpenModal: (open: boolean) => void, parentId: number) => Promise<void>;
-    updateFolder: (id: number, nombre: string, setOpenModal: (open: boolean) => void) => Promise<void>;
-    deleteFolder: (id: number, currentPage: number, pageSize: number) => Promise<void>;
-    moveFolder: (id: number, newId: number, setOpenModal: (open: boolean) => void, pageSize: number) => Promise<void>;
+    createFolder: (nombre: string, setOpenModal: (open: boolean) => void, parentId: number, token: string) => Promise<void>;
+    updateFolder: (id: number, nombre: string, setOpenModal: (open: boolean) => void, token: string) => Promise<void>;
+    deleteFolder: (id: number, currentPage: number, pageSize: number, token: string) => Promise<void>;
+    moveFolder: (id: number, newId: number, setOpenModal: (open: boolean) => void, pageSize: number, token: string) => Promise<void>;
     isSubmitting: boolean;
     totalFolders: number;
     pageSize: number;
@@ -37,8 +35,6 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
     const [loading, setLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [pageSize, setPageSize] = useState(6);
-    const [token, setToken] = useState<string | null>(null);
-
 
     async function fetchFolders(currentPage: number, pageSize: number, token: string) {
         try {
@@ -76,7 +72,7 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }
 
-    async function createFolder(nombre: string, setOpenModal: (open: boolean) => void, parentId: number) {
+    async function createFolder(nombre: string, setOpenModal: (open: boolean) => void, parentId: number, token: string) {
         try {
 
             setIsSubmitting(true);
@@ -126,7 +122,7 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }
 
-    async function updateFolder(id: number, nombre: string, setOpenModal: (open: boolean) => void) {
+    async function updateFolder(id: number, nombre: string, setOpenModal: (open: boolean) => void, token: string) {
         try {
 
             setIsSubmitting(true);
@@ -177,14 +173,17 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }
 
-    async function deleteFolder(id: number, currentPage: number, pageSize: number) {
+    async function deleteFolder(id: number, currentPage: number, pageSize: number, token: string) {
         try {
             setLoading(true);
             const response = await fetch(`/api/folders/${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                }
             });
             if (response.ok) {
-                //fetchFolders(currentPage, pageSize);
+                fetchFolders(currentPage, pageSize, token);
             } else {
                 const errorData = await response.json();
                 setLoading(false);
@@ -203,13 +202,17 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }
 
-    async function moveFolder(id: number, newId: number, setOpenModal: (open: boolean) => void, pageSize: number) {
+    async function moveFolder(id: number, newId: number, setOpenModal: (open: boolean) => void, pageSize: number, token: string) {
         try {
 
             setIsSubmitting(true);
 
             const response = await fetch(`/api/folders/${id}`, {
                 method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : '',
+                },
                 body: JSON.stringify({ IdCarpetaPadre: newId })
             });
 
@@ -228,7 +231,7 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
 
             setIsSubmitting(false);
             setOpenModal(false);
-            //fetchFolders(1, pageSize);
+            fetchFolders(1, pageSize, token);
 
         } catch (err) {
             console.error(err);

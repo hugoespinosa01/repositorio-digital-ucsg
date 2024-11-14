@@ -1,22 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import jwtmod from 'jsonwebtoken';
+import * as jose from 'jose'
 
-export default function middleware(request: NextRequest) {
+export default async function middleware(request: NextRequest) {
 
     const headersList = request.headers;
     const bearerHeader = headersList.get("authorization");
     const token = bearerHeader && bearerHeader.split(" ")[1];
-
-    //Validación de token
-    const publicKey = `-----BEGIN PUBLIC KEY-----\n${process.env.NEXT_PUBLIC_KEY}\n-----END PUBLIC KEY-----`;
 
     if (!token) {
         return NextResponse.json({ "message": "Falta token de acceso, no autorizado" }, { "status": 401 });
     }
 
     try {
-        const decodedToken = jwtmod.verify(token, publicKey, { algorithms: ['RS256'] });
-        console.log('decodedToken', decodedToken);
+        //Validación de token
+        const publicKey = `-----BEGIN PUBLIC KEY-----\n${process.env.NEXT_PUBLIC_KEY}\n-----END PUBLIC KEY-----`;
+        const publicKeyForValidation = await jose.importSPKI(publicKey, "RS256");
+        const { payload } = await jose.jwtVerify(token, publicKeyForValidation);
+        console.log('decodedToken', payload);
 
         return NextResponse.next();
 

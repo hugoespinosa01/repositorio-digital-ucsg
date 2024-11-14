@@ -43,6 +43,7 @@ import {
 } from "lucide-react"
 import { FolderContext } from "@/context/folder-context"
 import { ReloadIcon } from "@radix-ui/react-icons";
+import { AuthContext } from "@/context/auth-context"
 
 
 const formSchema = z.object({
@@ -52,6 +53,7 @@ const formSchema = z.object({
 export default function MoveFolderForm({ idFolder, setOpenModal }: { idFolder: number, setOpenModal: (open: boolean) => void }) {
 
     const { folders, moveFolder, pageSize, isSubmitting } = useContext(FolderContext);
+    const { keycloak } = useContext(AuthContext)
 
     const foldersForMove = folders.filter(folder => folder.Id != idFolder);
 
@@ -62,8 +64,10 @@ export default function MoveFolderForm({ idFolder, setOpenModal }: { idFolder: n
         }
     })
 
-    function onSubmit(values: z.infer<typeof formSchema>) {        
-        moveFolder(idFolder, values.carpeta_destino, setOpenModal, pageSize);
+    function onSubmit(values: z.infer<typeof formSchema>) {    
+        if (keycloak?.token) {
+            moveFolder(idFolder, values.carpeta_destino, setOpenModal, pageSize, keycloak.token);
+        }    
     }
 
     return (

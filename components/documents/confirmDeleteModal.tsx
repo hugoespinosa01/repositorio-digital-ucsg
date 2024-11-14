@@ -11,6 +11,7 @@ import {
 } from "@/components/custom-modal";
 import { Button } from '../ui/button';
 import { FolderContext } from '@/context/folder-context';
+import { AuthContext } from '@/context/auth-context';
 
 interface ConfirmDeleteModalProps {
     openModal: boolean;
@@ -23,10 +24,13 @@ interface ConfirmDeleteModalProps {
 export default function ConfirmDeleteModal({ openModal, setOpenModal, currentPage, idFolder, pageSize }: ConfirmDeleteModalProps) {
 
     const { deleteFolder } = useContext(FolderContext);
+    const { keycloak} = useContext(AuthContext);
 
     const handleAccept = () => {
         setOpenModal(false);
-        deleteFolder(idFolder, currentPage, pageSize)
+        if (keycloak?.token) {
+            deleteFolder(idFolder, currentPage, pageSize, keycloak.token);
+        }
     }
 
     return (
