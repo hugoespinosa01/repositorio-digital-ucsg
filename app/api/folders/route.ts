@@ -1,21 +1,9 @@
 import { NextResponse } from 'next/server';
 import { NextRequest } from "next/server";
 import { prisma } from '@/lib/prisma';
-import { headers } from 'next/headers'
-
 
 export async function GET(request: NextRequest) {
   try {
-
-    const headersList = headers();
-    const bearerHeader = headersList.get("authorization");    
-    const token = bearerHeader && bearerHeader.split(" ")[1];
-
-    if (!token) {
-      return NextResponse.json({ "message": "No autorizado" }, {"status": 401})
-    }
-
-    const response = await fetch('http://localhost:3000/api/auth/verify')
 
     const page = Number(request.nextUrl.searchParams.get('page'));
     const pageSize = Number(request.nextUrl.searchParams.get('page_size'));
