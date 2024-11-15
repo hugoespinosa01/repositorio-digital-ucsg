@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as jose from 'jose'
+import https from 'https';
 
 export default async function middleware(request: NextRequest) {
 
@@ -16,8 +17,47 @@ export default async function middleware(request: NextRequest) {
         const publicKey = `-----BEGIN PUBLIC KEY-----\n${process.env.NEXT_PUBLIC_KEY}\n-----END PUBLIC KEY-----`;
         const publicKeyForValidation = await jose.importSPKI(publicKey, "RS256");
         const { payload } = await jose.jwtVerify(token, publicKeyForValidation);
-        console.log('decodedToken', payload);
+        // const username = payload?.preferred_username as string;
 
+        // // Crear un agente HTTPS con rejectUnauthorized configurado a false
+        // const agent = new https.Agent({
+        //     rejectUnauthorized: false // Desactiva la verificación del certificado
+        // });        
+        // const body = new URLSearchParams();
+        // // body.append('token', token);
+        // body.append('client_id', process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || '');
+        // body.append('client_secret', process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_SECRET || '');
+        // // body.append('username', username);
+        // body.append('grant_type', 'urn:ietf:params:oauth:grant-type:token-exchange');
+        // body.append('audience', process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || '');
+
+        // const getRpt = await fetch(`${process.env.NEXT_PUBLIC_KEYCLOAK_URL}/realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}/protocol/openid-connect/token/introspect`, {
+        //     method: 'POST',
+        //     headers: {
+        //         'Content-Type': 'application/x-www-form-urlencoded',
+        //         'Authorization': `Bearer ${token}`
+        //     },
+        //     body: body.toString(),
+        // });
+
+        // const rpt = await getRpt.json();
+
+        // console.log('RPT:', rpt);
+        
+        
+        // const response = await fetch(`${process.env.NEXT_PUBLIC_KEYCLOAK_URL}/realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}/protocol/openid-connect/token/introspect`, {
+        //     method: 'POST',
+        //     headers: {
+        //         'Content-Type': 'application/x-www-form-urlencoded',
+        //         'Authorization': `Bearer ${token}`
+        //     },
+        //     body: body.toString()
+        // });
+
+        // const data = await response.json();
+
+        // console.log('Data:', data);
+        
         return NextResponse.next();
 
     } catch (error) {
@@ -26,6 +66,8 @@ export default async function middleware(request: NextRequest) {
             message: "Error al validar token, no autorizado",
         }, { "status": 403 });
     }
+
+
 
 }
 
