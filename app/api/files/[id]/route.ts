@@ -8,11 +8,12 @@ interface Params {
 export async function DELETE(request: Request, { params }: Params) {
     try {
 
-        const body = await request.json();
+        //Corregir esto
+        const documentId = params.id;
 
         const deletedFileDetails = await prisma.documentoDetalleKardex.updateMany({
             where: {
-                IdDocumentoKardex: Number(body.IdDocumentoKardex),
+                IdDocumentoKardex: Number(documentId),
             },
             data: {
                 Estado: 0,
@@ -25,7 +26,7 @@ export async function DELETE(request: Request, { params }: Params) {
 
         const deletedTypeFile = await prisma.tipoDocumentoKardex.updateMany({
             where: {
-                IdDocumento: Number(params.id),
+                IdDocumento: Number(documentId),
             },
             data: {
                 Estado: 0,
@@ -38,7 +39,7 @@ export async function DELETE(request: Request, { params }: Params) {
 
         const deletedFile = await prisma.carpeta.update({
             where: {
-                Id: Number(params.id),
+                Id: Number(documentId),
             },
             data: {
                 Estado: 0,
