@@ -66,9 +66,6 @@ export default async function middleware(request: NextRequest) {
             message: "Error al validar token, no autorizado",
         }, { "status": 403 });
     }
-
-
-
 }
 
 export const config = {

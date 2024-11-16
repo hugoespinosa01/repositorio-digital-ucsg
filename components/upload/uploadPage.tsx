@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/components/ui/use-toast';
@@ -8,17 +8,30 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import FileUpload from '@/components/custom-fileuploader';
 import GetBackButton from '../getback-button';
+import { ReloadIcon } from '@radix-ui/react-icons';
+import { useContext } from 'react';
+import { AuthContext } from '@/context/auth-context';
 
 const MAX_FILE_SIZE = 1024 * 1024 * 10; // 10MB
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [token, setToken] = useState<string>('');
+  
   const router = useRouter();
   const { register, handleSubmit } = useForm();
   const { toast } = useToast();
+  const {keycloak} = useContext(AuthContext);
 
+  useEffect(() => {
+    if (keycloak?.token) {
+      setToken(keycloak.token);
+    }
+  }, [keycloak]);
 
   const onSubmit = async () => {
+    setIsSubmitting(true);
     if (!file) {
       toast({
         title: "Error",
@@ -48,6 +61,9 @@ export default function UploadPage() {
       const response = await fetch("/api/files", {
         method: "POST",
         body: formData,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }
       });
 
       if (response.ok) {
@@ -58,8 +74,7 @@ export default function UploadPage() {
         });
         router.push("/documents?page=1");
       }
-
-      console.log(response);
+      console.log("Archivo subido");
 
     } catch (err) {
       toast({
@@ -67,8 +82,9 @@ export default function UploadPage() {
         description: "Hubo un problema al subir el documento.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
-
   };
 
   return (
@@ -95,7 +111,20 @@ export default function UploadPage() {
                 • Solo se permiten archivos PDF
               </p>
             </div>
-            <Button type="submit">Cargar</Button>
+            {
+              isSubmitting ? (
+                <Button
+                  disabled
+                  className="w-full sm:w-auto min-w-[120px]"
+                >
+                  <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                  Cargando...
+                </Button>
+              ) :
+                <Button type="submit" className='w-full sm:w-auto min-w-[120px]'>
+                  Cargar
+                </Button>
+            }
           </form>
         </div>
       </CardContent>

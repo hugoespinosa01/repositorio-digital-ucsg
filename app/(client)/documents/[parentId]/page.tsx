@@ -14,11 +14,16 @@ import DocumentsPage from "../../../../components/documents/documentsPage";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Folder } from "@/types/folder";
+import { useContext } from "react";
+import { AuthContext } from "@/context/auth-context";
+import LoadingBreadcrumb from "@/components/documents/loadingBreadcrumb";
 
 export default function DocumentDetail() {
 
   const params = useParams<{ parentId: string }>();
   const [parent, setParent] = useState<Folder | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const { keycloak } = useContext(AuthContext);
 
   const path = parent?.Ruta ?? '/';
   const pathArray = path.split('/');
@@ -37,69 +42,77 @@ export default function DocumentDetail() {
     }
   });
 
-
-  const fetchParent = async () => {
+  const fetchParent = async (token: string) => {
     // Fetch parent data
-    const response = await fetch(`/api/folders/${params.parentId}`);
+    setLoading(true);
+    const response = await fetch(`/api/folders/${params.parentId}`, {
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '',
+      }
+    });
     const res = await response.json();
     setParent(res.data);
+    setLoading(false);
   }
 
   useEffect(() => {
-    if (params.parentId) {
-      fetchParent();
+    if (params.parentId && keycloak?.token) {
+      fetchParent(keycloak.token);
     }
-  }, [params.parentId]);
+  }, [params.parentId, keycloak]);
 
   return (
     <ContentLayout title="Sinergia">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/">Inicio</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href={'/documents?page=1'}>Mis documentos</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          {
-            parent && pathsForBreadcrumb.map((item, index) => {
-              if (index === pathsForBreadcrumb.length - 1) {
-                return (
-                  <>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem key={index}>
-                      <BreadcrumbPage>
-                        {item?.name}
-                      </BreadcrumbPage>
-                    </BreadcrumbItem>
-                  </>
-                )
-              } else {
-                return (
-                  <>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem key={index}>
-                      <BreadcrumbLink asChild>
-                        <Link href={`/documents/${item?.id}?page=1`}>{item?.name}</Link>
-                      </BreadcrumbLink>
-                    </BreadcrumbItem>
-                  </>
-                )
-              }
 
+      {
+        loading ? (
+          <LoadingBreadcrumb />
+        ) : (<Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/">Inicio</Link>
+              </BreadcrumbLink >
+            </BreadcrumbItem >
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href={'/documents?page=1'}>Mis documentos</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            {
+              parent && pathsForBreadcrumb.map((item, index) => {
+                if (index === pathsForBreadcrumb.length - 1) {
+                  return (
+                    <>
+                      <BreadcrumbSeparator />
+                      <BreadcrumbItem key={index}>
+                        <BreadcrumbPage>
+                          {item?.name}
+                        </BreadcrumbPage>
+                      </BreadcrumbItem>
+                    </>
+                  )
+                } else {
+                  return (
+                    <>
+                      <BreadcrumbSeparator />
+                      <BreadcrumbItem key={index}>
+                        <BreadcrumbLink asChild>
+                          <Link href={`/documents/${item?.id}?page=1`}>{item?.name}</Link>
+                        </BreadcrumbLink>
+                      </BreadcrumbItem>
+                    </>
+                  )
+                }
+              })
+            }
+          </BreadcrumbList >
+        </Breadcrumb >)
+      }
 
-            })
-          }
-
-        </BreadcrumbList>
-      </Breadcrumb>
-      <DocumentsPage parentId={params.parentId}/>
-    </ContentLayout>
+      <DocumentsPage parentId={params.parentId} />
+    </ContentLayout >
   )
 }
 

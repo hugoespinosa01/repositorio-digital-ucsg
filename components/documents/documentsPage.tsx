@@ -83,8 +83,13 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
     setOpenMoveModal(true);
   }
 
-  const handleClick = (id: number) => {
+  const handleFolderClick = (id: number) => {
     router.push(`/documents/${id}?page=1`);
+  }
+
+  const handleFileClick = (id: number) => {
+    console.log('File clicked', id);
+    router.push(`/files/${id}?page=1`);
   }
 
   return (
@@ -146,7 +151,9 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                           {childrenDocsAndFiles.map((doc) =>
                             doc.Tipo === 'Archivo' ? (
                               <FileCard
+                                onClick={handleFileClick}
                                 key={doc.Id}
+                                file={doc}
                                 creationDate={doc.FechaCarga}
                                 fileName={doc.NombreArchivo}
                               />
@@ -159,7 +166,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                                 onEdit={handleEditFolder}
                                 onDelete={handleDeleteFolder}
                                 onMove={handleMoveFolder}
-                                onClick={handleClick}
+                                onClick={handleFolderClick}
                               />
                             )
                           )}
@@ -192,7 +199,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                             onEdit={handleEditFolder}
                             onDelete={handleDeleteFolder}
                             onMove={handleMoveFolder}
-                            onClick={handleClick}
+                            onClick={handleFolderClick}
                           />
 
                         ))}

@@ -96,6 +96,7 @@ export async function POST(request: NextRequest) {
             ]
         }
 
+        // Cambiar, está quemado
         const ruta = '/ucsg/Computación/'
         const idCarpeta = 26;
         const extension = file.name.substring(file.name.lastIndexOf('.') + 1);
@@ -115,6 +116,10 @@ export async function POST(request: NextRequest) {
             }
         });
 
+        if (!newDocumento) {
+            return NextResponse.json({ error: 'Error creando documento' }, { status: 500 });
+        }       
+
         // Creo el tipo de documento kardex
         const tipoDocKardex = await prisma.tipoDocumentoKardex.create({
             data: {
@@ -124,6 +129,10 @@ export async function POST(request: NextRequest) {
                 Estado: 1
             }
         });
+
+        if (!tipoDocKardex) {
+            return NextResponse.json({ error: 'Error creando tipo de documento kardex' }, { status: 500 });
+        }
 
         // Creo los detalles del kardex
         for (let materia of datosExtraidos.materiasAprobadas) {

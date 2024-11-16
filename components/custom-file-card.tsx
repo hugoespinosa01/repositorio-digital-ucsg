@@ -4,12 +4,13 @@ import { File, Pencil, Trash2 } from 'lucide-react';
 interface FileCardProps {
   fileName: string;
   creationDate: string;
+  file: any;
   onEdit?: () => void;
   onDelete?: () => void;
-  onClick?: () => void;
+  onClick?: (id: number) => void;
 }
 
-export function FileCard({ fileName, creationDate, onEdit, onDelete, onClick }: FileCardProps) {
+export function FileCard({ fileName, creationDate, file, onEdit, onDelete, onClick }: FileCardProps) {
   const [showActions, setShowActions] = React.useState(false);
 
   const handleActionClick = (e: React.MouseEvent, action: () => void) => {
@@ -22,7 +23,7 @@ export function FileCard({ fileName, creationDate, onEdit, onDelete, onClick }: 
       className="relative group rounded-lg p-4 border border-gray-200 hover:border-primary hover:shadow-lg transition-all duration-200 cursor-pointer w-full"
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
-      onClick={onClick}
+      onClick={() => onClick && onClick(file?.Id)}
     >
       <div className="flex items-start justify-between">
         <div className="flex items-center space-x-3 min-w-0">
@@ -39,13 +40,6 @@ export function FileCard({ fileName, creationDate, onEdit, onDelete, onClick }: 
 
         <div className={`relative ml-2 shrink-0 ${showActions ? 'visible' : 'invisible group-hover:visible'}`}>
           <div className="absolute right-0 top-0 flex items-center space-x-1">
-            <button
-              onClick={(e) => onEdit && handleActionClick(e, onEdit)}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-              title="Edit"
-            >
-              <Pencil className="w-4 h-4 text-gray-600 hover:text-blue-600" />
-            </button>
             <button
               onClick={(e) => onDelete && handleActionClick(e, onDelete)}
               className="p-1 hover:bg-gray-100 rounded-full transition-colors"
