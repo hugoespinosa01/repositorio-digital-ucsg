@@ -11,7 +11,12 @@ export async function GET(request: NextRequest) {
     const carpetas = await prisma.carpeta.findMany({
       where: {
         IdCarpetaPadre: null,
-        Estado: 1
+        Estado: 1,
+        Carrera: {
+          Nombre: {
+            in: ['Ingeniería en Sistemas Computacionales', 'Ingeniería en Tecnologías de la Información']
+          }
+        }
       },
       skip: (page - 1) * pageSize,
       take: pageSize,
@@ -37,10 +42,9 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching folders:', error);
     const errResponse = {
       error: 'Error fetching folders',
-      status: 500,
       message: error,
     }
-    return NextResponse.json(errResponse);
+    return NextResponse.json(errResponse, { status: 500 });
   }
 }
 

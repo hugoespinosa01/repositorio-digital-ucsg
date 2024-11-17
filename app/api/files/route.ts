@@ -4,10 +4,25 @@ import { prisma } from '@/lib/prisma';
 import { Documento } from '@/types/file';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
+import { AzureKeyCredential, DocumentAnalysisClient } from "@azure/ai-form-recognizer";
 
 dotenv.config();
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
 const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME || '';
+
+interface ExtractedData {
+    Alumno : string;
+    Carrera : string;
+    NoIdentificacion : string;
+    "detalle-materias" : {
+        Nivel : string;
+        Materia : string;
+        Periodo : string;
+        Calificacion : number;
+        NoMatricula : number;
+    }
+}
+
 
 export async function GET(request: Request) {
     try {
@@ -58,19 +73,25 @@ export async function POST(request: NextRequest) {
         const containerClient = blobServiceClient.getContainerClient(containerName);
         const blobName = `${uuidv4()}.pdf`;
         const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-    
+
         const blobResponse = await blockBlobClient.uploadData(pdfData, {
-          blobHTTPHeaders: { blobContentType: 'application/pdf' }
+            blobHTTPHeaders: { blobContentType: 'application/pdf' }
         });
-        
+
         if (!blobResponse) {
             return NextResponse.json({ error: 'Error uploading to blob storage' }, { status: 500 });
         }
 
+        const extractedData = await extractData(pdfData);
+
+        if (!extractedData) {
+            return NextResponse.json({ error: 'Error extracting data' }, { status: 500 });
+        }
+
         //Extraigo datos del documento (producto de Azure AI Intelligence)
         const datosExtraidos = {
-            alumno: "Alejandro Martínez",
-            noIdentificacion: "0926661265",
+            alumno: 'Hugo Espinosa',
+            noIdentificacion: '123456',
             materiasAprobadas: [
                 {
                     ciclo: "2021-1",
@@ -118,7 +139,7 @@ export async function POST(request: NextRequest) {
 
         if (!newDocumento) {
             return NextResponse.json({ error: 'Error creando documento' }, { status: 500 });
-        }       
+        }
 
         // Creo el tipo de documento kardex
         const tipoDocKardex = await prisma.tipoDocumentoKardex.create({
@@ -167,29 +188,60 @@ export async function POST(request: NextRequest) {
     }
 }
 
+const extractData = async (file: ArrayBuffer) => {
+    try {
+        const endpoint = process.env.FORM_RECOGNIZER_ENDPOINT || "<endpoint>";
+        const credential = new AzureKeyCredential(process.env.FORM_RECOGNIZER_API_KEY || "<api key>");
+        const client = new DocumentAnalysisClient(endpoint, credential);
+
+        const modelId = process.env.FORM_RECOGNIZER_CUSTOM_MODEL_ID || "<custom model ID>";
+
+        const poller = await client.beginAnalyzeDocument(
+            modelId,
+            file
+        );
+
+        const { documents } = await poller.pollUntilDone();
+
+        console.log("Extracted data:", documents);
+
+
+        if (!documents) {
+            return NextResponse.json({ error: 'Error extracting data' }, { status: 500 });
+        }
+
+        return documents[0].fields;
+
+    } catch (err) {
+        console.error('Error extracting data:', err);
+        return NextResponse.json({ error: 'Error extracting data', status: 500 });
+    }
+
+}
+
 const uploadToBlobStorage = async (file: Documento) => {
     const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
     const containerClient = blobServiceClient.getContainerClient(containerName);
 
     // Check if the container exists
     const containerExists = await containerClient.exists();
-    
+
     if (!containerExists) {
-      console.error(`Container '${containerName}' does not exist`);
-      return NextResponse.json({ error: 'Container not found' }, { status: 404 });
+        console.error(`Container '${containerName}' does not exist`);
+        return NextResponse.json({ error: 'Container not found' }, { status: 404 });
     }
 
     const documents = [];
     for await (const blob of containerClient.listBlobsFlat()) {
-      const blobClient = containerClient.getBlobClient(blob.name);
-      const properties = await blobClient.getProperties();
-      
-      documents.push({
-        id: blob.name,
-        title: properties.metadata?.title || 'Sin título',
-        description: properties.metadata?.description || 'Sin descripción',
-        uploadDate: properties.createdOn,
-      });
+        const blobClient = containerClient.getBlobClient(blob.name);
+        const properties = await blobClient.getProperties();
+
+        documents.push({
+            id: blob.name,
+            title: properties.metadata?.title || 'Sin título',
+            description: properties.metadata?.description || 'Sin descripción',
+            uploadDate: properties.createdOn,
+        });
     }
 
     return documents;

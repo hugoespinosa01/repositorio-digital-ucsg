@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as jose from 'jose'
-import https from 'https';
 
 export default async function middleware(request: NextRequest) {
 
