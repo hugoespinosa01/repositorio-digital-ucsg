@@ -10,18 +10,31 @@ dotenv.config();
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
 const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME || '';
 
-interface ExtractedData {
-    Alumno : string;
-    Carrera : string;
-    NoIdentificacion : string;
-    "detalle-materias" : {
-        Nivel : string;
-        Materia : string;
-        Periodo : string;
-        Calificacion : number;
-        NoMatricula : number;
-    }
+interface Materia {
+    ciclo: string;
+    materia: string;
+    periodo: string;
+    calificacion: string
+    noMatricula: string;
 }
+
+interface ExtractedData {
+    Alumno: { value: string };
+    Carrera: { value: string };
+    NoIdentificacion: { value: string };
+    "detalle-materias": {
+        values: Array<{
+            properties: {
+                Nivel?: { value: string };
+                Materia?: { value: string };
+                periodo?: { value: string };
+                Calificacion?: { value: string };
+                noMatricula?: { value: string };
+            };
+        }>;
+    };
+}
+
 
 
 export async function GET(request: Request) {
@@ -82,43 +95,38 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Error uploading to blob storage' }, { status: 500 });
         }
 
-        const extractedData = await extractData(pdfData);
+        const extractedData = await extractData(pdfData) as unknown as ExtractedData;
 
         if (!extractedData) {
-            return NextResponse.json({ error: 'Error extracting data' }, { status: 500 });
+            throw new Error('Error extracting data');
         }
 
         //Extraigo datos del documento (producto de Azure AI Intelligence)
         const datosExtraidos = {
-            alumno: 'Hugo Espinosa',
-            noIdentificacion: '123456',
-            materiasAprobadas: [
-                {
-                    ciclo: "2021-1",
-                    materia: "Matemáticas",
-                    periodo: "Ordinario",
-                    calificacion: 10,
-                    noMatricula: 1,
-                },
-                {
-                    ciclo: "2021-1",
-                    materia: "Física",
-                    periodo: "Ordinario",
-                    calificacion: 9,
-                    noMatricula: 2,
-                },
-                {
-                    ciclo: "2021-1",
-                    materia: "Química",
-                    periodo: "Ordinario",
-                    calificacion: 8,
-                    noMatricula: 3,
-                }
-            ]
+            alumno: extractedData.Alumno.value ?? '',
+            noIdentificacion: extractedData.NoIdentificacion.value ?? '',
+            carrera: extractedData.Carrera.value ?? '',
+            materiasAprobadas: [] as Materia[]
+        }
+        // Verifica que "detalle-materias" y sus valores existan antes de iterar
+        if (extractedData["detalle-materias"]?.values) {
+            for (const materia of extractedData["detalle-materias"].values) {
+                // Validación y mapeo seguro
+                datosExtraidos.materiasAprobadas.push({
+                    ciclo: materia.properties?.Nivel?.value ?? "", // Asegúrate de que "Nivel" exista
+                    materia: materia.properties?.Materia?.value ?? "",
+                    periodo: materia.properties?.periodo?.value ?? "",
+                    calificacion: materia.properties?.Calificacion?.value ?? "",
+                    noMatricula: materia.properties?.noMatricula?.value ?? ""
+                });
+            }
         }
 
         // Cambiar, está quemado
-        const ruta = '/ucsg/Computación/'
+
+        const carrera = checkCarrera(datosExtraidos.carrera);
+
+        const ruta = `/ucsg/${carrera}/`
         const idCarpeta = 26;
         const extension = file.name.substring(file.name.lastIndexOf('.') + 1);
 
@@ -147,7 +155,8 @@ export async function POST(request: NextRequest) {
                 IdDocumento: newDocumento.Id,
                 Alumno: datosExtraidos.alumno,
                 NoIdentificacion: datosExtraidos.noIdentificacion,
-                Estado: 1
+                Estado: 1,
+                Carrera: datosExtraidos.carrera
             }
         });
 
@@ -163,7 +172,7 @@ export async function POST(request: NextRequest) {
                     Materia: materia.materia,
                     Periodo: materia.periodo,
                     Calificacion: materia.calificacion,
-                    NoMatricula: materia.noMatricula,
+                    NoMatricula: Number(materia.noMatricula),
                     Estado: 1,
                     IdDocumentoKardex: tipoDocKardex.Id
                 }
@@ -245,6 +254,14 @@ const uploadToBlobStorage = async (file: Documento) => {
     }
 
     return documents;
+}
+
+const checkCarrera = (carrera: string) => {
+    if (carrera.toLowerCase().includes('sistemas')) {
+        return 'Ingeniería en Computación';
+    } else if (carrera.toLowerCase().includes('civil')) {
+        return 'Ingeniería Civil';
+    }
 }
 
 const validateDocument = async (documento: Documento) => {

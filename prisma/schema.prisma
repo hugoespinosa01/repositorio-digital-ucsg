@@ -93,6 +93,7 @@ model TipoDocumentoKardex {
   Alumno                 String?                  @db.VarChar(255)
   NoIdentificacion       String?                  @db.VarChar(255)
   Estado                 Int?
+  Carrera                String?                  @db.VarChar(100)
   DocumentoDetalleKardex DocumentoDetalleKardex[]
   Documento              Documento?               @relation(fields: [IdDocumento], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "IdDocumento_fk")
 }
