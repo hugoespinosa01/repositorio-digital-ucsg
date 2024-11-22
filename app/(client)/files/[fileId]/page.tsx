@@ -1,3 +1,5 @@
+'use client';
+
 import Link from "next/link";
 
 import { ContentLayout } from "@/components/admin-panel/content-layout";
@@ -10,8 +12,12 @@ import {
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
 import FilesPage from "@/components/files/filesPage";
+import { useParams } from "next/navigation";
 
 export default function DashboardPage() {
+
+  const params = useParams<{ fileId: string }>();
+
 
   return (
     <ContentLayout title="Sinergia">
@@ -28,7 +34,7 @@ export default function DashboardPage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <FilesPage />
+      <FilesPage fileId={params.fileId}/>
     </ContentLayout>
   );
 }

@@ -12,11 +12,6 @@ export async function GET(request: NextRequest) {
       where: {
         IdCarpetaPadre: null,
         Estado: 1,
-        Carrera: {
-          Nombre: {
-            in: ['Ingeniería en Sistemas Computacionales', 'Ingeniería en Tecnologías de la Información']
-          }
-        }
       },
       skip: (page - 1) * pageSize,
       take: pageSize,

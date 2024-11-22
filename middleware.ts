@@ -3,25 +3,21 @@ import * as jose from 'jose'
 
 export default async function middleware(request: NextRequest) {
 
-    // const headersList = request.headers;
-    // const bearerHeader = headersList.get("authorization");
-    // const token = bearerHeader && bearerHeader.split(" ")[1];
+    const headersList = request.headers;
+    const bearerHeader = headersList.get("authorization");
+    const token = bearerHeader && bearerHeader.split(" ")[1];
 
-    // if (!token) {
-    //     return NextResponse.json({ "message": "Falta token de acceso, no autorizado" }, { "status": 401 });
-    // }
+    if (!token) {
+        return NextResponse.json({ "message": "Falta token de acceso, no autorizado" }, { "status": 401 });
+    }
 
     try {
         //Validación de token
-        // const publicKey = `-----BEGIN PUBLIC KEY-----\n${process.env.NEXT_PUBLIC_KEY}\n-----END PUBLIC KEY-----`;
-        // const publicKeyForValidation = await jose.importSPKI(publicKey, "RS256");
-        // const { payload } = await jose.jwtVerify(token, publicKeyForValidation);
-        // const username = payload?.preferred_username as string;
-
-        // // Crear un agente HTTPS con rejectUnauthorized configurado a false
-        // const agent = new https.Agent({
-        //     rejectUnauthorized: false // Desactiva la verificación del certificado
-        // });        
+        const publicKey = `-----BEGIN PUBLIC KEY-----\n${process.env.NEXT_PUBLIC_KEY}\n-----END PUBLIC KEY-----`;
+        const publicKeyForValidation = await jose.importSPKI(publicKey, "RS256");
+        const { payload } = await jose.jwtVerify(token, publicKeyForValidation);
+        const username = payload?.preferred_username as string;
+      
         // const body = new URLSearchParams();
         // // body.append('token', token);
         // body.append('client_id', process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || '');

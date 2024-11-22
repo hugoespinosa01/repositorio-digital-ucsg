@@ -60,7 +60,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
       }
     }
 
-  }, [currentPage]);
+  }, [currentPage, keycloak]);
 
   const handleCreateFolder = () => {
     setEditMode(false);
