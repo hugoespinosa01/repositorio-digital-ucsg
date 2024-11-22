@@ -122,8 +122,6 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // Cambiar, está quemado
-
         const carrera = checkCarrera(datosExtraidos.carrera);
 
         const ruta = `/ucsg/${carrera}/`
