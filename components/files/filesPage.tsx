@@ -1,6 +1,6 @@
 "use client";
 
-import {  useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import LoadingDocuments from '@/components/documents/loading';
 import { useContext } from 'react';
@@ -12,18 +12,20 @@ import { AuthContext } from '@/context/auth-context';
 import Datatable from '../dataTable/Datatable';
 import { GetColumns } from '../dataTable/Columns';
 import { useRouter } from 'next/navigation';
+import { AspectRatio } from '../ui/aspect-ratio';
+import PDFViewer from '../pdf-viewer';
 
 interface FileData {
   Estado: number;
   Extension: string;
-  FechaCarga : string;
-  Id : number;
-  IdCarpeta : number;
-  NombreArchivo : string;
-  RefArchivo : string;
-  Ruta : string;
-  Tamano  : number;
-  Tipo : string;
+  FechaCarga: string;
+  Id: number;
+  IdCarpeta: number;
+  NombreArchivo: string;
+  RefArchivo: string;
+  Ruta: string;
+  Tamano: number;
+  Tipo: string;
 }
 
 export default function FilesPage({ fileId }: { fileId?: string | null }) {
@@ -38,7 +40,6 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
   //Para autenticación
   const { keycloak } = useContext(AuthContext);
 
-  console.log('fileId:', fileId);
 
 
   useEffect(() => {
@@ -46,11 +47,12 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
       router.push('/pageNotFound');
       return;
     }
-    if (fileId && keycloak) {
-      if (keycloak.token) {
-        fetchFile(fileId);
-      }
+    //if (fileId && keycloak) {
+    //if (keycloak.token) {
+    if (fileId) {
+      fetchFile(fileId);
     }
+
 
   }, [currentPage, keycloak]);
 
@@ -73,7 +75,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
     <Card className='p-5 mt-5'>
       <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between'>
         <CardTitle>
-          <h1 className="text-2xl font-bold mb-4">Archivo detalle</h1>
+          <h1 className="text-2xl font-bold mb-4">Detalle del archivo</h1>
           <GetBackButton />
         </CardTitle>
       </CardHeader>
@@ -86,16 +88,36 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
         ) :
           (
             <div className="container mx-auto p-4">
-              <strong>Estudiante: </strong>
-              <p>{fileData?.NombreArchivo}</p>
-              <div className='w-full'>
-                <Datatable
-                  title='Detalle de materias aprobadas'
-                  description=''
-                  columns={columns}
-                  data={[]}
+              <div className="grid grid-cols-2 md:grid-cols-2 gap-6">
+                <PDFViewer
+                  pdfUrl='/pdf/sample.pdf'
                 />
+                <h2 className="text-2xl font-bold mb-4 col-span-2 md:col-span-1">Información del estudiante</h2>
+                <div className="grid grid-cols-1 gap-2 text-sm">
+                  <div className="grid grid-cols-2">
+                    <dt className="font-semibold">Name:</dt>
+                    <dd>{fileData?.NombreArchivo}</dd>
+                  </div>
+                  <div className="grid grid-cols-2">
+                    <dt className="font-semibold">Email:</dt>
+                    <dd>{fileData?.Extension}</dd>
+                  </div>
+                  <div className="grid grid-cols-2">
+                    <div className="font-semibold">Enrollment Date:</div>
+                    <div>{fileData?.RefArchivo}</div>
+                  </div>
+                </div>
               </div>
+
+                <div className='w-full'>
+                  <Datatable
+                    title='Detalle de materias aprobadas'
+                    description=''
+                    columns={columns}
+                    data={[]}
+                  />
+                </div>
+
             </div>
           )}
       </CardContent>

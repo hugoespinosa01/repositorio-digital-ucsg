@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Plus } from 'lucide-react';
 import LoadingDocuments from './loading';
 import Image from 'next/image';
 import noDocuments from '@/img/no_documents.png';
@@ -39,6 +38,9 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
   const { folders, fetchFolders, loading, totalFolders } = useContext(FolderContext);
   const { fetchChildren, childrenDocsAndFiles, loadingChildren, totalChildren } = useContext(ChildrenContext);
   
+  console.log('Folders:', parentId);
+
+
   //Para autenticación
   const { keycloak } = useContext(AuthContext);
 
@@ -47,20 +49,21 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
       router.push('/pageNotFound');
       return;
     }
-    if (parentId && keycloak) {
-      if (keycloak.token) {
-        fetchChildren(parentId, currentPage, PAGE_SIZE, keycloak?.token);
-      }
+    if (parentId) {
+    //if (parentId && keycloak) {
+      //if (keycloak.token) {
+        fetchChildren(parentId, currentPage, PAGE_SIZE, '');
+     // }
     } else {
       // Fetch root folders
-      if (keycloak) {
-        if (keycloak.token) {
-          fetchFolders(currentPage, PAGE_SIZE, keycloak?.token);
-        }
-      }
+      //if (keycloak) {
+        //if (keycloak.token) {
+          fetchFolders(currentPage, PAGE_SIZE, '');
+        //}
+     // }
     }
 
-  }, [currentPage, keycloak]);
+  }, [currentPage]);
 
   const handleCreateFolder = () => {
     setEditMode(false);
