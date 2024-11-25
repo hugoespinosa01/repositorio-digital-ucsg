@@ -5,6 +5,8 @@ import { Documento } from '@/types/file';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 import { AzureKeyCredential, DocumentAnalysisClient } from "@azure/ai-form-recognizer";
+import { loadIntoPinecone } from '@/lib/pinecone';
+import { ExtractedData } from '@/types/extractedData';
 
 dotenv.config();
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
@@ -16,23 +18,6 @@ interface Materia {
     periodo: string;
     calificacion: string
     noMatricula: string;
-}
-
-interface ExtractedData {
-    Alumno: { value: string };
-    Carrera: { value: string };
-    NoIdentificacion: { value: string };
-    "detalle-materias": {
-        values: Array<{
-            properties: {
-                Nivel?: { value: string };
-                Materia?: { value: string };
-                periodo?: { value: string };
-                Calificacion?: { value: string };
-                noMatricula?: { value: string };
-            };
-        }>;
-    };
 }
 
 
@@ -100,6 +85,9 @@ export async function POST(request: NextRequest) {
         if (!extractedData) {
             throw new Error('Error extracting data');
         }
+
+        // Subo a la base de conocimeintos (usar modelo prebuilt-layout)
+        await loadIntoPinecone(extractedData);
 
         //Extraigo datos del documento (producto de Azure AI Intelligence)
         const datosExtraidos = {

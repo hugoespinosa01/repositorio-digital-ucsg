@@ -8,9 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import FileUpload from '@/components/custom-fileuploader';
 import GetBackButton from '../getback-button';
-import { ReloadIcon } from '@radix-ui/react-icons';
 import { useContext } from 'react';
 import { AuthContext } from '@/context/auth-context';
+import { Loader2 } from 'lucide-react';
 
 const MAX_FILE_SIZE = 1024 * 1024 * 10; // 10MB
 
@@ -103,6 +103,7 @@ export default function UploadPage() {
             <FileUpload
               file={file}
               setFile={setFile}
+              isSubmitting={isSubmitting}
             />
             <div>
               <p>
@@ -117,7 +118,7 @@ export default function UploadPage() {
                   disabled
                   className="w-full sm:w-auto min-w-[120px]"
                 >
-                  <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Cargando...
                 </Button>
               ) :

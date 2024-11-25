@@ -26,7 +26,7 @@ import {
 import {
   Input
 } from "@/components/ui/input"
-import { ReloadIcon } from "@radix-ui/react-icons";
+import { Loader2 } from "lucide-react";
 import { FolderContext } from "@/context/folder-context";
 import { Folder } from "@/types/folder";
 import { AuthContext } from "@/context/auth-context";
@@ -103,7 +103,7 @@ export default function CreateFolderForm({editMode, setOpenModal, folder, parent
           {
             isSubmitting ? (
               <Button disabled className="w-full sm:w-auto min-w-[120px]">
-                <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Cargando...
               </Button>
             ) : 

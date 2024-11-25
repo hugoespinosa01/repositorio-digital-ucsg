@@ -42,7 +42,7 @@ import {
     ChevronsUpDown,
 } from "lucide-react"
 import { FolderContext } from "@/context/folder-context"
-import { ReloadIcon } from "@radix-ui/react-icons";
+import { Loader2 } from "lucide-react";
 import { AuthContext } from "@/context/auth-context"
 
 
@@ -140,7 +140,7 @@ export default function MoveFolderForm({ idFolder, setOpenModal }: { idFolder: n
                     {
                         isSubmitting ?
                             <Button disabled className="w-full sm:w-auto min-w-[120px]" type="submit">
-                                <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 Cargando...
                             </Button> :
                             <Button className="w-full sm:w-auto min-w-[120px]" type="submit">Aceptar</Button>
