@@ -25,7 +25,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Sheet } from "lucide-react";
+import { Expand, Sheet } from "lucide-react";
 
 interface DatatableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -33,6 +33,7 @@ interface DatatableProps<TData, TValue> {
   title: string;
   description: string;
   onExport?: () => void;
+  onClickExpand: () => void; 
 }
 
 export default function Datatable<TData extends any, TValue>({
@@ -41,6 +42,7 @@ export default function Datatable<TData extends any, TValue>({
   columns,
   data,
   onExport,
+  onClickExpand
 }: DatatableProps<TData, TValue>) {
   const PAGE_SIZE = 5;
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -79,6 +81,12 @@ export default function Datatable<TData extends any, TValue>({
                 Exportar a Excel
               </Button>
             )}
+            <Button
+              variant={'ghost'}
+              onClick={onClickExpand}
+            >
+              <Expand className="w-4 h-4" />
+            </Button>
           </div>
         </CardTitle>
         <CardDescription>{description}</CardDescription>
@@ -94,9 +102,9 @@ export default function Datatable<TData extends any, TValue>({
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   );
                 })}

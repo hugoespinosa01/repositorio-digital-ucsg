@@ -14,6 +14,19 @@ import { GetColumns } from '../dataTable/Columns';
 import { useRouter } from 'next/navigation';
 import { AspectRatio } from '../ui/aspect-ratio';
 import PDFViewer from '../pdf-viewer';
+import { Button } from '../ui/button';
+import { DownloadIcon, File, FileDown } from 'lucide-react';
+import {
+  Credenza,
+  CredenzaBody,
+  CredenzaClose,
+  CredenzaContent,
+  CredenzaDescription,
+  CredenzaFooter,
+  CredenzaHeader,
+  CredenzaTitle,
+} from "@/components/custom-modal";
+
 
 interface FileData {
   Estado: number;
@@ -30,6 +43,7 @@ interface FileData {
 
 export default function FilesPage({ fileId }: { fileId?: string | null }) {
   const [fileData, setFileData] = useState<FileData | null>(null);
+  const [openModal, setOpenModal] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -70,6 +84,10 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
     setLoading(false);
   }
 
+  const onClickExpand = () => {
+    setOpenModal(true);
+  };
+
 
   return (
     <Card className='p-5 mt-5'>
@@ -92,32 +110,81 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
                 <PDFViewer
                   pdfUrl='/pdf/sample.pdf'
                 />
-                <h2 className="text-2xl font-bold mb-4 col-span-2 md:col-span-1">Información del estudiante</h2>
-                <div className="grid grid-cols-1 gap-2 text-sm">
-                  <div className="grid grid-cols-2">
-                    <dt className="font-semibold">Name:</dt>
+                <div>
+                  <h2 className="text-2xl font-bold mb-4 col-span-2 md:col-span-1">Información del estudiante</h2>
+
+                  <div className="p-0 justify-between">
+
+                    <Button
+                      variant={'default'}
+                      className='mr-4'
+                    >
+                      <DownloadIcon className='mr-5' />
+                      Descargar archivo
+                    </Button>
+                    <Button
+                      variant={'default'}
+                    >
+                      <FileDown className='mr-3' />
+                      Descargar reporte
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-2 mt-5 mb-2">
+                    <dt className="font-semibold">Estudiante:</dt>
                     <dd>{fileData?.NombreArchivo}</dd>
                   </div>
-                  <div className="grid grid-cols-2">
-                    <dt className="font-semibold">Email:</dt>
+                  <div className="grid grid-cols-2 mb-2">
+                    <dt className="font-semibold">Número de identificación:</dt>
                     <dd>{fileData?.Extension}</dd>
                   </div>
-                  <div className="grid grid-cols-2">
-                    <div className="font-semibold">Enrollment Date:</div>
+                  <div className="grid grid-cols-2 mb-2">
+                    <div className="font-semibold">Carrera:</div>
                     <div>{fileData?.RefArchivo}</div>
                   </div>
+                  <div className="grid grid-cols-2 mb-2">
+                    <div className="font-semibold">Nota de seminario / graduación:</div>
+                    <div>{fileData?.RefArchivo}</div>
+                  </div>
+
+                  <div className='w-full mt-5'>
+                    <Datatable
+                      title='Detalle de materias aprobadas'
+                      description=''
+                      columns={columns}
+                      data={[]}
+                      onClickExpand={onClickExpand}
+                    />
+                  </div>
+
+                  <Credenza open={openModal} onOpenChange={setOpenModal}>
+                    <CredenzaContent>
+                      <CredenzaHeader>
+                        <CredenzaTitle>
+                          Confirmación
+                        </CredenzaTitle>
+                      </CredenzaHeader>
+                      <CredenzaDescription>
+                        <div className="text-center sm:text-start">
+                          Eliminar carpeta
+                        </div>
+                      </CredenzaDescription>
+                      <CredenzaBody>
+                        Hola
+                      </CredenzaBody>
+                      <CredenzaFooter>
+                        <Button variant="default">Aceptar</Button>
+                        <CredenzaClose asChild>
+                          <Button variant="secondary">Cancelar</Button>
+                        </CredenzaClose>
+                      </CredenzaFooter>
+                    </CredenzaContent>
+                  </Credenza>
+
+
+
                 </div>
               </div>
-
-                <div className='w-full'>
-                  <Datatable
-                    title='Detalle de materias aprobadas'
-                    description=''
-                    columns={columns}
-                    data={[]}
-                  />
-                </div>
-
             </div>
           )}
       </CardContent>
