@@ -1,24 +1,19 @@
+'use client';
 import React from 'react'
-import { AspectRatio } from './ui/aspect-ratio';
+import { DocumentViewer } from 'react-documents';
 
-type Props = {
-    pdfUrl: string;
-}
+function PDFViewerComponent({ pdfUrl }: { pdfUrl: string }) { 
 
-function PDFViewer(pdfUrl: Props) {
   return (
-    <AspectRatio
-        ratio={3/4}
-        className='bg-muted'
-    >
-        <iframe
-            src={`https://docs.google.com/gview?url=${pdfUrl}&embedded=true`}
-            className='w-full h-full'
-        >
-
-        </iframe>
-    </AspectRatio>
+    <div>
+      <DocumentViewer 
+        queryParams="hl=Nl"
+        url={pdfUrl}
+        viewer='pdf'
+        style={{ width: '100%', height: '95vh' }}
+      ></DocumentViewer>
+    </div>
   )
 }
 
-export default PDFViewer;
+export default PDFViewerComponent;

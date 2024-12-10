@@ -72,17 +72,51 @@ export async function GET(request: Request, { params }: Params) {
             }
         });
 
+        if (!file) {
+            throw new Error('Documento no encontrado');
+        }
+
+        const kardex = await prisma.tipoDocumentoKardex.findFirst({
+            where: {
+                IdDocumento: file.Id,
+                Estado: 1
+            }
+        });
+
+        
+
+        if (!kardex) {
+            throw new Error('Documento kardex no encontrado');
+        }
+
+        const kardexDetalle = await prisma.documentoDetalleKardex.findMany({
+            where: {
+                IdDocumentoKardex: kardex?.Id,
+                Estado: 1
+            }
+        });
+
+        if (!kardexDetalle) {
+            throw new Error('Detalles de documento kardex no encontrados');
+        }
+
         const response = {
             message: 'Documento encontrado',
             status: 200,
-            data: file
-        }
-
-        if (!file) {
-            return NextResponse.json({ error: 'Documento no encontrado' }, { status: 404 });
+            data: {
+                NombreArchivo: file?.NombreArchivo,
+                Ruta: file?.Ruta,
+                FechaCarga: file?.FechaCarga,
+                RefArchivo: file?.RefArchivo,
+                Alumno: kardex?.Alumno,
+                Carrera: kardex?.Carrera,
+                NoIdentificacion: kardex?.NoIdentificacion,
+                DetalleMaterias: kardexDetalle,
+            }
         }
 
         return NextResponse.json(response);
+
     } catch (error) {
         console.error('Error buscando documentos:', error);
         return NextResponse.json({ error: 'Error buscando documentos' }, { status: 500 });
