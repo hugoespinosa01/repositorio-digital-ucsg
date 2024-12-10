@@ -154,7 +154,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-2 mt-5 mb-2 space-x-3">
+                  <div className="grid grid-cols-1 mt-5 mb-2 space-x-3">
                     <InputDemo
                       label='Estudiante:'
                       value={fileData?.Alumno}

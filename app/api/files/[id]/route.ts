@@ -123,3 +123,79 @@ export async function GET(request: Request, { params }: Params) {
     }
 
 }
+
+export async function PUT(request: Request, { params }: Params) {
+    try {
+
+        const documentId = params.id;
+        const body = await request.json();
+
+        const updatedFile = await prisma.documento.update({
+            where: {
+                Id: Number(documentId),
+            },
+            data: {
+                NombreArchivo: body.NombreArchivo,
+                Ruta: body.Ruta,
+                FechaCarga: body.FechaCarga,
+                RefArchivo: body.RefArchivo,
+            },
+        });
+
+        if (!updatedFile) {
+            return NextResponse.json({ error: 'Error actualizando documento' }, { status: 500 });
+        }
+
+        const updatedKardex = await prisma.tipoDocumentoKardex.update({
+            where: {
+                Id: Number(documentId),
+            },
+            data: {
+                Alumno: body.Alumno,
+                Carrera: body.Carrera,
+                NoIdentificacion: body.NoIdentificacion,
+            },
+        });
+
+        if (!updatedKardex) {
+            return NextResponse.json({ error: 'Error actualizando documento kardex' }, { status: 500 });
+        }
+
+        const updatedKardexDetail = await prisma.documentoDetalleKardex.updateMany({
+            where: {
+                IdDocumentoKardex: updatedKardex.Id,
+            },
+            data: {
+                Estado: 1,
+            },
+        });
+
+        if (!updatedKardexDetail) {
+            return NextResponse.json({ error: 'Error actualizando detalles de documento kardex' }, { status: 500 });
+        }
+
+        const newKardexDetail = await prisma.documentoDetalleKardex.createMany({
+            data: body.DetalleMaterias.map((detalle: any) => ({
+                IdDocumentoKardex: updatedKardex.Id,
+                IdMateria: detalle.IdMateria,
+                Calificacion: detalle.Calificacion,
+                Estado: 1,
+            })),
+        });
+
+        if (!newKardexDetail) {
+            return NextResponse.json({ error: 'Error creando detalles de documento kardex' }, { status: 500 });
+        }
+
+        const result = {
+            message: 'Documento actualizado con éxito',
+            status: 200,
+            data: updatedFile,
+        }
+        return NextResponse.json(result);
+
+    } catch (error) {
+        console.error('Error actualizando documento:', error);
+        return NextResponse.json({ error: 'Error actualizando documento' }, { status: 500 });
+    }
+}
