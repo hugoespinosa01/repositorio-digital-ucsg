@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import LoadingDocuments from '@/components/documents/loading';
 import { useContext } from 'react';
@@ -10,11 +10,12 @@ import Datatable from '../dataTable/Datatable';
 import { GetColumns } from '../dataTable/Columns';
 import { useRouter } from 'next/navigation';
 import { Button } from '../ui/button';
-import { DownloadIcon, FileDown } from 'lucide-react';
+import { DownloadIcon, FileDown, Trash, TrashIcon } from 'lucide-react';
 import PDFViewerComponent from '../pdf-viewer';
 import InputDemo from '../inputtext';
 import InputNumber from '../inputnumber';
 import ExpandKardexDetail from '../modals/expand-kardex-detail-datatable';
+import ConfirmDeleteFile from '../modals/confirm-delete-file';
 
 interface FileData {
   NombreArchivo: string;
@@ -25,35 +26,28 @@ interface FileData {
   Carrera: string;
   NotaGraduacionSeminario: number;
   NoIdentificacion: string;
-  DetalleMaterias: any[];
+  DetalleMaterias: [];
 }
 
 export default function FilesPage({ fileId }: { fileId?: string | null }) {
   const [fileData, setFileData] = useState<FileData | null>(null);
   const [fileUrl, setFileUrl] = useState<string>('');
   const [openModal, setOpenModal] = useState<boolean>(false);
+  const [openModalDelete, setOpenModalDelete] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const columns = useMemo(() => GetColumns(), []);
-  const currentPage = Number(searchParams.get('page'));
-  const PAGE_SIZE = 6;
 
   //Para autenticación
   const { keycloak } = useContext(AuthContext);
 
   useEffect(() => {
-    if (currentPage < 1 || isNaN(currentPage)) {
-      router.push('/pageNotFound');
-      return;
-    }
     //if (fileId && keycloak) {
     //if (keycloak.token) {
     if (fileId) {
       fetchFile(fileId);
     }
 
-  }, [currentPage, keycloak]);
+  }, [keycloak]);
 
 
   const fetchFile = async (fileId: string) => {
@@ -106,13 +100,56 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
     token: keycloak?.token
   }
 
+  const handleDelete = () => {
+    setOpenModalDelete(true);
+  }
+
+  const handleAcceptDelete = async () => {
+    setOpenModalDelete(false);
+
+    const response = await fetch(`/api/files/${Number(fileId)}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': keycloak?.token ? `Bearer ${keycloak.token}` : '',
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al eliminar el archivo: ${response.statusText}`);
+    }
+
+
+    router.push('/files');
+  }
+
+  const onEdit = useCallback((row: any) => {
+    console.log('Edit', row);
+  }, []);
+
+  const onDelete = useCallback((row: any) => {
+    console.log('Delete', row);
+  }, []);
+
+  const columns = useMemo(() => GetColumns({ onEdit, onDelete }), []);
+
   return (
     <Card className='p-5 mt-5'>
       <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between'>
+
         <CardTitle>
           <h1 className="text-2xl font-bold mb-4">Detalle del archivo {fileData?.NombreArchivo}</h1>
           <GetBackButton />
         </CardTitle>
+
+        <Button
+          variant={'destructive'}
+          onClick={handleDelete}
+          size={'sm'}
+        >
+          <Trash className='mr-2' size={15}/>
+          Eliminar
+        </Button>
+
       </CardHeader>
 
       <CardContent>
@@ -159,34 +196,41 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
                   </div>
 
 
-                  <div className="grid grid-cols-2 mb-2 space-x-3">
-                    <InputDemo
-                      label='Número de identificación:'
-                      id='NoIdentificacion'
-                      value={fileData?.NoIdentificacion}
-                      vals={vals}
-                    />
-                    <InputDemo
+                  <div className="flex mb-2 space-x-3">
+                    <div className="w-2/5">
+                      <InputDemo
+                        label='Número de identificación:'
+                        id='NoIdentificacion'
+                        value={fileData?.NoIdentificacion}
+                        vals={vals}
+                      />
+                    </div>
+                    <div className="w-3/5"><InputDemo
                       label='Carrera:'
                       value={fileData?.Carrera}
                       id='Carrera'
                       vals={vals}
-                    />
+                    /></div>
+
                   </div>
 
-                  <div className="grid grid-cols-2 mb-2 space-x-3">
-                    <InputNumber
-                      label='Nota de seminario / graduación:'
-                      value={fileData?.NotaGraduacionSeminario}
-                      vals={vals}
-                      id='NotaGraduacionSeminario'
-                    />
-                    <InputDemo
-                      label='Referencia archivo:'
-                      value={fileData?.RefArchivo}
-                      noIcon={true}
-                      id='RefArchivo'
-                    />
+                  <div className="flex space-x-3">
+                    <div className='w-2/5'>
+                      <InputNumber
+                        label='Nota de seminario / graduación:'
+                        value={fileData?.NotaGraduacionSeminario}
+                        vals={vals}
+                        id='NotaGraduacionSeminario'
+                      />
+                    </div>
+                    <div className='w-3/5'>
+                      <InputDemo
+                        label='Referencia archivo:'
+                        value={fileData?.RefArchivo}
+                        noIcon={true}
+                        id='RefArchivo'
+                      />
+                    </div>
                   </div>
 
                   {/* Tabla de materias aprobadas */}
@@ -195,7 +239,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
                       title='Detalle de materias aprobadas'
                       description=''
                       columns={columns}
-                      data={[]}
+                      data={fileData?.DetalleMaterias || []}
                       onClickExpand={onClickExpand}
                       showIcon={true}
                     />
@@ -203,8 +247,18 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
 
                   {/* Modal para expandir detalle de materias aprobadas */}
                   <ExpandKardexDetail
+                    data={fileData?.DetalleMaterias || []}
                     openModal={openModal}
                     setOpenModal={setOpenModal}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                  />
+
+                  {/* Modal para confirmar eliminación de archivo */}
+                  <ConfirmDeleteFile
+                    openModal={openModalDelete}
+                    setOpenModal={setOpenModalDelete}
+                    handleAccept={handleAcceptDelete}
                   />
 
                 </div>

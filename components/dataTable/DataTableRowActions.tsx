@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Button } from "../ui/button";
-import { MoreHorizontal } from "lucide-react";
+import { Edit, MoreHorizontal, TrashIcon } from "lucide-react";
 import { Row } from "@tanstack/react-table";
 
 interface DataTableRowActionsProps<TData> {
@@ -28,9 +28,11 @@ export default function DataTableRowActions<TData>({row, onEdit, onDelete}: Data
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Acciones</DropdownMenuLabel>
         <DropdownMenuItem onClick={() => onEdit(row.original)}>
+          <Edit className="mr-2" size={'15'}/>
           Editar
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onDelete(row.original)}>
+        <TrashIcon className="mr-2" size={'15'}/>
           Eliminar
         </DropdownMenuItem>
       </DropdownMenuContent>

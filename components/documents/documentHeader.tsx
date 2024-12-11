@@ -36,9 +36,6 @@ export default function DocumentHeader({
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
-
-
-
         </Fragment>
     )
 }

@@ -8,16 +8,19 @@ import { useMemo } from 'react';
 interface ExpandKardexDetailProps {
     openModal: boolean;
     setOpenModal: (open: boolean) => void;
+    data: any;
+    onEdit: (row: any) => void;
+    onDelete: (row: any) => void;
 }
 
 
-export default function ExpandKardexDetail({openModal, setOpenModal} : ExpandKardexDetailProps) {
-    const columns = useMemo(() => GetColumns(), []);
+export default function ExpandKardexDetail({ openModal, setOpenModal, data, onEdit, onDelete }: ExpandKardexDetailProps) {
+    const columns = useMemo(() => GetColumns({onEdit, onDelete}), []);
 
     return (
         <div className='flex'>
             <Credenza open={openModal} onOpenChange={setOpenModal}>
-                <CredenzaContent className=''>
+                <CredenzaContent className='max-w-fit'>
                     <CredenzaHeader>
                         <CredenzaTitle>
                             Detalle
@@ -25,13 +28,13 @@ export default function ExpandKardexDetail({openModal, setOpenModal} : ExpandKar
                     </CredenzaHeader>
                     <CredenzaDescription>
                         <div className="text-center sm:text-start">
-                            Detalle de materias aprobadas
+                            {/* Detalle de materias aprobadas */}
                         </div>
                     </CredenzaDescription>
-                    <CredenzaBody>
-                        <div className='flex w-100vh justify-center'>
+                    <CredenzaBody className='flex justify-center items-center'>
+                        <div>
                             <Datatable
-                                data={[]}
+                                data={data}
                                 columns={columns}
                                 title='Detalle de materias aprobadas'
                                 description=''

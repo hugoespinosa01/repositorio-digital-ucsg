@@ -92,7 +92,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
 
   const handleFileClick = (id: number) => {
     console.log('File clicked', id);
-    router.push(`/files/${id}?page=1`);
+    router.push(`/files/${id}`);
   }
 
   return (
