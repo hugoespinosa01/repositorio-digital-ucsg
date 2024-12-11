@@ -33,7 +33,8 @@ interface DatatableProps<TData, TValue> {
   title: string;
   description: string;
   onExport?: () => void;
-  onClickExpand: () => void; 
+  onClickExpand?: () => void;
+  showIcon?: boolean;
 }
 
 export default function Datatable<TData extends any, TValue>({
@@ -42,7 +43,8 @@ export default function Datatable<TData extends any, TValue>({
   columns,
   data,
   onExport,
-  onClickExpand
+  onClickExpand,
+  showIcon
 }: DatatableProps<TData, TValue>) {
   const PAGE_SIZE = 5;
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -81,12 +83,12 @@ export default function Datatable<TData extends any, TValue>({
                 Exportar a Excel
               </Button>
             )}
-            <Button
+            {showIcon && <Button
               variant={'ghost'}
               onClick={onClickExpand}
             >
               <Expand className="w-4 h-4" />
-            </Button>
+            </Button>}
           </div>
         </CardTitle>
         <CardDescription>{description}</CardDescription>

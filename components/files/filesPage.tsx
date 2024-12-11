@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import LoadingDocuments from '@/components/documents/loading';
 import { useContext } from 'react';
-import { ChildrenContext } from '@/context/children-context';
 import { useSearchParams } from 'next/navigation';
 import GetBackButton from '../getback-button';
 import { AuthContext } from '@/context/auth-context';
@@ -11,20 +10,11 @@ import Datatable from '../dataTable/Datatable';
 import { GetColumns } from '../dataTable/Columns';
 import { useRouter } from 'next/navigation';
 import { Button } from '../ui/button';
-import { DownloadIcon, File, FileDown } from 'lucide-react';
-import {
-  Credenza,
-  CredenzaBody,
-  CredenzaClose,
-  CredenzaContent,
-  CredenzaDescription,
-  CredenzaFooter,
-  CredenzaHeader,
-  CredenzaTitle,
-} from "@/components/custom-modal";
+import { DownloadIcon, FileDown } from 'lucide-react';
 import PDFViewerComponent from '../pdf-viewer';
 import InputDemo from '../inputtext';
-
+import InputNumber from '../inputnumber';
+import ExpandKardexDetail from '../modals/expand-kardex-detail-datatable';
 
 interface FileData {
   NombreArchivo: string;
@@ -33,6 +23,7 @@ interface FileData {
   RefArchivo: string;
   Alumno: string;
   Carrera: string;
+  NotaGraduacionSeminario: number;
   NoIdentificacion: string;
   DetalleMaterias: any[];
 }
@@ -110,6 +101,11 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
     window.open(fileUrl, '_blank');
   }
 
+  const vals = {
+    fileId: fileId,
+    token: keycloak?.token
+  }
+
   return (
     <Card className='p-5 mt-5'>
       <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between'>
@@ -128,7 +124,6 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
           (
             <div className="container mx-auto p-4">
               <div className="grid grid-cols-2 md:grid-cols-2 gap-6">
-
                 <div className="container mx-auto p-4 sm:block">
                   <PDFViewerComponent
                     pdfUrl={fileUrl}
@@ -157,37 +152,44 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
                   <div className="grid grid-cols-1 mt-5 mb-2 space-x-3">
                     <InputDemo
                       label='Estudiante:'
+                      id='Alumno'
                       value={fileData?.Alumno}
+                      vals={vals}
                     />
-
                   </div>
 
 
                   <div className="grid grid-cols-2 mb-2 space-x-3">
                     <InputDemo
                       label='Número de identificación:'
+                      id='NoIdentificacion'
                       value={fileData?.NoIdentificacion}
+                      vals={vals}
                     />
                     <InputDemo
                       label='Carrera:'
                       value={fileData?.Carrera}
+                      id='Carrera'
+                      vals={vals}
                     />
-
                   </div>
 
                   <div className="grid grid-cols-2 mb-2 space-x-3">
-                    <InputDemo
+                    <InputNumber
                       label='Nota de seminario / graduación:'
-                      value={fileData?.Carrera}
+                      value={fileData?.NotaGraduacionSeminario}
+                      vals={vals}
+                      id='NotaGraduacionSeminario'
                     />
                     <InputDemo
                       label='Referencia archivo:'
                       value={fileData?.RefArchivo}
                       noIcon={true}
+                      id='RefArchivo'
                     />
                   </div>
-       
 
+                  {/* Tabla de materias aprobadas */}
                   <div className='w-full mt-5'>
                     <Datatable
                       title='Detalle de materias aprobadas'
@@ -195,34 +197,15 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
                       columns={columns}
                       data={[]}
                       onClickExpand={onClickExpand}
+                      showIcon={true}
                     />
                   </div>
 
-                  <Credenza open={openModal} onOpenChange={setOpenModal}>
-                    <CredenzaContent>
-                      <CredenzaHeader>
-                        <CredenzaTitle>
-                          Confirmación
-                        </CredenzaTitle>
-                      </CredenzaHeader>
-                      <CredenzaDescription>
-                        <div className="text-center sm:text-start">
-                          Eliminar carpeta
-                        </div>
-                      </CredenzaDescription>
-                      <CredenzaBody>
-                        Hola
-                      </CredenzaBody>
-                      <CredenzaFooter>
-                        <Button variant="default">Aceptar</Button>
-                        <CredenzaClose asChild>
-                          <Button variant="secondary">Cancelar</Button>
-                        </CredenzaClose>
-                      </CredenzaFooter>
-                    </CredenzaContent>
-                  </Credenza>
-
-
+                  {/* Modal para expandir detalle de materias aprobadas */}
+                  <ExpandKardexDetail
+                    openModal={openModal}
+                    setOpenModal={setOpenModal}
+                  />
 
                 </div>
               </div>

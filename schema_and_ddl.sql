@@ -76,7 +76,8 @@ BEGIN
         IdDocumento int,
         Alumno varchar(255),
         NoIdentificacion varchar(255),
-        Estado int
+        Estado int,
+        NotaGraduacionSeminario decimal(18, 2),
     );
 END
 

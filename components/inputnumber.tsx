@@ -6,7 +6,7 @@ import EditKardexFieldModal from "./modals/edit-kardex-fields";
 import { useToast } from '@/components/ui/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
-interface InputDemoProps {
+interface InputNumberProps {
     value: string | undefined | number;
     label: string;
     id: string;
@@ -17,7 +17,7 @@ interface InputDemoProps {
     }
 }
 
-export default function InputDemo({ value, label, noIcon, vals, id }: InputDemoProps) {
+export default function InputNumber({ value, label, noIcon, vals, id }: InputNumberProps) {
 
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [fieldValue, setFieldValue] = useState<string | undefined | number>(value);
@@ -48,7 +48,7 @@ export default function InputDemo({ value, label, noIcon, vals, id }: InputDemoP
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                [id]: fieldValue
+                [id]: Number(fieldValue)
             })
         });
 
@@ -80,10 +80,12 @@ export default function InputDemo({ value, label, noIcon, vals, id }: InputDemoP
                 <Input
                     id="input-20"
                     className="-me-px w-full rounded-e-none shadow-none focus-visible:z-10"
-                    type="text"
+                    type="number"
                     readOnly={!isEditing}
                     value={fieldValue || ""}
                     onChange={handleChange}
+                    min={0}
+                    max={10}
                 />
                 {
                     noIcon ? null : (

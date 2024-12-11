@@ -112,6 +112,7 @@ export async function GET(request: Request, { params }: Params) {
                 Carrera: kardex?.Carrera,
                 NoIdentificacion: kardex?.NoIdentificacion,
                 DetalleMaterias: kardexDetalle,
+                NotaGraduacionSeminario: kardex?.NotaGraduacionSeminario
             }
         }
 
@@ -130,68 +131,55 @@ export async function PUT(request: Request, { params }: Params) {
         const documentId = params.id;
         const body = await request.json();
 
-        const updatedFile = await prisma.documento.update({
-            where: {
-                Id: Number(documentId),
-            },
-            data: {
-                NombreArchivo: body.NombreArchivo,
-                Ruta: body.Ruta,
-                FechaCarga: body.FechaCarga,
-                RefArchivo: body.RefArchivo,
-            },
-        });
-
-        if (!updatedFile) {
+        if (!body) {
             return NextResponse.json({ error: 'Error actualizando documento' }, { status: 500 });
         }
 
-        const updatedKardex = await prisma.tipoDocumentoKardex.update({
+        const tipoDocumentoKardex = await prisma.tipoDocumentoKardex.findFirst({
             where: {
-                Id: Number(documentId),
-            },
-            data: {
-                Alumno: body.Alumno,
-                Carrera: body.Carrera,
-                NoIdentificacion: body.NoIdentificacion,
-            },
+                IdDocumento: Number(documentId),
+                Estado: 1
+            }
         });
 
-        if (!updatedKardex) {
-            return NextResponse.json({ error: 'Error actualizando documento kardex' }, { status: 500 });
+        if (!tipoDocumentoKardex) {
+            return NextResponse.json({ error: 'Documento no encontrado' }, { status: 404 });
         }
 
-        const updatedKardexDetail = await prisma.documentoDetalleKardex.updateMany({
-            where: {
-                IdDocumentoKardex: updatedKardex.Id,
-            },
-            data: {
-                Estado: 1,
-            },
-        });
+        if (body.Alumno || body.Carrera || body.NoIdentificacion || body.NotaGraduacionSeminario) {
+            const updatingTipoKardex = await prisma.tipoDocumentoKardex.updateMany({
+                where: {
+                    IdDocumento: Number(documentId),
+                    Estado: 1
+                },
+                data: body
+            });
 
-        if (!updatedKardexDetail) {
-            return NextResponse.json({ error: 'Error actualizando detalles de documento kardex' }, { status: 500 });
+            if (!updatingTipoKardex) {
+                return NextResponse.json({ error: 'Error actualizando tipo de documento' }, { status: 500 });
+            }
+
         }
 
-        const newKardexDetail = await prisma.documentoDetalleKardex.createMany({
-            data: body.DetalleMaterias.map((detalle: any) => ({
-                IdDocumentoKardex: updatedKardex.Id,
-                IdMateria: detalle.IdMateria,
-                Calificacion: detalle.Calificacion,
-                Estado: 1,
-            })),
-        });
+        if (body.DetalleMaterias) {
+            const updatingDetalleKardex = await prisma.documentoDetalleKardex.updateMany({
+                where: {
+                    IdDocumentoKardex: Number(tipoDocumentoKardex.Id),
+                },
+                data: body
+            });
 
-        if (!newKardexDetail) {
-            return NextResponse.json({ error: 'Error creando detalles de documento kardex' }, { status: 500 });
+            if (!updatingDetalleKardex) {
+                return NextResponse.json({ error: 'Error actualizando detalles de documento' }, { status: 500 });
+            }
         }
 
+        
         const result = {
             message: 'Documento actualizado con éxito',
             status: 200,
-            data: updatedFile,
         }
+
         return NextResponse.json(result);
 
     } catch (error) {
