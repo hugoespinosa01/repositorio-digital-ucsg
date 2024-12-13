@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Dispatch } from "react";
 import {
   Card,
   CardContent,
@@ -24,12 +24,30 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  TableMeta,
 } from "@tanstack/react-table";
 import { Expand, Frown, Sheet } from "lucide-react";
+import { KardexDetalle } from "@/types/kardexDetalle";
+
+declare module '@tanstack/react-table' {
+  interface TableMeta<TData> {
+    editedRows: Record<string, any>;
+    setEditedRows: React.Dispatch<React.SetStateAction<Record<string, any>>>;
+    updateData: (rowIndex: number, columnId: string, value: string) => void;
+    revertData: (rowIndex: number, revert: boolean) => void;
+  }
+}
+
+interface CustomTableMeta<TData> extends TableMeta<TData> {
+  editedRows: Record<string, any>;
+  setEditedRows: React.Dispatch<React.SetStateAction<Record<string, any>>>;
+  updateData: (rowIndex: number, columnId: string, value: string) => void;
+}
 
 interface DatatableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  setData: Dispatch<React.SetStateAction<KardexDetalle[]>>;
   title: string;
   description: string;
   onClickExpand?: () => void;
@@ -42,10 +60,17 @@ export default function Datatable<TData extends any, TValue>({
   columns,
   data,
   onClickExpand,
-  showIcon
+  showIcon,
+  setData,
 }: DatatableProps<TData, TValue>) {
   const PAGE_SIZE = 5;
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [editedRows, setEditedRows] = React.useState({});
+  const [originalData, setOriginalData] = React.useState<TData[]>([...data]);
+  const updateData = async (rowIndex: number, columnId: string, value: string) => {
+    console.log(rowIndex, columnId, value);
+  };
+
   const table = useReactTable({
     data,
     columns,
@@ -62,8 +87,22 @@ export default function Datatable<TData extends any, TValue>({
       },
     },
     meta: {
+      editedRows,
+      setEditedRows,
+      revertData: (rowIndex: number, revert: boolean) => {
+        if (revert) {
+          setData((old: KardexDetalle[]) => 
+            old.map((row, index) => 
+              index === rowIndex ? originalData[rowIndex] as KardexDetalle : row
+            ))
+        } else {
+          setOriginalData((old: TData[]) => 
+            old.map((row, index) => (index === rowIndex ? data[rowIndex] : row))
+          );
+        }
+      },
       updateData: (rowIndex: number, columnId: string, value: string) => {
-        console.log(rowIndex, columnId, value);
+        updateData(rowIndex, columnId, value);
       }
     }
   });
@@ -181,3 +220,4 @@ export default function Datatable<TData extends any, TValue>({
     </Card>
   );
 }
+

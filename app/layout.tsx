@@ -8,7 +8,7 @@ import { ChildrenProvider } from '@/context/children-context';
 import { AuthProvider } from '@/context/auth-context';
 
 export const metadata: Metadata = {
-  title: 'Repositorio Digital Documental',
+  title: 'Sinergia | Repositorio digital documental',
   description: 'Sistema de gestión de documentos con IA para la Facultad de Ingeniería de la Universidad Católica de Santiago de Guayaquil.',
 };
 

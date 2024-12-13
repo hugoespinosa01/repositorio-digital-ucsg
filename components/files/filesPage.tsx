@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import LoadingDocuments from '@/components/documents/loading';
 import { useContext } from 'react';
-import { useSearchParams } from 'next/navigation';
 import GetBackButton from '../getback-button';
 import { AuthContext } from '@/context/auth-context';
 import Datatable from '../dataTable/Datatable';
@@ -16,6 +15,8 @@ import InputDemo from '../inputtext';
 import InputNumber from '../inputnumber';
 import ExpandKardexDetail from '../modals/expand-kardex-detail-datatable';
 import ConfirmDeleteFile from '../modals/confirm-delete-file';
+import { KardexDetalle } from '@/types/kardexDetalle';
+import { useToast } from '@/components/ui/use-toast';
 
 interface FileData {
   NombreArchivo: string;
@@ -31,11 +32,13 @@ interface FileData {
 
 export default function FilesPage({ fileId }: { fileId?: string | null }) {
   const [fileData, setFileData] = useState<FileData | null>(null);
+  const [detalleMaterias, setDetalleMaterias] = useState<KardexDetalle[]>([]);
   const [fileUrl, setFileUrl] = useState<string>('');
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [openModalDelete, setOpenModalDelete] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
+  const { toast } = useToast();
 
   //Para autenticación
   const { keycloak } = useContext(AuthContext);
@@ -84,6 +87,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
 
     //Seteo los datos del archivo
     setFileData(res.data);
+    setDetalleMaterias(res.data.DetalleMaterias);
     setLoading(false);
   }
 
@@ -118,8 +122,13 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
       throw new Error(`Error al eliminar el archivo: ${response.statusText}`);
     }
 
+    toast({
+      title: "Confirmación",
+      description: "La información ha sido eliminada exitosamente",
+      variant: "default",
+    });
 
-    router.push('/files');
+    router.back();
   }
 
   const onEdit = useCallback((row: any) => {
@@ -146,7 +155,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
           onClick={handleDelete}
           size={'sm'}
         >
-          <Trash className='mr-2' size={15}/>
+          <Trash className='mr-2' size={15} />
           Eliminar
         </Button>
 
@@ -239,7 +248,8 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
                       title='Detalle de materias aprobadas'
                       description=''
                       columns={columns}
-                      data={fileData?.DetalleMaterias || []}
+                      data={detalleMaterias || []}
+                      setData={setDetalleMaterias}
                       onClickExpand={onClickExpand}
                       showIcon={true}
                     />
@@ -247,7 +257,8 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
 
                   {/* Modal para expandir detalle de materias aprobadas */}
                   <ExpandKardexDetail
-                    data={fileData?.DetalleMaterias || []}
+                    data={detalleMaterias || []}
+                    setData={setDetalleMaterias}
                     openModal={openModal}
                     setOpenModal={setOpenModal}
                     onEdit={onEdit}

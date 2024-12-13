@@ -3,6 +3,7 @@ import { KardexDetalle } from "@/types/kardexDetalle";
 import DataTableColumnnHeader from "@/components/dataTable/DataTableColumnHeader";
 import DataTableRowActions from "./DataTableRowActions";
 import { TableCell } from '@/components/dataTable/TableCell'
+import { EditCell } from "./EditCell";
 
 interface Props {
   onEdit: (row: KardexDetalle) => void;
@@ -15,7 +16,7 @@ export function GetColumns({ onEdit, onDelete }: Props): ColumnDef<KardexDetalle
     {
       accessorKey: "Ciclo",
       header: "Ciclo",
-      cell: TableCell,
+      cell: ({getValue, row, column, table})  => TableCell({getValue, row, column, table}),
       meta: {
         type: 'text'
       }
@@ -23,24 +24,38 @@ export function GetColumns({ onEdit, onDelete }: Props): ColumnDef<KardexDetalle
     {
       accessorKey: "Materia",
       header: "Materia",
+      cell: TableCell,
+      meta: {
+        type: 'text'
+      }
     },
     {
       accessorKey: "Periodo",
       header: ({ column }) => <DataTableColumnnHeader column={column} title="Periodo" />,
+      cell: TableCell,
+      meta: {
+        type: 'text'
+      }
     },
     {
       accessorKey: "Calificacion",
-      header: ({ column }) => <DataTableColumnnHeader column={column} title="Calificacion" />
+      header: ({ column }) => <DataTableColumnnHeader column={column} title="Calificacion" />,
+      cell:TableCell,
+      meta: {
+        type: 'number'
+      }
     },
     {
       accessorKey: "NoMatricula",
       header: ({ column }) => <DataTableColumnnHeader column={column} title="No Matricula" />,
+      cell: TableCell,
+      meta: {
+        type: 'number'
+      }
     },
     {
-      id: 'actions',
-      cell: ({ row }) => (
-        <DataTableRowActions row={row} onEdit={onEdit} onDelete={onDelete} />
-      )
+      id: 'edit',
+      cell: EditCell
     }
   ];
 }

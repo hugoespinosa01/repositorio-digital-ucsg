@@ -11,9 +11,20 @@ export async function DELETE(request: Request, { params }: Params) {
         //Corregir esto
         const documentId = params.id;
 
+        const tipoDocKardex = await prisma.tipoDocumentoKardex.findFirst({
+            where: {
+                IdDocumento: Number(documentId),
+                Estado: 1
+            }
+        });
+
+        if (!tipoDocKardex) {
+            return NextResponse.json({ error: 'Documento no encontrado' }, { status: 404 });
+        }
+
         const deletedFileDetails = await prisma.documentoDetalleKardex.updateMany({
             where: {
-                IdDocumentoKardex: Number(documentId),
+                IdDocumentoKardex: tipoDocKardex.Id,
             },
             data: {
                 Estado: 0,
@@ -24,20 +35,20 @@ export async function DELETE(request: Request, { params }: Params) {
             return NextResponse.json({ error: 'Error eliminando detalles de documento' }, { status: 500 });
         }
 
-        const deletedTypeFile = await prisma.tipoDocumentoKardex.updateMany({
+        const deletedTipoDocKardex = await prisma.tipoDocumentoKardex.update({
             where: {
-                IdDocumento: Number(documentId),
+                Id: tipoDocKardex.Id,
             },
             data: {
                 Estado: 0,
             },
-        })
+        });
 
-        if (!deletedTypeFile) {
+        if (!deletedTipoDocKardex) {
             return NextResponse.json({ error: 'Error eliminando tipo de documento' }, { status: 500 });
         }
 
-        const deletedFile = await prisma.carpeta.update({
+        const deletedFile = await prisma.documento.update({
             where: {
                 Id: Number(documentId),
             },
@@ -46,7 +57,7 @@ export async function DELETE(request: Request, { params }: Params) {
             },
         });
         const result = {
-            message: 'Carpeta eliminada con éxito',
+            message: 'Documento eliminado con éxito',
             status: 200,
             data: deletedFile,
         }
@@ -54,7 +65,7 @@ export async function DELETE(request: Request, { params }: Params) {
     } catch (error) {
         console.error('Error eliminando documento:', error);
         const errResponse = {
-            error: 'Error deleting folder',
+            error: 'Error deleting file',
             status: 500,
             message: error,
         }

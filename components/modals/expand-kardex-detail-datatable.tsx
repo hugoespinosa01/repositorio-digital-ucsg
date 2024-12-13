@@ -1,9 +1,10 @@
-import React from 'react'
+import React, { Dispatch } from 'react'
 import { Button } from '../ui/button';
 import { Credenza, CredenzaBody, CredenzaContent, CredenzaFooter, CredenzaDescription, CredenzaHeader, CredenzaTitle, CredenzaClose } from '../custom-modal';
 import Datatable from '../dataTable/Datatable';
 import { GetColumns } from '../dataTable/Columns';
 import { useMemo } from 'react';
+import { KardexDetalle } from '@/types/kardexDetalle';
 
 interface ExpandKardexDetailProps {
     openModal: boolean;
@@ -11,10 +12,10 @@ interface ExpandKardexDetailProps {
     data: any;
     onEdit: (row: any) => void;
     onDelete: (row: any) => void;
+    setData: Dispatch<React.SetStateAction<KardexDetalle[]>>;
 }
 
-
-export default function ExpandKardexDetail({ openModal, setOpenModal, data, onEdit, onDelete }: ExpandKardexDetailProps) {
+export default function ExpandKardexDetail({ openModal, setOpenModal, data, onEdit, onDelete, setData }: ExpandKardexDetailProps) {
     const columns = useMemo(() => GetColumns({onEdit, onDelete}), []);
 
     return (
@@ -35,6 +36,7 @@ export default function ExpandKardexDetail({ openModal, setOpenModal, data, onEd
                         <div>
                             <Datatable
                                 data={data}
+                                setData={setData}
                                 columns={columns}
                                 title='Detalle de materias aprobadas'
                                 description=''

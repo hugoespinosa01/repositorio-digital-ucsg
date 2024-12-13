@@ -24,7 +24,10 @@ export default function ConfirmDeleteFile({
                 ¿Estás seguro de que deseas eliminar la siguiente información?
                 </CredenzaBody>
                 <CredenzaFooter>
-                    <Button variant="default" onClick={handleAccept}>Aceptar</Button>
+                    <Button 
+                        variant="default"
+                        onClick={handleAccept}
+                    >Aceptar</Button>
                     <CredenzaClose asChild>
                         <Button variant="secondary" onClick={() => setOpenModal(false)}>Cancelar</Button>
                     </CredenzaClose>

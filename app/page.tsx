@@ -2,6 +2,8 @@
 
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { ContainerScroll } from "@/components/scroll-custom-comp";
+import Image from "next/image";
 
 export default function Home() {
 
@@ -22,7 +24,31 @@ export default function Home() {
             </Button>
           </Link>
         </div>
+
+
+
       </main>
+      <ContainerScroll
+            titleComponent={
+              <>
+                <h1 className="text-4xl font-semibold text-black dark:text-white">
+                  Unleash the power of <br />
+                  <span className="text-4xl md:text-[6rem] font-bold mt-1 leading-none">
+                    Scroll Animations
+                  </span>
+                </h1>
+              </>
+            }
+          >
+            <Image
+              src={`https://ui.aceternity.com/_next/image?url=%2Flinear.webp&w=3840&q=75`}
+              alt="hero"
+              height={720}
+              width={1400}
+              className="mx-auto rounded-2xl object-cover h-full object-left-top"
+              draggable={false}
+            />
+          </ContainerScroll>
     </div>
   );
 }
