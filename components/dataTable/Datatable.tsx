@@ -28,6 +28,7 @@ import {
 } from "@tanstack/react-table";
 import { Expand, Frown, Sheet } from "lucide-react";
 import { KardexDetalle } from "@/types/kardexDetalle";
+import { useToast } from "../ui/use-toast";
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData> {
@@ -67,8 +68,37 @@ export default function Datatable<TData extends any, TValue>({
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [editedRows, setEditedRows] = React.useState({});
   const [originalData, setOriginalData] = React.useState<TData[]>([...data]);
+  const { toast } = useToast();
+
   const updateData = async (rowIndex: number, columnId: string, value: string) => {
-    console.log(rowIndex, columnId, value);
+    try {
+      
+      const response = await fetch(`/api/files/${(data[rowIndex] as KardexDetalle).IdDocumentoKardex}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ [columnId]: value }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error al actualizar la fila: ${response.statusText}`);
+      }
+
+      toast({
+        title: "Confirmación",
+        description: "La información ha sido actualizada exitosamente",
+        variant: "default",
+      })
+
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Hubo un error al intentar actualizar la información",
+        variant: "destructive",
+      });
+    } 
+
   };
 
   const table = useReactTable({
@@ -91,12 +121,12 @@ export default function Datatable<TData extends any, TValue>({
       setEditedRows,
       revertData: (rowIndex: number, revert: boolean) => {
         if (revert) {
-          setData((old: KardexDetalle[]) => 
-            old.map((row, index) => 
+          setData((old: KardexDetalle[]) =>
+            old.map((row, index) =>
               index === rowIndex ? originalData[rowIndex] as KardexDetalle : row
             ))
         } else {
-          setOriginalData((old: TData[]) => 
+          setOriginalData((old: TData[]) =>
             old.map((row, index) => (index === rowIndex ? data[rowIndex] : row))
           );
         }
