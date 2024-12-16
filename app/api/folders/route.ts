@@ -62,7 +62,7 @@ export async function POST(request: Request) {
         FechaCreacion: new Date(),
         FechaActualizacion: new Date(),
         IdCarrera: body.IdCarrera || null,
-        Estado: body.Estado || 1,
+        Estado: 1,
         Tipo: 'Carpeta',
       }
     });

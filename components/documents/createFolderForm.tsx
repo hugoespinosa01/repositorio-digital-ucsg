@@ -68,12 +68,21 @@ export default function CreateFolderForm({editMode, setOpenModal, folder, parent
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     
-    if (editMode && folder && keycloak?.token) {
-      updateFolder(folder.Id, values.nombre, setOpenModal, keycloak?.token);
+    // if (editMode && folder && keycloak?.token) {
+    //   updateFolder(folder.Id, values.nombre, setOpenModal, keycloak?.token);
+    //   return;
+    // }
+
+    if (editMode && folder) {
+      updateFolder(folder.Id, values.nombre, setOpenModal, "");
       return;
-    } else if (keycloak?.token) {
-      createFolder(values.nombre, setOpenModal, Number(parentId), keycloak?.token);
     }
+
+    createFolder(values.nombre, setOpenModal, Number(parentId), '');
+
+    // } else if (keycloak?.token) {
+    //   createFolder(values.nombre, setOpenModal, Number(parentId), keycloak?.token);
+    // }
     
   }
 
