@@ -23,6 +23,7 @@ import { FileCard } from '../custom-file-card';
 import { AuthContext } from '@/context/auth-context';
 import ConfirmDeleteFile from '../modals/confirm-delete-file';
 import SearchBar from '../custom-searchbar';
+import MoveFileModal from '../modals/move-file-modal';
 
 const PAGE_SIZE = 6;
 
@@ -31,7 +32,8 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get('page'));
   const [openModal, setOpenModal] = useState(false);
-  const [openMoveModal, setOpenMoveModal] = useState(false);
+  const [openMoveFolderModal, setOpenMoveFolderModal] = useState<boolean>(false);
+  const [openMoveFileModal, setOpenMoveFileModal] = useState<boolean>(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [folder, setFolder] = useState<Folder | null>(null);
   const [idFolder, setIdFolder] = useState<number>(0);
@@ -84,7 +86,13 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
 
   const handleMoveFolder = (id: number) => {
     setIdFolder(id);
-    setOpenMoveModal(true);
+    setOpenMoveFolderModal(true);
+  }
+
+  const handleMoveFile = (id: number) => {
+    console.log('Move file', id);
+    setIdFile(id);
+    setOpenMoveFileModal(true);
   }
 
   const handleFolderClick = (id: number) => {
@@ -100,8 +108,6 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
     setOpenModalDelete(true);
     setIdFile(id);
   }
-
-
 
   return (
     <Card className='p-5 mt-5'>
@@ -125,11 +131,6 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
           (
             <div className="container mx-auto p-4">
 
-              {/* Barra de búsqueda */}
-              <div className="justify-center mb-8 text-center">
-                <SearchBar />
-              </div>
-
               {
                 parentId ?
 
@@ -137,12 +138,18 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
 
                     (
                       <>
+                        {/* Barra de búsqueda */}
+                        <div className="justify-center mb-8 text-center">
+                          <SearchBar />
+                        </div>
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                           {childrenDocsAndFiles.map((doc) =>
                             doc.Tipo === 'Archivo' ? (
                               <FileCard
                                 onClick={handleFileClick}
                                 onDelete={handleDeleteFile}
+                                onMove={handleMoveFile}
                                 key={doc.Id}
                                 file={doc}
                                 creationDate={doc.FechaCarga}
@@ -179,6 +186,11 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                     ) :
                   folders.length > 0 ? (
                     <>
+                      {/* Barra de búsqueda */}
+                      <div className="justify-center mb-8 text-center">
+                        <SearchBar />
+                      </div>
+
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {folders.map((doc) => (
 
@@ -194,8 +206,6 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                           />
 
                         ))}
-
-
                       </div>
                       <div className='flex justify-center text-center mt-5'>
                         <PaginationWithLinks
@@ -216,6 +226,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
             </div>
           )}
         {/* Ventanas modales */}
+
         <CreateFolderModal
           openModal={openModal}
           setOpenModal={setOpenModal}
@@ -225,9 +236,15 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
         />
 
         <MoveFolderModal
-          openModal={openMoveModal}
-          setOpenModal={setOpenMoveModal}
+          openModal={openMoveFolderModal}
+          setOpenModal={setOpenMoveFolderModal}
           idFolder={idFolder}
+        />
+
+        <MoveFileModal
+          openModal={openMoveFileModal}
+          setOpenModal={setOpenMoveFileModal}
+          idFile={idFile}
         />
 
         <ConfirmDeleteModal

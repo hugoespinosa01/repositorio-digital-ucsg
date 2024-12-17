@@ -1,5 +1,5 @@
 import React from 'react';
-import { File, Trash2, Folder } from 'lucide-react';
+import { File, Trash2, Folder, FolderInput } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 interface FileCardProps {
@@ -11,7 +11,7 @@ interface FileCardProps {
   onMove?: (id: number) => void;
 }
 
-export function FileCard({ fileName, creationDate, file, onDelete, onClick, onMove}: FileCardProps) {
+export function FileCard({ fileName, creationDate, file, onDelete, onClick, onMove }: FileCardProps) {
   const [showActions, setShowActions] = React.useState(false);
 
   const handleActionClick = (e: React.MouseEvent, action: () => void) => {
@@ -31,12 +31,15 @@ export function FileCard({ fileName, creationDate, file, onDelete, onClick, onMo
           <div className="p-2 bg-blue-50 rounded-lg shrink-0">
             <File className="w-6 h-6 text-primary" />
           </div>
-          <div className="min-w-0">
-            <h3 className="font-medium group-hover:text-primary transition-colors truncate">
+          <div className="min-w-0 group">
+            <h3 className="font-medium group-hover:text-primary transition-all duration-300 truncate group-hover:max-w-[80%]">
               {fileName}
             </h3>
-            <p className="text-sm text-gray-500 truncate">Subido el: {new Date(creationDate).toLocaleDateString()}</p>
+            <p className="text-sm text-gray-500 truncate">
+              Subido el: {new Date(creationDate).toLocaleDateString()}
+            </p>
           </div>
+
         </div>
 
         <div className={`relative ml-2 shrink-0 ${showActions ? 'visible' : 'invisible group-hover:visible'}`}>
@@ -65,7 +68,7 @@ export function FileCard({ fileName, creationDate, file, onDelete, onClick, onMo
                     onClick={(e) => onMove && handleActionClick(e, () => onMove(file?.Id))}
                     className="p-1 hover:bg-gray-100 rounded-full transition-colors"
                   >
-                    <Folder className="w-4 h-4 text-gray-600 hover:text-blue-600" />
+                    <FolderInput className="w-4 h-4 text-gray-600 hover:text-blue-600" />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent>

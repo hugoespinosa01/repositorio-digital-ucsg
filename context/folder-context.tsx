@@ -10,7 +10,7 @@ export const FolderContext = createContext<{
     createFolder: (nombre: string, setOpenModal: (open: boolean) => void, parentId: number, token: string) => Promise<void>;
     updateFolder: (id: number, nombre: string, setOpenModal: (open: boolean) => void, token: string) => Promise<void>;
     deleteFolder: (id: number, currentPage: number, pageSize: number, token: string) => Promise<void>;
-    moveFolder: (id: number, newId: number, setOpenModal: (open: boolean) => void, pageSize: number, token: string) => Promise<void>;
+    moveFolder: (id: number | undefined, newId: number, setOpenModal: (open: boolean) => void, pageSize: number, token: string) => Promise<void>;
     isSubmitting: boolean;
     totalFolders: number;
     pageSize: number;
@@ -202,7 +202,7 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }
 
-    async function moveFolder(id: number, newId: number, setOpenModal: (open: boolean) => void, pageSize: number, token: string) {
+    async function moveFolder(id: number | undefined, newId: number, setOpenModal: (open: boolean) => void, pageSize: number, token: string) {
         try {
 
             setIsSubmitting(true);

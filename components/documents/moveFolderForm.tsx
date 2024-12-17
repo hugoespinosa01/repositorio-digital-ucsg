@@ -44,13 +44,14 @@ import {
 import { FolderContext } from "@/context/folder-context"
 import { Loader2 } from "lucide-react";
 import { AuthContext } from "@/context/auth-context"
+import SelectDemo from "../custom-select"
 
 
 const formSchema = z.object({
     carpeta_destino: z.number()
 });
 
-export default function MoveFolderForm({ idFolder, setOpenModal }: { idFolder: number, setOpenModal: (open: boolean) => void }) {
+export default function MoveFolderForm({ idFolder, idFile, setOpenModal }: { idFolder?: number, idFile?: number, setOpenModal: (open: boolean) => void }) {
 
     const { folders, moveFolder, pageSize, isSubmitting } = useContext(FolderContext);
     const { keycloak } = useContext(AuthContext)
@@ -64,10 +65,19 @@ export default function MoveFolderForm({ idFolder, setOpenModal }: { idFolder: n
         }
     })
 
-    function onSubmit(values: z.infer<typeof formSchema>) {    
+    const moveFile = (idFile: number, destino: number, setOpenModal: (open: boolean) => void, pageSize: number, token: string) => {
+
+    }
+
+    function onSubmit(values: z.infer<typeof formSchema>) {
+
         if (keycloak?.token) {
-            moveFolder(idFolder, values.carpeta_destino, setOpenModal, pageSize, keycloak.token);
-        }    
+            if (idFile) {
+                moveFile(idFile, values.carpeta_destino, setOpenModal, pageSize, keycloak.token);
+            } else {
+                moveFolder(idFolder, values.carpeta_destino, setOpenModal, pageSize, keycloak.token);
+            }
+        }
     }
 
     return (
@@ -77,63 +87,7 @@ export default function MoveFolderForm({ idFolder, setOpenModal }: { idFolder: n
                     control={form.control}
                     name="carpeta_destino"
                     render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                            <FormLabel>Carpeta</FormLabel>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <FormControl>
-                                        <div className="flex justify-center text-center">
-                                            <Button
-                                                variant="outline"
-                                                role="combobox"
-                                                className={cn(
-                                                    "w-[200px] justify-between",
-                                                    !field.value && "text-muted-foreground"
-                                                )}
-                                            >
-                                                {field.value
-                                                    ? foldersForMove.find(
-                                                        (folder) => folder.Id === field.value
-                                                    )?.Nombre
-                                                    : "Selecciona una carpeta"}
-                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                            </Button>
-                                        </div>
-                                    </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-[200px] p-0">
-                                    <Command>
-                                        <CommandInput placeholder="Buscar carpeta..." />
-                                        <CommandList>
-                                            <CommandEmpty>No se encontraron carpetas.</CommandEmpty>
-                                            <CommandGroup>
-                                                {foldersForMove.map((folder) => (
-                                                    <CommandItem
-                                                        value={folder.Nombre}
-                                                        key={folder.Id}
-                                                        onSelect={() => {
-                                                            form.setValue("carpeta_destino", folder.Id);
-                                                        }}
-                                                    >
-                                                        <Check
-                                                            className={cn(
-                                                                "mr-2 h-4 w-4",
-                                                                folder.Id === field.value
-                                                                    ? "opacity-100"
-                                                                    : "opacity-0"
-                                                            )}
-                                                        />
-                                                        {folder.Nombre}
-                                                    </CommandItem>
-                                                ))}
-                                            </CommandGroup>
-                                        </CommandList>
-                                    </Command>
-                                </PopoverContent>
-                            </Popover>
-                            <FormDescription></FormDescription>
-                            <FormMessage />
-                        </FormItem>
+                        <SelectDemo/>
                     )}
                 />
                 <div className="flex justify-center sm:justify-end">
