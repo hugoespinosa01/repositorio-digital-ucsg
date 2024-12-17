@@ -1,16 +1,17 @@
 import React from 'react';
-import { File, Pencil, Trash2 } from 'lucide-react';
+import { File, Trash2, Folder } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 interface FileCardProps {
   fileName: string;
   creationDate: string;
   file: any;
-  onEdit?: () => void;
-  onDelete?: () => void;
+  onDelete?: (id: number) => void;
   onClick?: (id: number) => void;
+  onMove?: (id: number) => void;
 }
 
-export function FileCard({ fileName, creationDate, file, onEdit, onDelete, onClick }: FileCardProps) {
+export function FileCard({ fileName, creationDate, file, onDelete, onClick, onMove}: FileCardProps) {
   const [showActions, setShowActions] = React.useState(false);
 
   const handleActionClick = (e: React.MouseEvent, action: () => void) => {
@@ -40,13 +41,41 @@ export function FileCard({ fileName, creationDate, file, onEdit, onDelete, onCli
 
         <div className={`relative ml-2 shrink-0 ${showActions ? 'visible' : 'invisible group-hover:visible'}`}>
           <div className="absolute right-0 top-0 flex items-center space-x-1">
-            <button
-              onClick={(e) => onDelete && handleActionClick(e, onDelete)}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-              title="Delete"
-            >
-              <Trash2 className="w-4 h-4 text-gray-600 hover:text-red-600" />
-            </button>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={(e) => onDelete && handleActionClick(e, () => onDelete(file?.Id))}
+                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4 text-gray-600 hover:text-red-600" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Eliminar
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={(e) => onMove && handleActionClick(e, () => onMove(file?.Id))}
+                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <Folder className="w-4 h-4 text-gray-600 hover:text-blue-600" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Mover
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+
+
           </div>
         </div>
       </div>

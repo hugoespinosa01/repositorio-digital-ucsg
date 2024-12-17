@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import LoadingDocuments from './loading';
 import Image from 'next/image';
@@ -22,6 +21,8 @@ import GetBackButton from '../getback-button';
 import ConfirmDeleteModal from './confirmDeleteModal';
 import { FileCard } from '../custom-file-card';
 import { AuthContext } from '@/context/auth-context';
+import ConfirmDeleteFile from '../modals/confirm-delete-file';
+import SearchBar from '../custom-searchbar';
 
 const PAGE_SIZE = 6;
 
@@ -34,11 +35,11 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [folder, setFolder] = useState<Folder | null>(null);
   const [idFolder, setIdFolder] = useState<number>(0);
+  const [idFile, setIdFile] = useState<number>(0);
   const [editMode, setEditMode] = useState(false);
   const { folders, fetchFolders, loading, totalFolders } = useContext(FolderContext);
+  const [openModalDelete, setOpenModalDelete] = useState<boolean>(false);
   const { fetchChildren, childrenDocsAndFiles, loadingChildren, totalChildren } = useContext(ChildrenContext);
-  
-  console.log('Folders:', parentId);
 
 
   //Para autenticación
@@ -50,17 +51,17 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
       return;
     }
     if (parentId) {
-    //if (parentId && keycloak) {
+      //if (parentId && keycloak) {
       //if (keycloak.token) {
-        fetchChildren(parentId, currentPage, PAGE_SIZE, '');
-     // }
+      fetchChildren(parentId, currentPage, PAGE_SIZE, '');
+      // }
     } else {
       // Fetch root folders
       //if (keycloak) {
-        //if (keycloak.token) {
-          fetchFolders(currentPage, PAGE_SIZE, '');
-        //}
-     // }
+      //if (keycloak.token) {
+      fetchFolders(currentPage, PAGE_SIZE, '');
+      //}
+      // }
     }
 
   }, [currentPage]);
@@ -95,46 +96,26 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
     router.push(`/files/${id}`);
   }
 
+  const handleDeleteFile = (id: number) => {
+    setOpenModalDelete(true);
+    setIdFile(id);
+  }
+
+
+
   return (
     <Card className='p-5 mt-5'>
-
       <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between'>
 
         <CardTitle>
           <h1 className="text-2xl font-bold mb-4">Documentos</h1>
           <GetBackButton />
         </CardTitle>
-
         <DocumentHeader
           handleCreateFolder={handleCreateFolder}
         />
 
-        {/* Ventanas modales */}
-        <CreateFolderModal
-          openModal={openModal}
-          setOpenModal={setOpenModal}
-          editMode={editMode}
-          folder={folder}
-          parentId={parentId}
-        />
-
-        <MoveFolderModal
-          openModal={openMoveModal}
-          setOpenModal={setOpenMoveModal}
-          idFolder={idFolder}
-        />
-
-        <ConfirmDeleteModal
-          openModal={openDeleteModal}
-          setOpenModal={setOpenDeleteModal}
-          idFolder={idFolder}
-          currentPage={currentPage}
-          pageSize={PAGE_SIZE}
-        />
-
-
       </CardHeader>
-
       <CardContent>
         {(loading || loadingChildren) ? (
           <div className="container mx-auto p-4">
@@ -143,6 +124,12 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
         ) :
           (
             <div className="container mx-auto p-4">
+
+              {/* Barra de búsqueda */}
+              <div className="justify-center mb-8 text-center">
+                <SearchBar />
+              </div>
+
               {
                 parentId ?
 
@@ -155,6 +142,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                             doc.Tipo === 'Archivo' ? (
                               <FileCard
                                 onClick={handleFileClick}
+                                onDelete={handleDeleteFile}
                                 key={doc.Id}
                                 file={doc}
                                 creationDate={doc.FechaCarga}
@@ -227,6 +215,37 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
 
             </div>
           )}
+        {/* Ventanas modales */}
+        <CreateFolderModal
+          openModal={openModal}
+          setOpenModal={setOpenModal}
+          editMode={editMode}
+          folder={folder}
+          parentId={parentId}
+        />
+
+        <MoveFolderModal
+          openModal={openMoveModal}
+          setOpenModal={setOpenMoveModal}
+          idFolder={idFolder}
+        />
+
+        <ConfirmDeleteModal
+          openModal={openDeleteModal}
+          setOpenModal={setOpenDeleteModal}
+          idFolder={idFolder}
+          currentPage={currentPage}
+          pageSize={PAGE_SIZE}
+        />
+
+
+        {/* Modal para confirmar eliminación de archivo */}
+        <ConfirmDeleteFile
+          openModal={openModalDelete}
+          setOpenModal={setOpenModalDelete}
+          idFile={idFile}
+          persistSamePage={true}
+        />
       </CardContent>
     </Card >
   );

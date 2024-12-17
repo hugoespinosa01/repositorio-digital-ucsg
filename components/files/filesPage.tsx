@@ -19,6 +19,7 @@ import { KardexDetalle } from '@/types/kardexDetalle';
 import { useToast } from '@/components/ui/use-toast';
 
 interface FileData {
+  Id: number;
   NombreArchivo: string;
   Ruta: string;
   FechaCarga: string;
@@ -269,7 +270,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
                   <ConfirmDeleteFile
                     openModal={openModalDelete}
                     setOpenModal={setOpenModalDelete}
-                    handleAccept={handleAcceptDelete}
+                    idFile={fileData?.Id}
                   />
 
                 </div>
