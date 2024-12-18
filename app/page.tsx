@@ -6,10 +6,13 @@ import { ContainerScroll } from "@/components/scroll-custom-comp";
 import Image from "next/image";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 import screen from "@/img/screen.png";
+import { useContext } from 'react';
+import { AuthContext } from '@/context/auth-context';
 
 export default function Home() {
 
-  
+  const { keycloak } = useContext(AuthContext);
+
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -23,14 +26,24 @@ export default function Home() {
             <div className="flex w-full items-center justify-center space-x-4 py-4 md:pb-6">
               <Link href={"/documents?page=1"}>
                 <Button>Ir a panel de control
-                  <ArrowRightIcon className="ml-2" />
                 </Button>
               </Link>
-              <Link href="/documents?page=1">
-                <Button variant="outline" className="ml-4">
-                  Iniciar sesión
-                </Button>
-              </Link>
+              {/* {
+                keycloak?.authenticated ? (
+                  <Link href={"/documents?page=1"}>
+                    <Button>Ir a panel de control
+                    </Button>
+                  </Link>
+                ) : (
+                  <Link href="http://localhost:8443/auth/realms/ucsg/protocol/openid-connect/auth?client_id=repositorio-digital-sinergia&redirect_uri=http://localhost:3000/auth/callback&response_type=code" passHref={true}>
+               
+                    <Button variant="default" className="ml-4">
+                      Iniciar sesión
+                      <ArrowRightIcon className="ml-2" />
+                    </Button>
+                  </Link>
+                )
+              } */}
             </div>
           </section>
           <div className="w-full flex justify-center relative">
@@ -61,7 +74,7 @@ export default function Home() {
       <footer className="py-6 md:py-0 border-t border-border/40">
         <div className="container flex flex-col items-center justify-center gap-4 md:h-24 md:flex-row">
           <p className='text-balance text-center text-sm leading-loose text-muted-foreground'>
-          Hecho por Hugo Espinosa y Denisse Ibarra para la UCSG. Todos los derechos reservados
+            Hecho por Hugo Espinosa y Denisse Ibarra para la UCSG. Todos los derechos reservados
           </p>
         </div>
       </footer>

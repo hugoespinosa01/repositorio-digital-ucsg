@@ -66,6 +66,7 @@
     "jose": "^5.9.6",
     "jwt-decode": "^4.0.0",
     "keycloak-js": "^26.0.5",
+    "langchain": "^0.3.7",
     "lucide-react": "^0.446.0",
     "md5": "^2.3.0",
     "mssql": "^11.0.1",

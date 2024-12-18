@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { AzureKeyCredential, DocumentAnalysisClient } from "@azure/ai-form-recognizer";
 import { loadIntoPinecone } from '@/lib/pinecone';
 import { ExtractedData } from '@/types/extractedData';
+import { initiateBootrstrapping } from '@/lib/pinecone';
 
 dotenv.config();
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Subo a la base de conocimeintos (usar modelo prebuilt-layout)
-        await loadIntoPinecone(extractedData);
+        await initiateBootrstrapping(process.env.PINECONE_INDEX as string);
 
         //Extraigo datos del documento (producto de Azure AI Intelligence)
         const datosExtraidos = {

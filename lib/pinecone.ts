@@ -2,7 +2,10 @@ import { Pinecone, PineconeRecord } from "@pinecone-database/pinecone"
 import { OpenAIApi, Configuration} from  'openai-edge'
 import md5 from 'md5'
 import { ExtractedData } from '@/types/extractedData';
-
+import { NextResponse } from "next/server";
+import path from "path";
+import { DirectoryLoader } from 'langchain/document_loaders/fs/directory'
+import { PDFLoader } from 'langchain/community/document_loaders/fs/pdf'
 
 interface Vector {
     id: string,
@@ -15,7 +18,7 @@ interface Vector {
 
 // Crea un cliente de Pinecone
 const pineconeClient = new Pinecone({
-    apiKey: process.env.PINECONE_API_KEY || "",
+    apiKey: process.env.PINECONE_API_KEY as string || "",
 })
 
 // Crea un cliente de OpenAI
@@ -70,4 +73,84 @@ export async function loadIntoPinecone (documents: ExtractedData) {
     console.log("Subiendo documentos a Pinecone...");
 
     return documents;
+}
+
+export async function initiateBootrstrapping (targetIndex: string) {
+    const baseURL = process.env.PRODUCTION_URL || "http://localhost:3000";
+    
+    const response = await fetch(`${baseURL}/api/ingest`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({targetIndex})
+    });
+
+    if (!response.ok) {
+        throw new Error("Error al iniciar el proceso de bootrstrapping");
+    }
+} 
+
+export const handleBootrstrapping = async (targetIndex: string) => {
+    try {
+        await createIndexIfNecessary(targetIndex);
+        const hasVectors = await pineconeIndexHasVectors(targetIndex);
+
+        if (hasVectors) {
+            return NextResponse.json({
+                message: "El índice ya tiene vectores"
+            }, { status: 200 });
+        }
+
+        console.log('Cargando documentos y metadatos...');
+
+        const docPath = path.resolve(process.cwd(), "/docs");
+        const loader = new DirectoryLoader(docPath, {
+            '.pdf': (filePath: string) => new PDFLoader(filePath),
+        });
+
+        const documents = await loader.load();
+
+        if (documents.length === 0) {
+            console.warn("No se encontraron documentos para cargar");
+            return NextResponse.json({
+                message: "No se encontraron documentos para cargar"
+            }, { status: 404 });
+        }
+        
+
+
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+export async function createIndexIfNecessary (indexName: string) {
+    await pineconeClient.createIndex(
+        {
+            name: indexName,
+            dimension: 1024,
+            spec: {
+                serverless: {
+                    cloud: 'aws',
+                    region: 'us-east-1',
+                }
+            },
+            waitUntilReady: true,
+            suppressConflicts: true,
+        }
+    )
+}
+
+
+export async function pineconeIndexHasVectors (indexName: string) {
+    try {
+        const targetIndex = await pineconeClient.index(indexName);
+        const stats = await targetIndex.describeIndexStats();
+        return (stats.totalRecordCount && stats.totalRecordCount > 0) ? true : false;
+    }
+     catch (err) {
+        console.error(err);
+        throw new Error("Error al verificar si el índice tiene vectores");
+    }
 }
