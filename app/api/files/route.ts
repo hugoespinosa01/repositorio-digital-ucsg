@@ -5,7 +5,6 @@ import { Documento } from '@/types/file';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 import { AzureKeyCredential, DocumentAnalysisClient } from "@azure/ai-form-recognizer";
-import { loadIntoPinecone } from '@/lib/pinecone';
 import { ExtractedData } from '@/types/extractedData';
 import { initiateBootrstrapping } from '@/lib/pinecone';
 
