@@ -5,7 +5,8 @@ import { ExtractedData } from '@/types/extractedData';
 import { NextResponse } from "next/server";
 import path from "path";
 import { DirectoryLoader } from 'langchain/document_loaders/fs/directory'
-import { PDFLoader } from 'langchain/community/document_loaders/fs/pdf'
+import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
+import { promises } from "fs";
 
 interface Vector {
     id: string,
@@ -117,6 +118,9 @@ export const handleBootrstrapping = async (targetIndex: string) => {
                 message: "No se encontraron documentos para cargar"
             }, { status: 404 });
         }
+
+
+        const metadata = await readMetadata();
         
 
 
@@ -125,7 +129,7 @@ export const handleBootrstrapping = async (targetIndex: string) => {
     }
 }
 
-export async function createIndexIfNecessary (indexName: string) {
+export async function createIndexIfNecessary (indexName: string) {  
     await pineconeClient.createIndex(
         {
             name: indexName,
@@ -140,6 +144,14 @@ export async function createIndexIfNecessary (indexName: string) {
             suppressConflicts: true,
         }
     )
+}
+
+export async function readMetadata() : Promise<Document["metadata"][]> {
+    try {
+        const filePath = path.resolve(process.cwd(), "/docs/metadata.json");
+    } catch (err) {
+
+    }
 }
 
 
