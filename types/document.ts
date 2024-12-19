@@ -6,6 +6,7 @@ export interface Document {
         Alumno: { value: string };
         Carrera: { value: string };
         NoIdentificacion: { value: string };
+        FechaCarga: string;
         "detalle-materias": {
             values: Array<{
                 properties: {

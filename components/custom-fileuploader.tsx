@@ -1,5 +1,5 @@
 'use client';
-import { Inbox, Loader2 } from 'lucide-react';
+import { Inbox, Loader2, LoaderCircle } from 'lucide-react';
 import React from 'react'
 import { useDropzone } from 'react-dropzone'
 
@@ -30,7 +30,7 @@ const FileUpload = ({ file, setFile, isSubmitting }: FileUploadProps) => {
                     isSubmitting ?
                         (
                             <>
-                                <Loader2 className='h-10 w-10 text-blue-500 '></Loader2>
+                                <LoaderCircle className='h-10 w-10 text-blue-500 animate-spin'/>
                                 <p>
                                     Cargando y extrayendo texto...
                                 </p>

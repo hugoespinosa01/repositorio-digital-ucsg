@@ -139,7 +139,7 @@ export const handleBootrstrapping = async (targetIndex: string) => {
 
         console.log('Cargando documentos y metadatos...');
 
-        const docPath = path.resolve(process.cwd(), "/docs");
+        const docPath = path.join(process.cwd(), "/tmp");
         const loader = new DirectoryLoader(docPath, {
             '.pdf': (filePath: string) => new PDFLoader(filePath),
         });

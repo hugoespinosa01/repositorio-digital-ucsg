@@ -7,6 +7,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { AzureKeyCredential, DocumentAnalysisClient } from "@azure/ai-form-recognizer";
 import { ExtractedData } from '@/types/extractedData';
 import { initiateBootrstrapping } from '@/lib/pinecone';
+import { writeFileSync } from 'fs';
+import path from 'path';
+import fs from 'fs/promises';
 
 dotenv.config();
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
@@ -65,6 +68,9 @@ export async function POST(request: NextRequest) {
 
         // Procesar el PDF
         const pdfData = await file.arrayBuffer();
+        
+        // Guardo en una carpeta temporal
+        await handleFiles(pdfData, '/tmp', file.name);
 
         //Subo al blob storage
         const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
@@ -182,6 +188,39 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(errResponse);
     }
 }
+
+const handleFiles = async (file: ArrayBuffer, relativePath: string, filename: string) => {
+    if (!relativePath) {
+        return NextResponse.json({ error: 'Path required' }, { status: 400 });
+    }
+    
+    const absolutePath = path.join(process.cwd(), relativePath);
+    const pathExists = await validatePathExists(absolutePath);
+
+    if (!pathExists) {
+        console.log('El directorio no existía, pero ha sido creado.');
+    }
+
+    try {
+        const filePath = path.join(absolutePath, filename);
+        await fs.writeFile(filePath, new Uint8Array(file));
+        console.log('File written successfully');
+    } catch (err) {
+        console.error('Error handling files:', err);
+        return NextResponse.json({ error: 'Error handling files', status: 500 });
+    }
+
+}
+
+const validatePathExists = async (absolutePath: string): Promise<boolean> => {
+    try {
+        await fs.access(absolutePath);
+        return true;
+    } catch (error) {
+        await fs.mkdir(path.join(process.cwd(), "/tmp"), { recursive: true });
+        return false;
+    }
+};
 
 const extractData = async (file: ArrayBuffer) => {
     try {

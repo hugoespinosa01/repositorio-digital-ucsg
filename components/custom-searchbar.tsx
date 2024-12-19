@@ -1,11 +1,15 @@
 import { Input } from "@/components/ui/input";
 import { Sparkles, LoaderCircle, Search } from "lucide-react";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { useState, useEffect } from "react";
+import { useState, useEffect, FormEvent } from "react";
 
-export default function SearchBar() {
+export default function SearchBar({
+    handleSearch
+}: {
+    handleSearch: (query: string) => void;
+}) {
 
-    const [inputValue, setInputValue] = useState("");
+    const [inputValue, setInputValue] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     useEffect(() => {
@@ -17,6 +21,12 @@ export default function SearchBar() {
             return () => clearTimeout(timer);
         }
     }, [inputValue]);
+
+    const handleSubmit = (e: FormEvent) => {
+        e.preventDefault();
+        handleSearch(inputValue);
+        setInputValue("");
+    }
 
     return (
         <div className="space-y-2">
@@ -48,7 +58,8 @@ export default function SearchBar() {
                         <TooltipTrigger asChild>
                             <button
                                 className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-lg border border-transparent text-muted-foreground/80 outline-offset-2 transition-colors hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring/70 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-                                aria-label="Subscribe"
+                                aria-label="Search"
+                                onClick={handleSubmit}
                             >
                                 <Sparkles size={16} strokeWidth={2} aria-hidden="true" />
                             </button>
@@ -58,9 +69,6 @@ export default function SearchBar() {
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
-
-
-
             </div>
         </div>
     );

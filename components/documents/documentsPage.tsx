@@ -24,6 +24,7 @@ import { AuthContext } from '@/context/auth-context';
 import ConfirmDeleteFile from '../modals/confirm-delete-file';
 import SearchBar from '../custom-searchbar';
 import MoveFileModal from '../modals/move-file-modal';
+import { SearchResult } from '@/types/searchResult';
 
 const PAGE_SIZE = 6;
 
@@ -41,6 +42,9 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
   const [editMode, setEditMode] = useState(false);
   const { folders, fetchFolders, loading, totalFolders } = useContext(FolderContext);
   const [openModalDelete, setOpenModalDelete] = useState<boolean>(false);
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [query, setQuery] = useState<string>('');
   const { fetchChildren, childrenDocsAndFiles, loadingChildren, totalChildren } = useContext(ChildrenContext);
 
 
@@ -100,7 +104,6 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
   }
 
   const handleFileClick = (id: number) => {
-    console.log('File clicked', id);
     router.push(`/files/${id}`);
   }
 
@@ -108,6 +111,34 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
     setOpenModalDelete(true);
     setIdFile(id);
   }
+
+  const handleSearch = async (
+    query: string,
+    setResults: (results: SearchResult[]) => void,
+    setIsSearching: (isSearching: boolean) => void
+  ) => {
+    setIsSearching(true);
+    const response = await fetch('/api/search', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': keycloak?.token ? `Bearer ${keycloak.token}` : '',
+      },
+      body: JSON.stringify({ query }),
+    });
+
+    if (!response.ok) {
+      const body = await response.json();
+      console.log('Error searching:', body);
+      throw new Error('Error searching');
+    }
+
+    const { results } = await response.json();
+    setResults(results);
+    setIsSearching(false);
+  }
+
+
 
   return (
     <Card className='p-5 mt-5'>
@@ -140,24 +171,58 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                       <>
                         {/* Barra de búsqueda */}
                         <div className="justify-center mb-8 text-center">
-                          <SearchBar />
+                          <SearchBar
+                            handleSearch={(query: string) => {
+                              handleSearch(query, setResults, setIsSearching);
+                              setQuery(query);
+                            }}
+
+                          />
                         </div>
 
+                        {
+                          isSearching && (
+                            <div className="flex justify-center mb-8">
+                              <div className="flex items-center space-x-3 bg-white p-3 rounded-sm">
+                                <p className="text-sm text-gray-600">Buscando documentos...</p>
+                                <div className="spinner-border-3 border-t-transparent border-red-800 rounded-full w-4 h-4 animate-spin"></div>
+                              </div>
+                            </div>
+                          )
+                        }
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {
+                            results.map((res, index) => (
+                              <FileCard
+                                key={index}
+                                onClick={handleFileClick}
+                                onDelete={handleDeleteFile}
+                                onMove={handleMoveFile}
+                                file={res.metadata}
+                                creationDate={res.metadata.FechaCarga}
+                                fileName={res.metadata.NombreArchivo}
+                              />
+                            ))
+                          }
+                        </div>
+
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {childrenDocsAndFiles.map((doc) =>
+                          {childrenDocsAndFiles.map((doc, index) =>
                             doc.Tipo === 'Archivo' ? (
                               <FileCard
                                 onClick={handleFileClick}
                                 onDelete={handleDeleteFile}
                                 onMove={handleMoveFile}
-                                key={doc.Id}
+                                key={index}
                                 file={doc}
                                 creationDate={doc.FechaCarga}
                                 fileName={doc.NombreArchivo}
                               />
                             ) : (
                               <FolderCard
-                                key={doc.Id}
+                                key={index}
                                 folder={doc}
                                 fileName={doc.Nombre}
                                 creationDate={doc.FechaCreacion}
@@ -168,7 +233,6 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                               />
                             )
                           )}
-
                         </div>
                         <div className='flex justify-center text-center mt-5'>
                           <PaginationWithLinks
@@ -188,8 +252,24 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                     <>
                       {/* Barra de búsqueda */}
                       <div className="justify-center mb-8 text-center">
-                        <SearchBar />
+                        <SearchBar
+                          handleSearch={(query: string) => {
+                            handleSearch(query, setResults, setIsSearching);
+                            setQuery(query);
+                          }}
+                        />
                       </div>
+
+                      {
+                        isSearching && (
+                          <div className="flex justify-center mb-8">
+                            <div className="flex items-center space-x-3 bg-white p-3 rounded-sm">
+                              <p className="text-sm text-gray-600">Buscando documentos...</p>
+                              <div className="spinner-border-3 border-t-transparent border-red-800 rounded-full w-4 h-4 animate-spin"></div>
+                            </div>
+                          </div>
+                        )
+                      }
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {folders.map((doc) => (
