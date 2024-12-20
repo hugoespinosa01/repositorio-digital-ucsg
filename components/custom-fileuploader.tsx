@@ -30,7 +30,7 @@ const FileUpload = ({ file, setFile, isSubmitting }: FileUploadProps) => {
                     isSubmitting ?
                         (
                             <>
-                                <LoaderCircle className='h-10 w-10 text-blue-500 animate-spin'/>
+                                <LoaderCircle className='h-10 w-10 text-red-600 animate-spin'/>
                                 <p>
                                     Cargando y extrayendo texto...
                                 </p>

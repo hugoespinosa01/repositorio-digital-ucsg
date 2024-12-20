@@ -25,7 +25,6 @@ export default function SearchBar({
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
         handleSearch(inputValue);
-        setInputValue("");
     }
 
     return (

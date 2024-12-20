@@ -1,7 +1,7 @@
 export interface Document {
     pageContent: string;
     metadata: {
-        Id : number;
+        id : string;
         NombreArchivo: string;
         Alumno: { value: string };
         Carrera: { value: string };

@@ -1,16 +1,20 @@
+'use server';
 import { Pinecone, PineconeRecord } from "@pinecone-database/pinecone"
 import { OpenAIApi, Configuration } from 'openai-edge'
 import md5 from 'md5'
-import { ExtractedData } from '@/types/extractedData';
 import { NextResponse } from "next/server";
 import path from "path";
 import { DirectoryLoader } from 'langchain/document_loaders/fs/directory'
 import { UnstructuredLoader } from "@langchain/community/document_loaders/fs/unstructured";
-import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
-import { VoyageEmbeddings } from '@langchain/community/embeddings/voyage';
+// import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 import { promises as fs } from "fs";
-import { type Document } from "@/types/document";
+import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
+// import { type Document } from "@/types/document";
 import { v4 as uuidv4 } from 'uuid';
+import {
+    Document,
+    RecursiveCharacterTextSplitter,
+  } from "@pinecone-database/doc-splitter";
 
 // interface Vector {
 //     id: string,
@@ -21,50 +25,121 @@ import { v4 as uuidv4 } from 'uuid';
 //     }
 // };
 
+type PDFPage = {
+    pageContent: string;
+    metadata: {
+      page_number: number;
+    };
+  };
+
 // Crea un cliente de Pinecone
 const pineconeClient = new Pinecone({
     apiKey: process.env.PINECONE_API_KEY as string || "",
 })
+
+const getPineconeClient = () => {
+    return new Pinecone({
+      apiKey: process.env.PINECONE_API_KEY!,
+    });
+};
 
 // Crea un cliente de OpenAI
 const openaiClient = new OpenAIApi(new Configuration({
     apiKey: process.env.OPENAI_API_KEY || "",
 }))
 
-// export async function getEmbeddings(text: string) {
-//     try {
-//         const response = await openaiClient.createEmbedding({
-//             model: "text-embedding-ada-002",
-//             input: text.replace(/\n/g, " ")
-//         })
-//         const result = await response.json();
-//         return result.data[0].embedding as number[];
-//     } catch (err) {
-//         console.error(err);
-//         throw new Error("Error al obtener los embeddings");
-//     }
-// }
+export async function loadToPinecone(fileName: string) {
 
+    const docPath = path.join(process.cwd(), "/tmp/", fileName);
+    
+    const loader = new UnstructuredLoader(docPath, {
+        apiKey: process.env.UNSTRUCTURED_API_KEY,
+        strategy: "hi_res",
+        ocrLanguages: ["spa"],
+    });
 
-// export async function embedDocuments(doc: ExtractedData) {
-//     //Vectorizar los documentos
-//     try {
-//         const embeddings = await getEmbeddings(doc.Alumno.value);
-//         const hash = md5(doc.Alumno.value);
+    const pages = (await loader.load()) as PDFPage[];
 
-//         return {
-//             id: hash,
-//             values: embeddings,
-//             metadata: {
-//                 text: doc.Alumno.value,
-//                 pageNumber: doc.Alumno.value,
-//             }
-//         } as PineconeRecord;
-//     } catch (err) {
-//         console.error(err);
-//         throw new Error("Error al vectorizar los documentos");
-//     }
-// }
+    //Elimino el documento de la carpeta temporal
+    await fs.unlink(docPath);
+
+    // Split documents
+    const documents = await Promise.all(pages.map(prepareDocument));
+
+    // Vectorize documents
+    const vectors = await Promise.all(documents.flat().map(embedDocument));
+
+    // Upsert to Pinecone
+    const client = await getPineconeClient();
+    const pineconeIndex = await client.index(process.env.PINECONE_INDEX || "documentos-ucsg");
+    const namespace = pineconeIndex.namespace(convertToAscii(fileName));
+
+    await namespace.upsert(vectors);
+
+    return documents[0];
+}
+
+function convertToAscii(inputString: string) {
+    // remove non ascii characters
+    const asciiString = inputString.replace(/[^\x00-\x7F]+/g, "");
+    return asciiString;
+}
+
+async function prepareDocument(page: PDFPage) {
+    let { pageContent, metadata } = page;
+    pageContent = pageContent.replace(/\n/g, "");
+    // split the docs
+    const splitter = new RecursiveCharacterTextSplitter();
+    const docs = await splitter.splitDocuments([
+      new Document({
+        pageContent,
+        metadata: {
+          pageNumber: metadata.page_number,
+          text: truncateStringByBytes(pageContent, 36000),
+        },
+      }),
+    ]);
+    return docs;
+  }
+
+export const truncateStringByBytes = (str: string, bytes: number) => {
+    const enc = new TextEncoder();
+    return new TextDecoder("utf-8").decode(enc.encode(str).slice(0, bytes));
+  };
+
+async function embedDocument(doc: Document) {
+    try {
+      const embeddings = await getEmbeddings(doc.pageContent);
+      const hash = md5(doc.pageContent);
+      const textResult = await doc.metadata.text;
+
+      return {
+        id: hash,
+        values: embeddings,
+        metadata: {
+          text: textResult,
+          pageNumber: doc.metadata.pageNumber,
+        },
+      } as PineconeRecord;
+    } catch (error) {
+      console.log("error embedding document", error);
+      throw error;
+    }
+  }
+
+async function getEmbeddings(text: string) {
+    try {
+        const response = await openaiClient.createEmbedding({
+            model: "text-embedding-ada-002",
+            input: text.replace(/\n/g, " "),
+        })
+        const result = await response.json();
+        return result.data[0].embedding as number[];
+    } catch (err) {
+        console.error(err);
+        throw new Error("Error al obtener los embeddings");
+    }
+}
 
 // export async function loadIntoPinecone(documents: ExtractedData) {
 
@@ -126,166 +201,166 @@ export async function initiateBootrstrapping(targetIndex: string, filename: stri
     }
 }
 
-export const handleBootrstrapping = async (targetIndex: string, filename: string) => {
-    try {
-        await createIndexIfNecessary(targetIndex);
-        const hasVectors = await pineconeIndexHasVectors(targetIndex);
+// export const handleBootrstrapping = async (targetIndex: string, filename: string) => {
+//     try {
+//         await createIndexIfNecessary(targetIndex);
+//         const hasVectors = await pineconeIndexHasVectors(targetIndex);
 
-        if (hasVectors) {
-            return NextResponse.json({
-                message: "El índice ya tiene vectores"
-            }, { status: 200 });
-        }
+//         if (hasVectors) {
+//             return NextResponse.json({
+//                 message: "El índice ya tiene vectores"
+//             }, { status: 200 });
+//         }
 
-        console.log('Cargando documentos y metadatos...');
+//         console.log('Cargando documentos y metadatos...');
 
-        const docPath = path.join(process.cwd(), "/tmp/", filename);
+//         const docPath = path.join(process.cwd(), "/tmp/", filename);
         
-        // const loader = new DirectoryLoader(docPath, {
-        //     '.pdf': (filePath: string) => new PDFLoader(filePath),
-        // });
+//         // const loader = new DirectoryLoader(docPath, {
+//         //     '.pdf': (filePath: string) => new PDFLoader(filePath),
+//         // });
 
-        const loader = new UnstructuredLoader(docPath, {
-            apiKey: process.env.UNSTRUCTURED_API_KEY,
-            strategy: "hi_res"
-        });
+//         const loader = new UnstructuredLoader(docPath, {
+//             apiKey: process.env.UNSTRUCTURED_API_KEY,
+//             strategy: "hi_res",
+//             ocrLanguages: ["spa"], 
+//         });
 
-        const documents = await loader.load();
+//         const documents = await loader.load();
 
-        if (documents.length === 0) {
-            console.warn("No se encontraron documentos para cargar");
-            return NextResponse.json({
-                message: "No se encontraron documentos para cargar"
-            }, { status: 404 });
-        }
+//         if (documents.length === 0) {
+//             console.warn("No se encontraron documentos para cargar");
+//             return NextResponse.json({
+//                 message: "No se encontraron documentos para cargar"
+//             }, { status: 404 });
+//         }
 
-        //Elimino el documento de la carpeta temporal
-        await fs.unlink(docPath);
+//         //Elimino el documento de la carpeta temporal
+//         await fs.unlink(docPath);
 
+//         // const metadata = await readMetadata();
 
-        // const metadata = await readMetadata();
+//         // const validDocuments = documents.filter((doc) => isValidDocument(doc.pageContent));
 
-        // const validDocuments = documents.filter((doc) => isValidDocument(doc.pageContent));
+//         // validDocuments.forEach((doc) => {
+//         //     const fileMetadata = metadata.find((meta) => meta.NombreArchivo === path.basename(doc.metadata.source));
+//         //     if (fileMetadata) {
+//         //         doc.metadata = {
+//         //             ...doc.metadata,
+//         //             ...fileMetadata,
+//         //             pageContent: doc.pageContent
+//         //         }
+//         //     }
+//         // })
 
-        // validDocuments.forEach((doc) => {
-        //     const fileMetadata = metadata.find((meta) => meta.NombreArchivo === path.basename(doc.metadata.source));
-        //     if (fileMetadata) {
-        //         doc.metadata = {
-        //             ...doc.metadata,
-        //             ...fileMetadata,
-        //             pageContent: doc.pageContent
-        //         }
-        //     }
-        // })
+//         // console.log('Documentos válidos:', validDocuments.length);
 
-        // console.log('Documentos válidos:', validDocuments.length);
+//         // Dividir los documentos en pequeños chunks o fragmentos
+//         const splitter = new RecursiveCharacterTextSplitter({
+//             chunkSize: 1000,
+//             chunkOverlap: 200,
+//         });
 
-        // Dividir los documentos en pequeños chunks o fragmentos
-        const splitter = new RecursiveCharacterTextSplitter({
-            chunkSize: 1000,
-            chunkOverlap: 200,
-        });
+//         const splits = await splitter.splitDocuments(documents);
 
-        const splits = await splitter.splitDocuments(documents);
+//         console.log('Fragmentos:', splits.length);
 
-        console.log('Fragmentos:', splits.length);
+//         // Procesar en lotes
+//         const BATCH_SIZE = 5;
 
-        // Procesar en lotes
-        const BATCH_SIZE = 5;
+//         for (let i = 0; i < splits.length; i += BATCH_SIZE) {
+//             const batch = splits.slice(i, i + BATCH_SIZE);
+//             console.log(`Procesando lote ${Math.floor(i / BATCH_SIZE) + 1} de ${Math.ceil(splits.length / BATCH_SIZE)}`);
 
-        for (let i = 0; i < splits.length; i += BATCH_SIZE) {
-            const batch = splits.slice(i, i + BATCH_SIZE);
-            console.log(`Procesando lote ${Math.floor(i / BATCH_SIZE) + 1} de ${Math.ceil(splits.length / BATCH_SIZE)}`);
+//             // Filtrar y preparar lote
+//             const validBatch = batch.filter((split) => isValidDocument(split.pageContent));
+//             if (validBatch.length === 0) {
+//                 console.warn("Omitiendo lote - Lote no válido");
+//                 continue;
+//             }
 
-            // Filtrar y preparar lote
-            const validBatch = batch.filter((split) => isValidDocument(split.pageContent));
-            if (validBatch.length === 0) {
-                console.warn("Omitiendo lote - Lote no válido");
-                continue;
-            }
+//             const castedBatch: Document[] = validBatch.map((split) => ({
+//                 pageContent: split.pageContent.trim(),
+//                 metadata: {
+//                     ...flattenMetadata(split.metadata as Document["metadata"]),
+//                     id: uuidv4(),
+//                     pageContent: split.pageContent.trim(),
+//                 }
+//             }));
 
-            const castedBatch: Document[] = validBatch.map((split) => ({
-                pageContent: split.pageContent.trim(),
-                metadata: {
-                    ...flattenMetadata(split.metadata as Document["metadata"]),
-                    id: uuidv4(),
-                    pageContent: split.pageContent.trim(),
-                }
-            }));
+//             try {
+//                 // Generate embeddings
+//                 // const voyageEmbeddings = new VoyageEmbeddings({
+//                 //     apiKey: process.env.VOYAGE_API_KEY,
+//                 //     inputType: "document",
+//                 //     modelName: "voyage-law-2",
+//                 // });
 
-            try {
-                // Generate embeddings
-                const voyageEmbeddings = new VoyageEmbeddings({
-                    apiKey: process.env.VOYAGE_API_KEY,
-                    inputType: "document",
-                    modelName: "voyage-law-2",
-                });
+//                 const pageContents = castedBatch.map((split) => split.pageContent);
+//                 console.log(`Generating embeddings for ${pageContents.length} chunks`);
 
-                const pageContents = castedBatch.map((split) => split.pageContent);
-                console.log(`Generating embeddings for ${pageContents.length} chunks`);
+//                 //const embeddings = await getEmbeddings(pageContents);
 
-                const embeddings = await voyageEmbeddings.embedDocuments(pageContents);
+//                 if (!embeddings || embeddings.length !== pageContents.length) {
+//                     console.error("Invalid embeddings response", {
+//                         expected: pageContents.length,
+//                         received: embeddings?.length,
+//                     });
+//                     continue;
+//                 }
 
-                if (!embeddings || embeddings.length !== pageContents.length) {
-                    console.error("Invalid embeddings response", {
-                        expected: pageContents.length,
-                        received: embeddings?.length,
-                    });
-                    continue;
-                }
+//                 // Create vectors
+//                 const vectors = castedBatch.map((split, index) => ({
+//                     id: split.metadata.id!,
+//                     values: embeddings[index],
+//                     metadata: split.metadata,
+//                 }));
 
-                // Create vectors
-                const vectors = castedBatch.map((split, index) => ({
-                    id: split.metadata.Id!,
-                    values: embeddings[index],
-                    metadata: split.metadata,
-                }));
+//                 // Upsert to Pinecone
+//                 const pc = new Pinecone({
+//                     apiKey: process.env.PINECONE_API_KEY!,
+//                 });
 
-                // Upsert to Pinecone
-                const pc = new Pinecone({
-                    apiKey: process.env.PINECONE_API_KEY!,
-                });
+//                 const index = pc.Index(targetIndex);
+//                 await batchUpserts(index, vectors, 2);
 
-                const index = pc.Index(targetIndex);
-                await batchUpserts(index, vectors, 2);
+//                 // Add delay between batches
+//                 await new Promise((resolve) => setTimeout(resolve, 1000));
+//             } catch (error) {
+//                 console.error(
+//                     `Error processing batch ${Math.floor(i / BATCH_SIZE) + 1}:`,
+//                     {
+//                         error: error instanceof Error ? error.message : "Unknown error",
+//                         batchSize: castedBatch.length,
+//                     }
+//                 );
+//                 continue;
+//             }
+//         }
 
-                // Add delay between batches
-                await new Promise((resolve) => setTimeout(resolve, 1000));
-            } catch (error) {
-                console.error(
-                    `Error processing batch ${Math.floor(i / BATCH_SIZE) + 1}:`,
-                    {
-                        error: error instanceof Error ? error.message : "Unknown error",
-                        batchSize: castedBatch.length,
-                    }
-                );
-                continue;
-            }
-        }
+//         console.log("Bootstrap procedure completed successfully.");
+//         return NextResponse.json({ success: true }, { status: 200 });
 
-        console.log("Bootstrap procedure completed successfully.");
-        return NextResponse.json({ success: true }, { status: 200 });
+//     } catch (error: any) {
+//         console.error("Error during bootstrap procedure:", {
+//             message: error.message,
+//             cause: error.cause?.message,
+//             stack: error.stack,
+//         });
 
-    } catch (error: any) {
-        console.error("Error during bootstrap procedure:", {
-            message: error.message,
-            cause: error.cause?.message,
-            stack: error.stack,
-        });
+//         if (error.code === "UND_ERR_CONNECT_TIMEOUT") {
+//             return NextResponse.json(
+//                 { error: "Operation timed out - please try again" },
+//                 { status: 504 }
+//             );
+//         }
 
-        if (error.code === "UND_ERR_CONNECT_TIMEOUT") {
-            return NextResponse.json(
-                { error: "Operation timed out - please try again" },
-                { status: 504 }
-            );
-        }
-
-        return NextResponse.json(
-            { error: "Bootstrap procedure failed" },
-            { status: 500 }
-        );
-    }
-}
+//         return NextResponse.json(
+//             { error: "Bootstrap procedure failed" },
+//             { status: 500 }
+//         );
+//     }
+// }
 
 const isValidDocument = (content: string): boolean => {
     if (!content || typeof content != "string") return false;
@@ -297,7 +372,7 @@ export async function createIndexIfNecessary(indexName: string) {
     await pineconeClient.createIndex(
         {
             name: indexName,
-            dimension: 1024,
+            dimension: 1536,
             spec: {
                 serverless: {
                     cloud: 'aws',

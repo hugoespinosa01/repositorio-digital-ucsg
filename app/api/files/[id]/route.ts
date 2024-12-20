@@ -191,7 +191,7 @@ export async function PUT(request: Request, { params }: Params) {
             status: 200,
         }
 
-        return NextResponse.json(result);
+        return NextResponse.json(result, { status: 200 });
 
     } catch (error) {
         console.error('Error actualizando documento:', error);

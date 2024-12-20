@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 import { AzureKeyCredential, DocumentAnalysisClient } from "@azure/ai-form-recognizer";
 import { ExtractedData } from '@/types/extractedData';
-import { initiateBootrstrapping } from '@/lib/pinecone';
+import { initiateBootrstrapping, loadToPinecone } from '@/lib/pinecone';
 import path from 'path';
 import fs from 'fs/promises';
 
@@ -92,10 +92,10 @@ export async function POST(request: NextRequest) {
             throw new Error('Error extracting data');
         }
 
-        const { fields, content } = extractedData;
+        const { fields } = extractedData;
 
         // Subo a la base de conocimeintos (usar modelo prebuilt-layout)
-        await initiateBootrstrapping(process.env.PINECONE_INDEX as string, file.name);
+        await loadToPinecone(file.name);
 
         //Extraigo datos del documento (producto de Azure AI Intelligence)
         const datosExtraidos = {
@@ -119,6 +119,14 @@ export async function POST(request: NextRequest) {
         }
 
         const carrera = checkCarrera(datosExtraidos.carrera);
+
+        // Busco el Id de la carpeta de la carrera correspondiente
+
+        const carpetaObjetivo = await prisma.carpeta.findFirst({
+            where: {
+                Nombre: carrera
+            }
+        })
 
         const ruta = `/ucsg/${carrera}/`
         const idCarpeta = 26;
@@ -187,7 +195,7 @@ export async function POST(request: NextRequest) {
             status: 500,
             message: err,
         }
-        return NextResponse.json(errResponse);
+        return NextResponse.json(errResponse, { status: 500 });
     }
 }
 

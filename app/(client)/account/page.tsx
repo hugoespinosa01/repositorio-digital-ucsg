@@ -9,7 +9,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
-import UploadPage from "../../../components/upload/uploadPage";
 import AccountDetails from "@/components/account/account-card";
 
 export default function AccountPage() {

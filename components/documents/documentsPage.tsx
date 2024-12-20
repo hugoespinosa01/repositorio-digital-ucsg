@@ -25,6 +25,7 @@ import ConfirmDeleteFile from '../modals/confirm-delete-file';
 import SearchBar from '../custom-searchbar';
 import MoveFileModal from '../modals/move-file-modal';
 import { SearchResult } from '@/types/searchResult';
+import { TextShimmer } from '../loading-text-effect';
 
 const PAGE_SIZE = 6;
 
@@ -117,25 +118,30 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
     setResults: (results: SearchResult[]) => void,
     setIsSearching: (isSearching: boolean) => void
   ) => {
-    setIsSearching(true);
-    const response = await fetch('/api/search', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': keycloak?.token ? `Bearer ${keycloak.token}` : '',
-      },
-      body: JSON.stringify({ query }),
-    });
+    try {
+      setIsSearching(true);
+      const response = await fetch('/api/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': keycloak?.token ? `Bearer ${keycloak.token}` : '',
+        },
+        body: JSON.stringify({ query }),
+      });
 
-    if (!response.ok) {
-      const body = await response.json();
-      console.log('Error searching:', body);
-      throw new Error('Error searching');
+      if (!response.ok) {
+        const body = await response.json();
+        console.log('Error searching:', body);
+        throw new Error('Error searching');
+      }
+
+      const { results } = await response.json();
+      setResults(results);
+    } catch (err) {
+      console.error('Error searching:', err);
+    } finally {
+      setIsSearching(false);
     }
-
-    const { results } = await response.json();
-    setResults(results);
-    setIsSearching(false);
   }
 
 
@@ -187,6 +193,14 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                                 <p className="text-sm text-gray-600">Buscando documentos...</p>
                                 <div className="spinner-border-3 border-t-transparent border-red-800 rounded-full w-4 h-4 animate-spin"></div>
                               </div>
+
+                              <TextShimmer
+                                duration={1.2}
+                                className='text-sm font-medium color:theme(colors.blue.600)] [--base-gradient-color:theme(colors.blue.200)] dark:[--base-color:theme(colors.blue.700)] dark:[--base-gradient-color:theme(colors.blue.400)]'
+                              >
+                                Buscando documentos...
+                              </TextShimmer>
+
                             </div>
                           )
                         }
@@ -209,7 +223,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
 
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {childrenDocsAndFiles.map((doc, index) =>
+                          {!isSearching && childrenDocsAndFiles.map((doc, index) =>
                             doc.Tipo === 'Archivo' ? (
                               <FileCard
                                 onClick={handleFileClick}
@@ -272,7 +286,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                       }
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {folders.map((doc) => (
+                        {!isSearching && folders.map((doc) => (
 
                           <FolderCard
                             key={doc.Id}
