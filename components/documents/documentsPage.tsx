@@ -189,10 +189,10 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                         {
                           isSearching && (
                             <div className="flex justify-center mb-8">
-                              <div className="flex items-center space-x-3 bg-white p-3 rounded-sm">
+                              {/* <div className="flex items-center space-x-3 bg-white p-3 rounded-sm">
                                 <p className="text-sm text-gray-600">Buscando documentos...</p>
                                 <div className="spinner-border-3 border-t-transparent border-red-800 rounded-full w-4 h-4 animate-spin"></div>
-                              </div>
+                              </div> */}
 
                               <TextShimmer
                                 duration={1.2}
@@ -277,10 +277,16 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                       {
                         isSearching && (
                           <div className="flex justify-center mb-8">
-                            <div className="flex items-center space-x-3 bg-white p-3 rounded-sm">
+                            {/* <div className="flex items-center space-x-3 bg-white p-3 rounded-sm">
                               <p className="text-sm text-gray-600">Buscando documentos...</p>
                               <div className="spinner-border-3 border-t-transparent border-red-800 rounded-full w-4 h-4 animate-spin"></div>
-                            </div>
+                            </div> */}
+                            <TextShimmer
+                              duration={1.2}
+                              className='text-sm font-medium color:theme(colors.blue.600)] [--base-gradient-color:theme(colors.blue.200)] dark:[--base-color:theme(colors.blue.700)] dark:[--base-gradient-color:theme(colors.blue.400)]'
+                            >
+                              Buscando documentos...
+                            </TextShimmer>
                           </div>
                         )
                       }
