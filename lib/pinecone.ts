@@ -5,12 +5,12 @@ import { ExtractedData } from '@/types/extractedData';
 import { NextResponse } from "next/server";
 import path from "path";
 import { DirectoryLoader } from 'langchain/document_loaders/fs/directory'
-import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
+import { UnstructuredLoader } from "@langchain/community/document_loaders/fs/unstructured";
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 import { VoyageEmbeddings } from '@langchain/community/embeddings/voyage';
 import { promises as fs } from "fs";
 import { type Document } from "@/types/document";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from 'uuid';
 
 // interface Vector {
 //     id: string,
@@ -110,7 +110,7 @@ const batchUpserts = async (
     }
 };
 
-export async function initiateBootrstrapping(targetIndex: string) {
+export async function initiateBootrstrapping(targetIndex: string, filename: string) {
     const baseURL = process.env.PRODUCTION_URL || "http://localhost:3000";
 
     const response = await fetch(`${baseURL}/api/ingest`, {
@@ -118,7 +118,7 @@ export async function initiateBootrstrapping(targetIndex: string) {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ targetIndex })
+        body: JSON.stringify({ targetIndex, filename })
     });
 
     if (!response.ok) {
@@ -126,7 +126,7 @@ export async function initiateBootrstrapping(targetIndex: string) {
     }
 }
 
-export const handleBootrstrapping = async (targetIndex: string) => {
+export const handleBootrstrapping = async (targetIndex: string, filename: string) => {
     try {
         await createIndexIfNecessary(targetIndex);
         const hasVectors = await pineconeIndexHasVectors(targetIndex);
@@ -139,9 +139,15 @@ export const handleBootrstrapping = async (targetIndex: string) => {
 
         console.log('Cargando documentos y metadatos...');
 
-        const docPath = path.join(process.cwd(), "/tmp");
-        const loader = new DirectoryLoader(docPath, {
-            '.pdf': (filePath: string) => new PDFLoader(filePath),
+        const docPath = path.join(process.cwd(), "/tmp/", filename);
+        
+        // const loader = new DirectoryLoader(docPath, {
+        //     '.pdf': (filePath: string) => new PDFLoader(filePath),
+        // });
+
+        const loader = new UnstructuredLoader(docPath, {
+            apiKey: process.env.UNSTRUCTURED_API_KEY,
+            strategy: "hi_res"
         });
 
         const documents = await loader.load();
@@ -153,23 +159,26 @@ export const handleBootrstrapping = async (targetIndex: string) => {
             }, { status: 404 });
         }
 
+        //Elimino el documento de la carpeta temporal
+        await fs.unlink(docPath);
 
-        const metadata = await readMetadata();
 
-        const validDocuments = documents.filter((doc) => isValidDocument(doc.pageContent));
+        // const metadata = await readMetadata();
 
-        validDocuments.forEach((doc) => {
-            const fileMetadata = metadata.find((meta) => meta.NombreArchivo === path.basename(doc.metadata.source));
-            if (fileMetadata) {
-                doc.metadata = {
-                    ...doc.metadata,
-                    ...fileMetadata,
-                    pageContent: doc.pageContent
-                }
-            }
-        })
+        // const validDocuments = documents.filter((doc) => isValidDocument(doc.pageContent));
 
-        console.log('Documentos válidos:', validDocuments.length);
+        // validDocuments.forEach((doc) => {
+        //     const fileMetadata = metadata.find((meta) => meta.NombreArchivo === path.basename(doc.metadata.source));
+        //     if (fileMetadata) {
+        //         doc.metadata = {
+        //             ...doc.metadata,
+        //             ...fileMetadata,
+        //             pageContent: doc.pageContent
+        //         }
+        //     }
+        // })
+
+        // console.log('Documentos válidos:', validDocuments.length);
 
         // Dividir los documentos en pequeños chunks o fragmentos
         const splitter = new RecursiveCharacterTextSplitter({
@@ -177,7 +186,7 @@ export const handleBootrstrapping = async (targetIndex: string) => {
             chunkOverlap: 200,
         });
 
-        const splits = await splitter.splitDocuments(validDocuments);
+        const splits = await splitter.splitDocuments(documents);
 
         console.log('Fragmentos:', splits.length);
 

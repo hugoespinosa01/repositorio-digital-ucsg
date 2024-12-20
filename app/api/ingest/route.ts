@@ -2,10 +2,10 @@ import { handleBootrstrapping } from "@/lib/pinecone";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-    const { targetIndex } = await req.json();
+    const { targetIndex, filename } = await req.json();
     
     try {
-        await handleBootrstrapping(targetIndex);
+        await handleBootrstrapping(targetIndex, filename);
 
         return NextResponse.json({
             message: "Proceso de bootrstrapping exitoso"

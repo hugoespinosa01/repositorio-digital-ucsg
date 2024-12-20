@@ -7,7 +7,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { AzureKeyCredential, DocumentAnalysisClient } from "@azure/ai-form-recognizer";
 import { ExtractedData } from '@/types/extractedData';
 import { initiateBootrstrapping } from '@/lib/pinecone';
-import { writeFileSync } from 'fs';
 import path from 'path';
 import fs from 'fs/promises';
 
@@ -86,25 +85,28 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Error uploading to blob storage' }, { status: 500 });
         }
 
-        const extractedData = await extractData(pdfData) as unknown as ExtractedData;
+        // Extraigo los datos del documento (usar modelo modelo_computacion_v1)
+        const extractedData = await extractData(pdfData, 'modelo_computacion_v1') as unknown as ExtractedData;
 
         if (!extractedData) {
             throw new Error('Error extracting data');
         }
 
+        const { fields, content } = extractedData;
+
         // Subo a la base de conocimeintos (usar modelo prebuilt-layout)
-        await initiateBootrstrapping(process.env.PINECONE_INDEX as string);
+        await initiateBootrstrapping(process.env.PINECONE_INDEX as string, file.name);
 
         //Extraigo datos del documento (producto de Azure AI Intelligence)
         const datosExtraidos = {
-            alumno: extractedData.Alumno.value ?? '',
-            noIdentificacion: extractedData.NoIdentificacion.value ?? '',
-            carrera: extractedData.Carrera.value ?? '',
+            alumno: fields.Alumno.value ?? '',
+            noIdentificacion: fields.NoIdentificacion.value ?? '',
+            carrera: fields.Carrera.value ?? '',
             materiasAprobadas: [] as Materia[]
         }
         // Verifica que "detalle-materias" y sus valores existan antes de iterar
-        if (extractedData["detalle-materias"]?.values) {
-            for (const materia of extractedData["detalle-materias"].values) {
+        if (fields["detalle-materias"]?.values) {
+            for (const materia of fields["detalle-materias"].values) {
                 // Validación y mapeo seguro
                 datosExtraidos.materiasAprobadas.push({
                     ciclo: materia.properties?.Nivel?.value ?? "", // Asegúrate de que "Nivel" exista
@@ -222,29 +224,40 @@ const validatePathExists = async (absolutePath: string): Promise<boolean> => {
     }
 };
 
-const extractData = async (file: ArrayBuffer) => {
+// const extractContent = async (file: ArrayBuffer) => {
+//     try {
+//         const endpoint = process.env.FORM_RECOGNIZER_ENDPOINT || "<endpoint>";
+//         const credential = new AzureKeyCredential(process.env.FORM_RECOGNIZER_API_KEY || "<api key>");
+//         const client = new DocumentAnalysisClient(endpoint, credential);
+
+//         const modelId
+
+
+//     }
+// }
+
+const extractData = async (file: ArrayBuffer, model: string) => {
     try {
         const endpoint = process.env.FORM_RECOGNIZER_ENDPOINT || "<endpoint>";
         const credential = new AzureKeyCredential(process.env.FORM_RECOGNIZER_API_KEY || "<api key>");
         const client = new DocumentAnalysisClient(endpoint, credential);
 
-        const modelId = process.env.FORM_RECOGNIZER_CUSTOM_MODEL_ID || "<custom model ID>";
+        const modelId = model;
 
-        const poller = await client.beginAnalyzeDocument(
-            modelId,
-            file
-        );
+        const poller = await client.beginAnalyzeDocument(modelId,file);
 
-        const { documents } = await poller.pollUntilDone();
+        const { content, documents } = await poller.pollUntilDone();
 
         console.log("Extracted data:", documents);
-
 
         if (!documents) {
             return NextResponse.json({ error: 'Error extracting data' }, { status: 500 });
         }
 
-        return documents[0].fields;
+        return {
+            fields: documents[0].fields,
+            content: content
+        };
 
     } catch (err) {
         console.error('Error extracting data:', err);
