@@ -207,7 +207,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                           {
-                            results.map((res, index) => (
+                            results.length > 0 && results.map((res, index) => (
                               <FileCard
                                 key={index}
                                 onClick={handleFileClick}
@@ -223,7 +223,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
 
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {!isSearching && childrenDocsAndFiles.map((doc, index) =>
+                          {!isSearching &&  childrenDocsAndFiles.map((doc, index) =>
                             doc.Tipo === 'Archivo' ? (
                               <FileCard
                                 onClick={handleFileClick}

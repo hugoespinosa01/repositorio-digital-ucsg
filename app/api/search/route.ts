@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { Pinecone } from "@pinecone-database/pinecone";
 import { VoyageEmbeddings } from "@langchain/community/embeddings/voyage";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { PineconeStore } from "@langchain/pinecone";
+import { getEmbeddings } from "@/lib/pinecone";
 
 export async function POST(req: Request) {
   const { query } = await req.json();
@@ -17,22 +19,29 @@ export async function POST(req: Request) {
     });
 
     // Initialize VoyageEmbeddings with correct inputType for queries
-    const voyageEmbeddings = new VoyageEmbeddings({
-      apiKey: process.env.VOYAGE_API_KEY,
-      inputType: "query",
-      modelName: "voyage-law-2",
+    const embeddings = new OpenAIEmbeddings({
+      model: "text-embedding-ada-002",
     });
 
     // Initialize PineconeVectorStore
-    const vectorStore = new PineconeStore(voyageEmbeddings, {
+    const vectorStore = new PineconeStore(embeddings, {
       pineconeIndex: pc.Index(process.env.PINECONE_INDEX as string),
     });
 
+    const index = pc.index(process.env.PINECONE_INDEX as string);
+    const status = await index.describeIndexStats();
+    const queryVector = await getEmbeddings(query);
+    const res = await index.query({
+      vector: queryVector,
+      topK: 20,
+      includeMetadata: true,
+      includeValues: true,
+      filter: {}
+    })
+
     console.log(`query is: ${query}`);
 
-    const retrieved = await vectorStore.maxMarginalRelevanceSearch(query, {
-      k: 20,
-    });
+    const retrieved = await vectorStore.similaritySearch(query, 2);
 
     // Filter to ensure results set is unique - filter on the metadata.id
     const results: any = retrieved.filter((result, index) => {

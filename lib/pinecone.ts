@@ -48,7 +48,7 @@ const openaiClient = new OpenAIApi(new Configuration({
     apiKey: process.env.OPENAI_API_KEY || "",
 }))
 
-export async function loadToPinecone(fileName: string) {
+export async function loadToPinecone(fileName: string, content: string) {
 
     const docPath = path.join(process.cwd(), "/tmp/", fileName);
     
@@ -60,11 +60,21 @@ export async function loadToPinecone(fileName: string) {
 
     const pages = (await loader.load()) as PDFPage[];
 
+    const _pages = splitTextIntoChunks(content)
+
+    const _docs = _pages.map((chunk, index) => ({
+        pageContent: chunk,
+        metadata: {
+            page_number: index + 1
+        }
+    })) as PDFPage[];
+
+
     //Elimino el documento de la carpeta temporal
     await fs.unlink(docPath);
 
     // Split documents
-    const documents = await Promise.all(pages.map(prepareDocument));
+    const documents = await Promise.all(_docs.map(prepareDocument));
 
     // Vectorize documents
     const vectors = await Promise.all(documents.flat().map(embedDocument));
@@ -100,12 +110,30 @@ async function prepareDocument(page: PDFPage) {
       }),
     ]);
     return docs;
-  }
+}
 
 export const truncateStringByBytes = (str: string, bytes: number) => {
     const enc = new TextEncoder();
     return new TextDecoder("utf-8").decode(enc.encode(str).slice(0, bytes));
-  };
+};
+
+function splitTextIntoChunks(text: string, maxChunkSize: number = 1000) {
+    const sentences = text.split(/[.!?]\s+/);
+    const chunks = [];
+    let currentChunk = '';
+  
+    for (const sentence of sentences) {
+      if ((currentChunk + sentence).length > maxChunkSize) {
+        if (currentChunk) chunks.push(currentChunk.trim());
+        currentChunk = sentence;
+      } else {
+        currentChunk += (currentChunk ? ' ' : '') + sentence;
+      }
+    }
+  
+    if (currentChunk) chunks.push(currentChunk.trim());
+    return chunks;
+  }
 
 async function embedDocument(doc: Document) {
     try {
@@ -127,7 +155,7 @@ async function embedDocument(doc: Document) {
     }
   }
 
-async function getEmbeddings(text: string) {
+export async function getEmbeddings(text: string) {
     try {
         const response = await openaiClient.createEmbedding({
             model: "text-embedding-ada-002",

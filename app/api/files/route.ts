@@ -52,7 +52,6 @@ export async function GET(request: Request) {
         }
         return NextResponse.json(errResponse);
     }
-
 }
 
 export async function POST(request: NextRequest) {
@@ -92,10 +91,10 @@ export async function POST(request: NextRequest) {
             throw new Error('Error extracting data');
         }
 
-        const { fields } = extractedData;
+        const { fields, content } = extractedData;
 
         // Subo a la base de conocimeintos (usar modelo prebuilt-layout)
-        await loadToPinecone(file.name);
+        await loadToPinecone(file.name, content);
 
         //Extraigo datos del documento (producto de Azure AI Intelligence)
         const datosExtraidos = {
