@@ -48,6 +48,8 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
   const [query, setQuery] = useState<string>('');
   const { fetchChildren, childrenDocsAndFiles, loadingChildren, totalChildren } = useContext(ChildrenContext);
 
+  console.log('Children:', folders);
+  
 
   //Para autenticación
   const { keycloak } = useContext(AuthContext);
@@ -72,7 +74,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
         }
       }
 
-  }, [currentPage]);
+  }, [currentPage, keycloak]);
 
   const handleCreateFolder = () => {
     setEditMode(false);

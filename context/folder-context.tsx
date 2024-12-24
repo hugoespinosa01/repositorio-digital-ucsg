@@ -48,6 +48,8 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
             });
             if (response.ok) {
                 const res = await response.json();
+                console.log("hola", res.data);
+                
 
                 if (Array.isArray(res.data)) {
                     setFolders(res.data);

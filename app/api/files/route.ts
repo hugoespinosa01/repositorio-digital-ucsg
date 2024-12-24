@@ -131,7 +131,9 @@ export async function POST(request: NextRequest) {
         // Busco el Id de la carpeta de la carrera correspondiente
         const carpetaObjetivo = await prisma.carpeta.findFirst({
             where: {
-                IdCarrera: carreraId,
+                IdCarrera: {
+                    in: carreraId
+                },
                 Estado: 1,
                 IdCarpetaPadre: carpetaRoot?.Id
             }
@@ -140,7 +142,7 @@ export async function POST(request: NextRequest) {
         if (!carpetaObjetivo) {
             await prisma.carpeta.create({
                 data: {
-                    IdCarrera: carreraId,
+                    IdCarrera: carreraId[0],
                     IdCarpetaPadre: carpetaRoot?.Id,
                     Nombre: datosExtraidos.carrera,
                     Estado: 1

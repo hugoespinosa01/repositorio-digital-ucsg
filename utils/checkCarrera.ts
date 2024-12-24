@@ -1,21 +1,31 @@
 import { prisma } from '@/lib/prisma';
 
 export const checkCarrera = async (carrera: string) => {
-    let carreraId = null;
-    if (carrera.toLowerCase().includes('sistemas')) {
+    let carreraId = [];
+    let sistemasArray = ['sistemas', 'computación', 'computacion', 'computadoras', 'computacion', 'informática'];
+    if (sistemasArray.some(x => carrera.toLowerCase().includes(x))) {
         // Busco el Id de la carrera correspondiente
-        carreraId = await prisma.carrera.findFirst({
+        const _carreraId = await prisma.carrera.findFirst({
             where: {
                 Nombre: "Ingeniería en Computación",
             }
         })
-    } else if (carrera.toLowerCase().includes('civil')) {
-        // Busco el Id de la carrera correspondiente
-        carreraId = await prisma.carrera.findFirst({
-            where: {
-                Nombre: "Ingeniería Civi",
-            }
-        })
+        if (!_carreraId) {
+            throw new Error('Carrera no encontrada');
+        }
+        carreraId.push(_carreraId.Id);
     }
-    return carreraId?.Id;
+    if (carrera.toLowerCase().includes('civil')) {
+        // Busco el Id de la carrera correspondiente
+        const _carreraId = await prisma.carrera.findFirst({
+            where: {
+                Nombre: "Ingeniería Civil",
+            }
+        });
+        if (!_carreraId) {
+            throw new Error('Carrera no encontrada');
+        }
+        carreraId.push(_carreraId.Id);
+    }
+    return carreraId;
 }

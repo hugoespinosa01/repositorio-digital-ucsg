@@ -7,6 +7,14 @@ import { searchParentFolders } from '@/utils/searchParentFolders';
 export async function GET(request: NextRequest) {
   try {
 
+    const carrera = request.headers.get('x-carrera');
+    let rootFolder = null;
+
+    if (!carrera) {
+      return NextResponse.json({ error: 'Carrera no encontrada' }, { status: 400 });
+    }
+
+    const carreraId = await checkCarrera(carrera);
     const page = Number(request.nextUrl.searchParams.get('page'));
     const pageSize = Number(request.nextUrl.searchParams.get('page_size'));
 
@@ -14,10 +22,25 @@ export async function GET(request: NextRequest) {
       where: {
         IdCarpetaPadre: null,
         Estado: 1,
+        IdCarrera: {
+          in: carreraId
+        }
       },
       skip: (page - 1) * pageSize,
       take: pageSize,
     });
+
+    if (carpetas.length === 0) {
+      //Busco la carpeta raíz
+      rootFolder = await prisma.carpeta.findFirst({
+        where: {
+          IdCarpetaPadre: null,
+          Estado: 1,
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      });
+    }
 
     const totalLength = await prisma.carpeta.count({
       where: {
@@ -29,7 +52,7 @@ export async function GET(request: NextRequest) {
     const result = {
       message: 'Consulta exitosa',
       status: 200,
-      data: carpetas,
+      data: carpetas.length > 0 ? carpetas : [rootFolder],
       length: totalLength,
       currentPage: page,
     }
@@ -79,7 +102,7 @@ export async function POST(request: Request) {
         IdCarpetaPadre: body.IdCarpetaPadre || null,
         FechaCreacion: new Date(),
         FechaActualizacion: new Date(),
-        IdCarrera: carreraId || null,
+        IdCarrera: carreraId[0] || null,
         Estado: 1,
         Tipo: 'Carpeta',
         Ruta: ruta,
