@@ -9,6 +9,7 @@ import { ExtractedData } from '@/types/extractedData';
 import { initiateBootrstrapping, loadToPinecone } from '@/lib/pinecone';
 import path from 'path';
 import fs from 'fs/promises';
+import { checkCarrera } from '@/utils/checkCarrera';
 
 dotenv.config();
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
@@ -21,8 +22,6 @@ interface Materia {
     calificacion: string
     noMatricula: string;
 }
-
-
 
 export async function GET(request: Request) {
     try {
@@ -66,7 +65,7 @@ export async function POST(request: NextRequest) {
 
         // Procesar el PDF
         const pdfData = await file.arrayBuffer();
-        
+
         // Guardo en una carpeta temporal
         await handleFiles(pdfData, '/tmp', file.name);
 
@@ -103,6 +102,7 @@ export async function POST(request: NextRequest) {
             carrera: fields.Carrera.value ?? '',
             materiasAprobadas: [] as Materia[]
         }
+
         // Verifica que "detalle-materias" y sus valores existan antes de iterar
         if (fields["detalle-materias"]?.values) {
             for (const materia of fields["detalle-materias"].values) {
@@ -117,18 +117,39 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        const carrera = checkCarrera(datosExtraidos.carrera);
+        // Busco el ID de la carrera
+        const carreraId = await checkCarrera(datosExtraidos.carrera);
+
+        //Busco la carpeta root
+        const carpetaRoot = await prisma.carpeta.findFirst({
+            where: {
+                IdCarpetaPadre: null,
+                Estado: 1
+            }
+        });
 
         // Busco el Id de la carpeta de la carrera correspondiente
-
         const carpetaObjetivo = await prisma.carpeta.findFirst({
             where: {
-                Nombre: carrera
+                IdCarrera: carreraId,
+                Estado: 1,
+                IdCarpetaPadre: carpetaRoot?.Id
             }
-        })
+        });
 
-        const ruta = `/ucsg/${carrera}/`
-        const idCarpeta = 26;
+        if (!carpetaObjetivo) {
+            await prisma.carpeta.create({
+                data: {
+                    IdCarrera: carreraId,
+                    IdCarpetaPadre: carpetaRoot?.Id,
+                    Nombre: datosExtraidos.carrera,
+                    Estado: 1
+                }
+            });
+        }
+
+        const ruta = `/${carpetaRoot?.Nombre}/${carpetaObjetivo?.Nombre}/`
+        const idCarpeta = carpetaObjetivo?.Id;
         const extension = file.name.substring(file.name.lastIndexOf('.') + 1);
 
         // Creo el documento (archivo)
@@ -172,7 +193,7 @@ export async function POST(request: NextRequest) {
                     Ciclo: materia.ciclo,
                     Materia: materia.materia,
                     Periodo: materia.periodo,
-                    Calificacion: materia.calificacion,
+                    Calificacion: Number(materia.calificacion),
                     NoMatricula: Number(materia.noMatricula),
                     Estado: 1,
                     IdDocumentoKardex: tipoDocKardex.Id
@@ -202,7 +223,7 @@ const handleFiles = async (file: ArrayBuffer, relativePath: string, filename: st
     if (!relativePath) {
         return NextResponse.json({ error: 'Path required' }, { status: 400 });
     }
-    
+
     const absolutePath = path.join(process.cwd(), relativePath);
     const pathExists = await validatePathExists(absolutePath);
 
@@ -251,7 +272,7 @@ const extractData = async (file: ArrayBuffer, model: string) => {
 
         const modelId = model;
 
-        const poller = await client.beginAnalyzeDocument(modelId,file);
+        const poller = await client.beginAnalyzeDocument(modelId, file);
 
         const { content, documents } = await poller.pollUntilDone();
 
@@ -301,13 +322,7 @@ const uploadToBlobStorage = async (file: Documento) => {
     return documents;
 }
 
-const checkCarrera = (carrera: string) => {
-    if (carrera.toLowerCase().includes('sistemas')) {
-        return 'Ingeniería en Computación';
-    } else if (carrera.toLowerCase().includes('civil')) {
-        return 'Ingeniería Civil';
-    }
-}
+
 
 const validateDocument = async (documento: Documento) => {
 

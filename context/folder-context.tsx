@@ -79,7 +79,6 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
 
             const body = {
                 Nombre: nombre,
-                Tipo: "Carpeta",
                 IdCarpetaPadre: parentId ?? null,
             }
 

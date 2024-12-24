@@ -97,7 +97,7 @@ function convertToAscii(inputString: string) {
 
 async function prepareDocument(page: PDFPage) {
     let { pageContent, metadata } = page;
-    pageContent = pageContent.replace(/\n/g, "");
+    pageContent = pageContent.replace(/\n{2,}/g, "\n");
     // split the docs
     const splitter = new RecursiveCharacterTextSplitter();
     const docs = await splitter.splitDocuments([
@@ -105,7 +105,7 @@ async function prepareDocument(page: PDFPage) {
         pageContent,
         metadata: {
           pageNumber: metadata.page_number,
-          text: truncateStringByBytes(pageContent, 36000),
+          text: pageContent,
         },
       }),
     ]);
@@ -113,8 +113,20 @@ async function prepareDocument(page: PDFPage) {
 }
 
 export const truncateStringByBytes = (str: string, bytes: number) => {
-    const enc = new TextEncoder();
-    return new TextDecoder("utf-8").decode(enc.encode(str).slice(0, bytes));
+    const encoder = new TextEncoder();
+    let currentBytes = 0;
+    let result = "";
+    let maxBytes = bytes;
+  
+    for (const char of str) {
+      const encoded = encoder.encode(char);
+      if (currentBytes + encoded.length > maxBytes) break;
+  
+      currentBytes += encoded.length;
+      result += char;
+    }
+  
+    return result;
 };
 
 function splitTextIntoChunks(text: string, maxChunkSize: number = 1000) {

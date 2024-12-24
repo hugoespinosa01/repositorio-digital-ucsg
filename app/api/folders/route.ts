@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { NextRequest } from "next/server";
 import { prisma } from '@/lib/prisma';
+import { checkCarrera } from '@/utils/checkCarrera';
+import { searchParentFolders } from '@/utils/searchParentFolders';
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,7 +47,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: Request) {
   try {
+
+    //Verificamos la carrera asignada al usuario autenticado
+    const carrera = request.headers.get('x-carrera');
     const body = await request.json();
+    var ruta = "";
+
+    if (!carrera) {
+      return NextResponse.json({ error: 'Carrera no encontrada' }, { status: 400 });
+    }
 
     if (!body.Nombre) {
       return NextResponse.json({ error: 'Nombre requerido' }, { status: 400 });
@@ -55,15 +65,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'El nombre debe ser texto' }, { status: 400 });
     }
 
+    const carreraId = await checkCarrera(carrera);
+
+    const parentFoldersList = await searchParentFolders(body.IdCarpetaPadre);
+
+    for (const parentFolder of parentFoldersList) {
+      ruta += `/${parentFolder.Nombre}`;
+    }
+
     const newCarpeta = await prisma.carpeta.create({
       data: {
         Nombre: body.Nombre,
         IdCarpetaPadre: body.IdCarpetaPadre || null,
         FechaCreacion: new Date(),
         FechaActualizacion: new Date(),
-        IdCarrera: body.IdCarrera || null,
+        IdCarrera: carreraId || null,
         Estado: 1,
         Tipo: 'Carpeta',
+        Ruta: ruta,
+        IdHijos: "",
       }
     });
 

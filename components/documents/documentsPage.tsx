@@ -58,18 +58,19 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
       return;
     }
     if (parentId) {
-      //if (parentId && keycloak) {
-      //if (keycloak.token) {
-      fetchChildren(parentId, currentPage, PAGE_SIZE, '');
-      // }
+      if (parentId && keycloak) {
+        if (keycloak.token) {
+          fetchChildren(parentId, currentPage, PAGE_SIZE, keycloak.token);
+        }
+      }
     } else {
-      // Fetch root folders
-      //if (keycloak) {
-      //if (keycloak.token) {
-      fetchFolders(currentPage, PAGE_SIZE, '');
-      //}
-      // }
-    }
+        // Fetch root folders
+        if (keycloak) {
+          if (keycloak.token) {
+            fetchFolders(currentPage, PAGE_SIZE, keycloak.token);
+          }
+        }
+      }
 
   }, [currentPage]);
 
@@ -223,7 +224,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
 
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {!isSearching &&  childrenDocsAndFiles.map((doc, index) =>
+                          {!isSearching && childrenDocsAndFiles.map((doc, index) =>
                             doc.Tipo === 'Archivo' ? (
                               <FileCard
                                 onClick={handleFileClick}

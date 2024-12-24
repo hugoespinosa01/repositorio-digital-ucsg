@@ -13,6 +13,7 @@ export async function POST(req: Request) {
   }
 
   try {
+    
     // Initialize Pinecone client
     const pc = new Pinecone({
       apiKey: process.env.PINECONE_API_KEY!,
@@ -31,15 +32,15 @@ export async function POST(req: Request) {
     const index = pc.index(process.env.PINECONE_INDEX as string);
     const status = await index.describeIndexStats();
     const queryVector = await getEmbeddings(query);
+    
     const res = await index.query({
       vector: queryVector,
       topK: 20,
       includeMetadata: true,
       includeValues: true,
-      filter: {}
     })
 
-    console.log(`query is: ${query}`);
+    console.log(`query is: ${queryVector.length}`);
 
     const retrieved = await vectorStore.similaritySearch(query, 2);
 

@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const initKeycloak = async () => {
             const keycloakInstance = new Keycloak(keycloakOptions);
             try {
-                await keycloakInstance.init({ onLoad: 'login-required' });
+                await keycloakInstance.init({ onLoad: 'check-sso' });
                 setKeycloak(keycloakInstance);
                 
                 if (keycloakInstance.token) {

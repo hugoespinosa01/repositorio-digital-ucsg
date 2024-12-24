@@ -9,6 +9,7 @@ import screen from "@/img/screen.png";
 import { useContext } from 'react';
 import { AuthContext } from '@/context/auth-context';
 import { IconCloud } from '@/components/icon-cloud';
+import { LayoutDashboard, LogIn, LogOut } from 'lucide-react';
 
 const slugs = [
   "typescript",
@@ -31,6 +32,13 @@ export default function Home() {
 
   const { keycloak } = useContext(AuthContext);
 
+  const handleLogin = () => {
+    keycloak?.login();
+  }
+
+  const handleLogout = () => {
+    keycloak?.logout();
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -42,26 +50,37 @@ export default function Home() {
             </h1>
             <span className="max-w-[750px] mt-3 text-center text-lg font-light text-foreground">Gestiona tus documentos con inteligencia artificial</span>
             <div className="flex w-full items-center justify-center space-x-4 py-4 md:pb-6">
-              <Link href={"/documents?page=1"}>
-                <Button>Ir a panel de control
-                </Button>
-              </Link>
-              {/* {
+              {
                 keycloak?.authenticated ? (
-                  <Link href={"/documents?page=1"}>
-                    <Button>Ir a panel de control
+                  <>
+                    <Link href={"/documents?page=1"}>
+                      <Button
+                        variant={'default'}
+                        size={'sm'}
+                      >Ir a panel de control
+                        <LayoutDashboard className="ml-2 w-4 h-4" />
+                      </Button>
+                    </Link>
+                    <Button
+                      variant={'secondary'}
+                      size={'sm'}
+                      onClick={handleLogout}
+                    >Cerrar sesión
+                      <LogOut className="ml-2 w-4 h-4" />
                     </Button>
-                  </Link>
+                  </>
                 ) : (
-                  <Link href="http://localhost:8443/auth/realms/ucsg/protocol/openid-connect/auth?client_id=repositorio-digital-sinergia&redirect_uri=http://localhost:3000/auth/callback&response_type=code" passHref={true}>
-               
-                    <Button variant="default" className="ml-4">
-                      Iniciar sesión
-                      <ArrowRightIcon className="ml-2" />
-                    </Button>
-                  </Link>
+                  <Button
+                    variant="default"
+                    className="ml-4"
+                    onClick={handleLogin}
+                    size={'sm'}
+                  >
+                    Iniciar sesión
+                    <LogIn className="ml-2 w-4 h-4" />
+                  </Button>
                 )
-              } */}
+              }
             </div>
           </section>
           <div className="w-full flex justify-center relative">
