@@ -124,6 +124,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
   ) => {
     try {
       setIsSearching(true);
+      setResults([]);
       const response = await fetch('/api/search', {
         method: 'POST',
         headers: {
