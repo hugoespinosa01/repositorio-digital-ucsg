@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import LoadingDocuments from './loading';
 import Image from 'next/image';
@@ -26,6 +25,7 @@ import SearchBar from '../custom-searchbar';
 import MoveFileModal from '../modals/move-file-modal';
 import { SearchResult } from '@/types/searchResult';
 import { TextShimmer } from '../loading-text-effect';
+import { Documento } from '@/types/file';
 
 const PAGE_SIZE = 6;
 
@@ -43,13 +43,13 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
   const [editMode, setEditMode] = useState(false);
   const { folders, fetchFolders, loading, totalFolders } = useContext(FolderContext);
   const [openModalDelete, setOpenModalDelete] = useState<boolean>(false);
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [results, setResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [query, setQuery] = useState<string>('');
   const { fetchChildren, childrenDocsAndFiles, loadingChildren, totalChildren } = useContext(ChildrenContext);
 
   console.log('Children:', folders);
-  
+
 
   //Para autenticación
   const { keycloak } = useContext(AuthContext);
@@ -59,6 +59,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
       router.push('/pageNotFound');
       return;
     }
+
     if (parentId) {
       if (parentId && keycloak) {
         if (keycloak.token) {
@@ -66,13 +67,13 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
         }
       }
     } else {
-        // Fetch root folders
-        if (keycloak) {
-          if (keycloak.token) {
-            fetchFolders(currentPage, PAGE_SIZE, keycloak.token);
-          }
+      // Fetch root folders
+      if (keycloak) {
+        if (keycloak.token) {
+          fetchFolders(currentPage, PAGE_SIZE, keycloak.token);
         }
       }
+    }
 
   }, [currentPage, keycloak]);
 
@@ -147,8 +148,6 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
     }
   }
 
-
-
   return (
     <Card className='p-5 mt-5'>
       <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between'>
@@ -216,9 +215,9 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                                 onClick={handleFileClick}
                                 onDelete={handleDeleteFile}
                                 onMove={handleMoveFile}
-                                file={res.metadata}
-                                creationDate={res.metadata.FechaCarga}
-                                fileName={res.metadata.NombreArchivo}
+                                file={res}
+                                creationDate={res.FechaCarga}
+                                fileName={res.NombreArchivo}
                               />
                             ))
                           }
@@ -226,7 +225,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
 
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {!isSearching && childrenDocsAndFiles.map((doc, index) =>
+                          {!isSearching && results.length == 0 && childrenDocsAndFiles.map((doc, index) =>
                             doc.Tipo === 'Archivo' ? (
                               <FileCard
                                 onClick={handleFileClick}
@@ -280,10 +279,6 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                       {
                         isSearching && (
                           <div className="flex justify-center mb-8">
-                            {/* <div className="flex items-center space-x-3 bg-white p-3 rounded-sm">
-                              <p className="text-sm text-gray-600">Buscando documentos...</p>
-                              <div className="spinner-border-3 border-t-transparent border-red-800 rounded-full w-4 h-4 animate-spin"></div>
-                            </div> */}
                             <TextShimmer
                               duration={1.2}
                               className='text-sm font-medium color:theme(colors.blue.600)] [--base-gradient-color:theme(colors.blue.200)] dark:[--base-color:theme(colors.blue.700)] dark:[--base-gradient-color:theme(colors.blue.400)]'
@@ -294,8 +289,24 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                         )
                       }
 
+                      {
+                        results.length > 0 && results.map((res, index) => (
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <FileCard
+                              key={index}
+                              onClick={handleFileClick}
+                              onDelete={handleDeleteFile}
+                              onMove={handleMoveFile}
+                              file={res}
+                              creationDate={res.FechaCarga}
+                              fileName={res.NombreArchivo}
+                            />
+                          </div>
+                        ))
+                      }
+
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {!isSearching && folders.map((doc) => (
+                        {!isSearching && results.length == 0 && folders.map((doc) => (
 
                           <FolderCard
                             key={doc.Id}

@@ -8,10 +8,12 @@ export const AuthContext = createContext<{
     keycloak: Keycloak | null;
     handleLogout: () => void;
     token: string | null;
+    setToken: (token: string) => void;
 }>({
     keycloak: null,
     handleLogout: () => { },
-    token: null
+    token: null,
+    setToken: () => { }
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -22,12 +24,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const initKeycloak = async () => {
             const keycloakInstance = new Keycloak(keycloakOptions);
             try {
-                await keycloakInstance.init({ onLoad: 'check-sso' });
+                await keycloakInstance.init({ 
+                    onLoad: 'check-sso',
+                    redirectUri: window.location.origin,
+                });
                 setKeycloak(keycloakInstance);
                 
                 if (keycloakInstance.token) {
-                    setToken(keycloakInstance.token);
+                    setToken(keycloakInstance.token ?? null);
                 }
+
+                if (keycloakInstance.isTokenExpired(30)){
+                    await keycloakInstance.updateToken(60);
+                    setToken(keycloakInstance.token ?? null);
+                }
+
             } catch (error) {
                 console.error(error)
             }
@@ -51,7 +62,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         <AuthContext.Provider value={{
             keycloak,
             handleLogout,
-            token
+            token,
+            setToken
         }}>
             {children}
         </AuthContext.Provider>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/components/ui/use-toast';
@@ -17,18 +17,33 @@ const MAX_FILE_SIZE = 1024 * 1024 * 10; // 10MB
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [token, setToken] = useState<string>('');
-  
   const router = useRouter();
-  const { register, handleSubmit } = useForm();
+  //const [token, setToken] = useState<string>('');
+
+  const { handleSubmit } = useForm();
   const { toast } = useToast();
-  const {keycloak} = useContext(AuthContext);
+  const { token, keycloak } = useContext(AuthContext);
 
   useEffect(() => {
-    if (keycloak?.token) {
-      setToken(keycloak.token);
+
+    async function checkIfAuthenticated() {
+      if (!keycloak?.authenticated) {
+        const loginUrl = await keycloak?.createLoginUrl();
+        if (loginUrl) {
+          router.push(loginUrl);
+        }
+      }
     }
+
+    checkIfAuthenticated();
+
   }, [keycloak]);
+
+  // useEffect(() => {
+  //   if (keycloak?.token) {
+  //     setToken(keycloak.token);
+  //   }
+  // }, [keycloak]);
 
   const onSubmit = async () => {
     setIsSubmitting(true);

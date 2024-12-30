@@ -1,10 +1,13 @@
 export interface Documento {
     Id: number;
+    IdCarpeta: number | null;
     NombreArchivo: string;
-    IdCarpeta: number;
-    FechaCarga: string;
-    Ruta: string;
+    Ruta: string | null;
     RefArchivo: string;
-    Tamano: number;
-    Extension: string;
+    FechaCarga: Date;
+    Tamano: number | null;
+    Extension: string | null;
+    Estado: number | null;
+    Tipo: string | null;
 }
+
