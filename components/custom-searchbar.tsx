@@ -11,6 +11,7 @@ export default function SearchBar({
 
     const [inputValue, setInputValue] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [clearResults, setClearResults] = useState<boolean>(false);
 
     useEffect(() => {
         if (inputValue) {
@@ -19,6 +20,9 @@ export default function SearchBar({
                 setIsLoading(false);
             }, 500);
             return () => clearTimeout(timer);
+        }
+        if (inputValue.length === 0) {
+            setClearResults(true);
         }
     }, [inputValue]);
 
@@ -36,7 +40,9 @@ export default function SearchBar({
                     placeholder="Busca un documento con IA"
                     type="search"
                     value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
+                    onChange={(e) => {
+                        setInputValue(e.target.value)
+                    }}
                 />
                 <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
                     {isLoading ? (

@@ -3,6 +3,8 @@ import * as jose from 'jose'
 
 export default async function middleware(request: NextRequest) {
 
+    
+
     const headersList = request.headers;
     const bearerHeader = headersList.get("authorization");
     const token = bearerHeader && bearerHeader.split(" ")[1];

@@ -54,6 +54,13 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
   //Para autenticación
   const { keycloak } = useContext(AuthContext);
 
+  // Limpiar resultados de búsqueda si no hay query
+  useEffect(() => {
+    if (query.length === 0) {
+      setResults([]);
+    }
+  }, [query]);
+
   useEffect(() => {
     if (currentPage < 1 || isNaN(currentPage)) {
       router.push('/pageNotFound');
@@ -290,21 +297,22 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                         )
                       }
 
-                      {
-                        results.length > 0 && results.map((res, index) => (
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <FileCard
-                              key={index}
-                              onClick={handleFileClick}
-                              onDelete={handleDeleteFile}
-                              onMove={handleMoveFile}
-                              file={res}
-                              creationDate={res.FechaCarga}
-                              fileName={res.NombreArchivo}
-                            />
-                          </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {results.length > 0 && results.map((res, index) => (
+                          <FileCard
+                            key={index}
+                            onClick={handleFileClick}
+                            onDelete={handleDeleteFile}
+                            onMove={handleMoveFile}
+                            file={res}
+                            creationDate={res.FechaCarga}
+                            fileName={res.NombreArchivo}
+                          />
                         ))
-                      }
+                        }
+                      </div>
+
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {!isSearching && results.length == 0 && folders.map((doc) => (
