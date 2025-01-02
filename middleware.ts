@@ -1,12 +1,13 @@
-import type { NextFetchEvent, NextRequest } from 'next/server';
-import { getSession } from 'next-auth/react';
-import { NextResponse } from 'next/server';
-
 export { default } from "next-auth/middleware";
 
 export const config = {
     matcher: [
       '/documents/:path*',
+      '/upload/:path*',
+      '/files/:path*',
+      '/account/:path*',
+      '/pageNotFound/:path*',
+      '/api/:path*',
     ],
 }
 

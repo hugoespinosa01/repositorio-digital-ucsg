@@ -5,7 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { GeistSans } from 'geist/font/sans';
 import { FolderProvider } from '@/context/folder-context'
 import { ChildrenProvider } from '@/context/children-context';
-import { AuthProvider } from '@/context/auth-context';
+import SessionProviderWrapper from '@/utils/sessionProviderWrapper';
 
 export const metadata: Metadata = {
   title: 'Sinergia | Repositorio digital documental',
@@ -18,21 +18,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" suppressHydrationWarning>
-      <body className={GeistSans.className}>
-        <AuthProvider>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <FolderProvider>
-              <ChildrenProvider>
-                <div vaul-drawer-wrapper="" className="bg-background">
-                  {children}
-                </div>
-              </ChildrenProvider>
-            </FolderProvider>
-            <Toaster />
-          </ThemeProvider>
-        </AuthProvider>
-      </body>
-    </html>
+    <SessionProviderWrapper>
+      <html lang="es" suppressHydrationWarning>
+        <body className={GeistSans.className}>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+              <FolderProvider>
+                <ChildrenProvider>
+                  <div vaul-drawer-wrapper="" className="bg-background">
+                    {children}
+                  </div>
+                </ChildrenProvider>
+              </FolderProvider>
+              <Toaster />
+            </ThemeProvider>
+        </body>
+      </html>
+    </SessionProviderWrapper>
   );
 }

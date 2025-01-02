@@ -3,13 +3,14 @@ import React, { useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { IdCard, Mail, School } from 'lucide-react';
 import { Input } from '../ui/input';
-import { useContext, useState } from 'react';
-import { AuthContext } from '@/context/auth-context';
+import { useState } from 'react';
+import { useSession } from 'next-auth/react';
+import GetBackButton from '../getback-button';
+
 
 interface UserInfo {
-  given_name: string;
+  name: string;
   email: string;
-  familyName: string;
   career: string;
   identification: string;
 }
@@ -17,34 +18,31 @@ interface UserInfo {
 export default function AccountDetails() {
 
   const [userInfo, setUserInfo] = useState<UserInfo>({
-    given_name: '',
+    name: '',
     email: '',
-    familyName: '',
     career: '',
     identification: ''
   })
-
-  const { keycloak } = useContext(AuthContext);
+  const { data: session } = useSession();
 
   useEffect(() => {
-    if (keycloak) {
-      setUserInfo({
-        given_name: keycloak.tokenParsed?.given_name,
-        email: keycloak.tokenParsed?.email,
-        familyName: keycloak.tokenParsed?.family_name,
-        career: keycloak.tokenParsed?.carrera,
-        identification: keycloak.tokenParsed?.cedula
-      })
-    }
-  }, [keycloak])
-
-  console.log(keycloak?.tokenParsed);
-  
+    setUserInfo({
+      name: session?.user?.name || '',
+      email: session?.user?.email || '',
+      career: session?.user.carrera.join() || '',
+      identification: session?.user.cedula || ''
+    })
+  }, [])
 
   return (
     <Card className='p-5 mt-5'>
       <CardHeader>
-        <CardTitle>Información del usuario</CardTitle>
+        <CardTitle>
+          <h1 className="text-2xl font-bold mb-4">
+            Información del usuario
+          </h1>
+          <GetBackButton />
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="max-w-6xl mx-auto px-4 py-8">
@@ -52,21 +50,12 @@ export default function AccountDetails() {
             {/* Main Content */}
             <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
-                    <Input
-                      disabled
-                      value={userInfo.given_name}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Apellido</label>
-                    <Input
-                      disabled
-                      value={userInfo.familyName}
-                    />
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
+                  <Input
+                    readOnly
+                    value={userInfo.name.toUpperCase()}
+                  />
                 </div>
 
                 <div>
@@ -78,7 +67,7 @@ export default function AccountDetails() {
                   </label>
                   <Input
                     value={userInfo.identification}
-                    disabled
+                    readOnly
                   />
                 </div>
 
@@ -92,7 +81,7 @@ export default function AccountDetails() {
                   <Input
                     type='email'
                     value={userInfo.email}
-                    disabled
+                    readOnly
                   />
                 </div>
 
@@ -104,7 +93,7 @@ export default function AccountDetails() {
                     </div>
                   </label>
                   <Input
-                    disabled
+                    readOnly
                     value={userInfo.career}
                   />
                 </div>

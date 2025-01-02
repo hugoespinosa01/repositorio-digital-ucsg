@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import LoadingDocuments from '@/components/documents/loading';
 import { useContext } from 'react';
@@ -17,6 +17,8 @@ import ExpandKardexDetail from '../modals/expand-kardex-detail-datatable';
 import ConfirmDeleteFile from '../modals/confirm-delete-file';
 import { KardexDetalle } from '@/types/kardexDetalle';
 import { useToast } from '@/components/ui/use-toast';
+import { useSession } from 'next-auth/react';
+import ReporteSIU from '../reporteSIU';
 
 interface FileData {
   Id: number;
@@ -40,29 +42,24 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
   const { toast } = useToast();
-
-  //Para autenticación
-  const { keycloak } = useContext(AuthContext);
+  const { data: session } = useSession();
+  const printRef = useRef(null);
+  
 
   useEffect(() => {
-    //if (fileId && keycloak) {
-    //if (keycloak.token) {
+
     if (fileId) {
       fetchFile(fileId);
     }
 
-  }, [keycloak]);
+  }, [fileId]);
 
 
   const fetchFile = async (fileId: string) => {
     setLoading(true);
 
     //Traigo los datos del archivo
-    const response = await fetch(`/api/files/${Number(fileId)}`, {
-      headers: {
-        'Authorization': keycloak?.token ? `Bearer ${keycloak.token}` : '',
-      }
-    })
+    const response = await fetch(`/api/files/${Number(fileId)}`);
 
     if (!response.ok) {
       throw new Error(`Error al obtener el archivo: ${response.statusText}`);
@@ -71,11 +68,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
     const res = await response.json();
 
     //Obtengo el archivo PDF
-    const blobResponse = await fetch(`/api/blob/${res.data.RefArchivo}`, {
-      headers: {
-        'Authorization': keycloak?.token ? `Bearer ${keycloak.token}` : '',
-      }
-    });
+    const blobResponse = await fetch(`/api/blob/${res.data.RefArchivo}`);
 
     if (!blobResponse.ok) {
       throw new Error(`Error al obtener el archivo: ${blobResponse.statusText}`);
@@ -101,8 +94,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
   }
 
   const vals = {
-    fileId: fileId,
-    token: keycloak?.token
+    fileId: fileId
   }
 
   const handleDelete = () => {
@@ -114,9 +106,6 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
 
     const response = await fetch(`/api/files/${Number(fileId)}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': keycloak?.token ? `Bearer ${keycloak.token}` : '',
-      }
     });
 
     if (!response.ok) {
@@ -141,6 +130,15 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
   }, []);
 
   const columns = useMemo(() => GetColumns({ onEdit, onDelete }), []);
+
+  const handleDownloadReport = async () => {
+    const element = printRef.current;
+    if (!element) {
+      return;
+    }
+
+
+  }
 
   return (
     <Card className='p-5 mt-5'>
@@ -169,7 +167,10 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
           </div>
         ) :
           (
-            <div className="container mx-auto p-4">
+            <div className="container mx-auto p-4">           
+              <ReporteSIU 
+                printRef={printRef}
+              />
               <div className="grid grid-cols-2 md:grid-cols-2 gap-6">
                 <div className="container mx-auto p-4 sm:block">
                   <PDFViewerComponent
@@ -190,6 +191,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
                     </Button>
                     <Button
                       variant={'default'}
+                      onClick={handleDownloadReport}
                     >
                       <FileDown className='mr-3' />
                       Descargar reporte

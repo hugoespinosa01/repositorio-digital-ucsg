@@ -2,6 +2,7 @@ import { decrypt } from '@/utils/encrypt-decrypt-auth';
 import { getServerSession } from 'next-auth';
 
 import auth from '@/lib/auth';
+import { getSession } from 'next-auth/react';
 
 export async function getAccessToken() {
     const session = await getServerSession(auth);

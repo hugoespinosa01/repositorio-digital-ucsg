@@ -20,6 +20,8 @@ declare module 'next-auth' {
         error?: 'RefreshAccessTokenError';
         user: User & {
             id: UserId;
+            carrera: string[];
+            cedula: string;
         };
     }
 }
@@ -47,6 +49,8 @@ interface Decoded {
     preferred_username: string;
     given_name: string;
     family_name: string;
+    carrera: string[];
+    cedula: string;
 }
 
 export interface RealmAccess {

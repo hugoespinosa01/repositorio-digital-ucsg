@@ -123,7 +123,7 @@ export function Menu({ isOpen }: MenuProps) {
               <Tooltip delayDuration={100}>
                 <TooltipTrigger asChild>
                   <Button
-                    onClick={() => keycloakSessionLogOut().then(() => signOut({ callbackUrl: 'http://localhost:3000' }))}
+                    onClick={() => keycloakSessionLogOut().then(() => signOut({ callbackUrl: '/' }))}
                     variant="outline"
                     className="w-full justify-center h-10 mt-5"
                   >

@@ -13,7 +13,6 @@ interface InputDemoProps {
     noIcon?: boolean;
     vals?: {
         fileId: string | null | undefined;
-        token: string | undefined;
     }
 }
 
@@ -44,7 +43,6 @@ export default function InputDemo({ value, label, noIcon, vals, id }: InputDemoP
         const response = await fetch(`/api/files/${vals?.fileId}`, {
             method: 'PUT',
             headers: {
-                'Authorization': vals?.token ? `Bearer ${vals?.token}` : '',
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({

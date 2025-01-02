@@ -6,7 +6,7 @@ import { useToast } from '@/components/ui/use-toast';
 
 export const ChildrenContext = createContext<{
     childrenDocsAndFiles: any[];
-    fetchChildren: (parentId: string | null, currentPage: number, pageSize: number, token: string) => Promise<void>;
+    fetchChildren: (parentId: string | null, currentPage: number, pageSize: number) => Promise<void>;
     loadingChildren: boolean;
     totalChildren: number;
 }>({
@@ -23,15 +23,11 @@ export const ChildrenProvider = ({ children }: { children: React.ReactNode }) =>
     const [totalChildren, setTotalChildren] = useState<number>(0);
     const { toast } = useToast();
 
-
-    async function fetchChildren(parentId: string | null, currentPage: number, pageSize: number, token: string) {
+    async function fetchChildren(parentId: string | null, currentPage: number, pageSize: number) {
         try {
             setLoadingChildren(true);
-            const response = await fetch(`/api/folders/${Number(parentId)}/children?page=${currentPage}&page_size=${pageSize}`, {
-                headers: {
-                    'Authorization': token ? `Bearer ${token}` : '',
-                }
-            });
+
+            const response = await fetch(`/api/folders/${Number(parentId)}/children?page=${currentPage}&page_size=${pageSize}`);
             if (response.ok){
                 const res = await response.json();
                 if (Array.isArray(res.data)) {

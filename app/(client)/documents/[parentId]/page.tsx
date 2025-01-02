@@ -14,8 +14,6 @@ import DocumentsPage from "../../../../components/documents/documentsPage";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Folder } from "@/types/folder";
-import { useContext } from "react";
-import { AuthContext } from "@/context/auth-context";
 import LoadingBreadcrumb from "@/components/documents/loadingBreadcrumb";
 
 export default function DocumentDetail() {
@@ -23,7 +21,6 @@ export default function DocumentDetail() {
   const params = useParams<{ parentId: string }>();
   const [parent, setParent] = useState<Folder | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const { keycloak } = useContext(AuthContext);
 
   const path = parent?.Ruta ?? '/';
   const pathArray = path.split('/');
@@ -42,32 +39,28 @@ export default function DocumentDetail() {
     }
   });
 
-  const fetchParent = async (token: string) => {
+  const fetchParent = async () => {
     // Fetch parent data
     setLoading(true);
-    const response = await fetch(`/api/folders/${params.parentId}`, {
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : '',
-      }
-    });
+    const response = await fetch(`/api/folders/${params.parentId}`);
     const res = await response.json();
     setParent(res.data);
     setLoading(false);
   }
 
   useEffect(() => {
-    if (params.parentId && keycloak?.token) {
-      fetchParent(keycloak.token);
+    if (params.parentId) {
+      fetchParent();
     }
-  }, [params.parentId, keycloak]);
+  }, [params.parentId]);
 
   return (
     <ContentLayout title="Sinergia">
-
       {
         loading ? (
           <LoadingBreadcrumb />
-        ) : (<Breadcrumb>
+        ) : (
+        <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
@@ -85,7 +78,7 @@ export default function DocumentDetail() {
                 if (index === pathsForBreadcrumb.length - 1) {
                   return (
                     <>
-                      <BreadcrumbSeparator />
+                      <BreadcrumbSeparator key={index + 1} />
                       <BreadcrumbItem key={index}>
                         <BreadcrumbPage>
                           {item?.name}
@@ -96,7 +89,7 @@ export default function DocumentDetail() {
                 } else {
                   return (
                     <>
-                      <BreadcrumbSeparator />
+                      <BreadcrumbSeparator key={index + 1}/>
                       <BreadcrumbItem key={index}>
                         <BreadcrumbLink asChild>
                           <Link href={`/documents/${item?.id}?page=1`}>{item?.name}</Link>

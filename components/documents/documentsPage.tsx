@@ -19,13 +19,13 @@ import DocumentHeader from './documentHeader';
 import GetBackButton from '../getback-button';
 import ConfirmDeleteModal from './confirmDeleteModal';
 import { FileCard } from '../custom-file-card';
-import { AuthContext } from '@/context/auth-context';
 import ConfirmDeleteFile from '../modals/confirm-delete-file';
 import SearchBar from '../custom-searchbar';
 import MoveFileModal from '../modals/move-file-modal';
 import { SearchResult } from '@/types/searchResult';
 import { TextShimmer } from '../loading-text-effect';
-import { Documento } from '@/types/file';
+import { getAccessToken } from '@/utils/session-token-accessor';
+
 
 const PAGE_SIZE = 6;
 
@@ -47,12 +47,8 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [query, setQuery] = useState<string>('');
   const { fetchChildren, childrenDocsAndFiles, loadingChildren, totalChildren } = useContext(ChildrenContext);
-
-  console.log('Children:', folders);
-
-
-  //Para autenticación
-  const { keycloak } = useContext(AuthContext);
+  console.log(query);
+  
 
   // Limpiar resultados de búsqueda si no hay query
   useEffect(() => {
@@ -68,21 +64,13 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
     }
 
     if (parentId) {
-      if (parentId && keycloak) {
-        if (keycloak.token) {
-          fetchChildren(parentId, currentPage, PAGE_SIZE, keycloak.token);
-        }
-      }
+      fetchChildren(parentId, currentPage, PAGE_SIZE);
     } else {
       // Fetch root folders
-      if (keycloak) {
-        if (keycloak.token) {
-          fetchFolders(currentPage, PAGE_SIZE, keycloak.token);
-        }
-      }
+      fetchFolders(currentPage, PAGE_SIZE);
     }
 
-  }, [currentPage, keycloak]);
+  }, [currentPage, parentId]);
 
   const handleCreateFolder = () => {
     setEditMode(false);
@@ -132,11 +120,11 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
     try {
       setIsSearching(true);
       setResults([]);
+    
       const response = await fetch('/api/search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': keycloak?.token ? `Bearer ${keycloak.token}` : '',
         },
         body: JSON.stringify({ query }),
       });
@@ -188,6 +176,8 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                         {/* Barra de búsqueda */}
                         <div className="justify-center mb-8 text-center">
                           <SearchBar
+                            fieldValue={query}
+                            setFieldValue={setQuery}
                             handleSearch={(query: string) => {
                               handleSearch(query, setResults, setIsSearching);
                               setQuery(query);
@@ -199,10 +189,6 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                         {
                           isSearching && (
                             <div className="flex justify-center mb-8">
-                              {/* <div className="flex items-center space-x-3 bg-white p-3 rounded-sm">
-                                <p className="text-sm text-gray-600">Buscando documentos...</p>
-                                <div className="spinner-border-3 border-t-transparent border-red-800 rounded-full w-4 h-4 animate-spin"></div>
-                              </div> */}
 
                               <TextShimmer
                                 duration={1.2}
@@ -220,6 +206,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                             results.length > 0 && results.map((res, index) => (
                               <FileCard
                                 key={index}
+                                orderId={index}
                                 onClick={handleFileClick}
                                 onDelete={handleDeleteFile}
                                 onMove={handleMoveFile}
@@ -277,6 +264,8 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                       {/* Barra de búsqueda */}
                       <div className="justify-center mb-8 text-center">
                         <SearchBar
+                          fieldValue={query}
+                          setFieldValue={setQuery}
                           handleSearch={(query: string) => {
                             handleSearch(query, setResults, setIsSearching);
                             setQuery(query);

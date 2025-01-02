@@ -1,6 +1,7 @@
 import React from 'react';
-import { File, Trash2, Folder, FolderInput } from 'lucide-react';
+import { File, Trash2, FolderInput } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { cn } from '@/lib/utils';
 
 interface FileCardProps {
   fileName: string;
@@ -9,9 +10,10 @@ interface FileCardProps {
   onDelete?: (id: number) => void;
   onClick?: (id: number) => void;
   onMove?: (id: number) => void;
+  orderId?: number;
 }
 
-export function FileCard({ fileName, creationDate, file, onDelete, onClick, onMove }: FileCardProps) {
+export function FileCard({ fileName, creationDate, file, onDelete, onClick, onMove, orderId }: FileCardProps) {
   const [showActions, setShowActions] = React.useState(false);
 
   const handleActionClick = (e: React.MouseEvent, action: () => void) => {
@@ -32,7 +34,7 @@ export function FileCard({ fileName, creationDate, file, onDelete, onClick, onMo
             <File className="w-6 h-6 text-primary" />
           </div>
           <div className="min-w-0 group">
-            <h3 className="font-medium group-hover:text-primary transition-all duration-300 truncate group-hover:max-w-[80%]">
+            <h3 className={cn(orderId === 0 && "bg-yellow-500", "font-medium group-hover:text-primary transition-all duration-300 truncate group-hover:max-w-[80%]")}>
               {fileName}
             </h3>
             <p className="text-sm text-gray-500 truncate">

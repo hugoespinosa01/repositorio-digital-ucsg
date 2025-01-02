@@ -4,31 +4,31 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/comp
 import { useState, useEffect, FormEvent } from "react";
 
 export default function SearchBar({
-    handleSearch
+    handleSearch,
+    fieldValue,
+    setFieldValue
 }: {
     handleSearch: (query: string) => void;
+    setFieldValue: (value: string) => void;
+    fieldValue: string;
 }) {
 
-    const [inputValue, setInputValue] = useState<string>("");
+    // const [inputValue, setInputValue] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [clearResults, setClearResults] = useState<boolean>(false);
 
     useEffect(() => {
-        if (inputValue) {
+        if (fieldValue) {
             setIsLoading(true);
             const timer = setTimeout(() => {
                 setIsLoading(false);
             }, 500);
             return () => clearTimeout(timer);
         }
-        if (inputValue.length === 0) {
-            setClearResults(true);
-        }
-    }, [inputValue]);
+    }, [setFieldValue]);
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-        handleSearch(inputValue);
+        handleSearch(fieldValue);
     }
 
     return (
@@ -39,9 +39,9 @@ export default function SearchBar({
                     className="peer pe-9 ps-9"
                     placeholder="Busca un documento con IA"
                     type="search"
-                    value={inputValue}
+                    value={fieldValue}
                     onChange={(e) => {
-                        setInputValue(e.target.value)
+                        setFieldValue(e.target.value)
                     }}
                 />
                 <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">

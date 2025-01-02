@@ -5,7 +5,7 @@ import { Folder } from "@/types/folder";
 
 export const FolderContext = createContext<{
     folders: any[];
-    fetchFolders: (currentPage: number, pageSize: number, token: string) => Promise<void>;
+    fetchFolders: (currentPage: number, pageSize: number) => Promise<void>;
     loading: boolean;
     createFolder: (nombre: string, setOpenModal: (open: boolean) => void, parentId: number, token: string) => Promise<void>;
     updateFolder: (id: number, nombre: string, setOpenModal: (open: boolean) => void, token: string) => Promise<void>;
@@ -36,20 +36,14 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [pageSize, setPageSize] = useState(6);
 
-    async function fetchFolders(currentPage: number, pageSize: number, token: string) {
+    async function fetchFolders(currentPage: number, pageSize: number) {
         try {
             setLoading(true);
             setPageSize(pageSize);
 
-            const response = await fetch(`/api/folders?page=${currentPage}&page_size=${pageSize}`, {
-                headers: {
-                    'Authorization': token ? `Bearer ${token}` : '',
-                }
-            });
+            const response = await fetch(`/api/folders?page=${currentPage}&page_size=${pageSize}`);
             if (response.ok) {
-                const res = await response.json();
-                console.log("hola", res.data);
-                
+                const res = await response.json();              
 
                 if (Array.isArray(res.data)) {
                     setFolders(res.data);
@@ -184,7 +178,7 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
                 }
             });
             if (response.ok) {
-                fetchFolders(currentPage, pageSize, token);
+                fetchFolders(currentPage, pageSize);
             } else {
                 const errorData = await response.json();
                 setLoading(false);
@@ -232,7 +226,7 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
 
             setIsSubmitting(false);
             setOpenModal(false);
-            fetchFolders(1, pageSize, token);
+            fetchFolders(1, pageSize);
 
         } catch (err) {
             console.error(err);

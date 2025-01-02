@@ -18,32 +18,9 @@ export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const router = useRouter();
-  //const [token, setToken] = useState<string>('');
 
   const { handleSubmit } = useForm();
   const { toast } = useToast();
-  const { token, keycloak } = useContext(AuthContext);
-
-  useEffect(() => {
-
-    async function checkIfAuthenticated() {
-      if (!keycloak?.authenticated) {
-        const loginUrl = await keycloak?.createLoginUrl();
-        if (loginUrl) {
-          router.push(loginUrl);
-        }
-      }
-    }
-
-    checkIfAuthenticated();
-
-  }, [keycloak]);
-
-  // useEffect(() => {
-  //   if (keycloak?.token) {
-  //     setToken(keycloak.token);
-  //   }
-  // }, [keycloak]);
 
   const onSubmit = async () => {
     setIsSubmitting(true);
@@ -75,10 +52,7 @@ export default function UploadPage() {
 
       const response = await fetch("/api/files", {
         method: "POST",
-        body: formData,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        }
+        body: formData
       });
 
       if (response.ok) {

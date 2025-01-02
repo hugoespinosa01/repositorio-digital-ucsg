@@ -6,12 +6,12 @@ import KeycloakProvider from 'next-auth/providers/keycloak';
 
 async function refreshAccessToken(token: JWT) {
     const resp = await fetch(
-        `${process.env.NEXT_PUBLIC_KEYCLOAK_URL}/protocol/openid-connect/token`,
+        `${process.env.NEXT_PUBLIC_KEYCLOAK_URL}realms/ucsg/protocol/openid-connect/token`,
         {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({
                 client_id: process.env.KEYCLOAK_BACKEND_CLIENT_ID || '',
-                client_secret: ' ',
+                client_secret: process.env.KEYCLOAK_CLIENT_SECRET || '',
                 grant_type: 'refresh_token',
                 refresh_token: token.refresh_token,
             }),
@@ -34,7 +34,7 @@ async function refreshAccessToken(token: JWT) {
 const auth: NextAuthOptions = {
     providers: [
         KeycloakProvider({
-            clientId: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || '',
+            clientId: process.env.KEYCLOAK_BACKEND_CLIENT_ID || '',
             clientSecret: process.env.KEYCLOAK_CLIENT_SECRET || '',
             issuer: process.env.NEXT_PUBLIC_KEYCLOAK_ISSUER || '',
         }),
@@ -44,6 +44,7 @@ const auth: NextAuthOptions = {
             const nowTimeStamp = Math.floor(Date.now() / 1000);
 
             if (account) {
+                // Disponible solo la primera vez el callback es llamado en una nueva sesión
                 token.decoded = jwtDecode(account.access_token ?? '');
                 token.access_token = account.access_token ?? '';
                 token.id_token = account.id_token ?? '';
@@ -51,8 +52,10 @@ const auth: NextAuthOptions = {
                 token.refresh_token = account.refresh_token ?? '';
                 return token;
             } else if (nowTimeStamp < token.expires_at) {
+                // Si el token no ha expirado, devolverlo
                 return token;
             } else {
+                // Si el token ha expirado, intentar refrescarlo
                 try {
                     console.log('Refreshing access token');
                     const refreshedToken = await refreshAccessToken(token);
@@ -71,6 +74,9 @@ const auth: NextAuthOptions = {
             session.user.id = token.sub;
             session.user.name = token.name;
             session.user.email = token.email;
+            //Guardo también la carrera
+            session.user.carrera = token.decoded.carrera;
+            session.user.cedula = token.decoded.cedula;
             return session;
         },
     },

@@ -4,14 +4,11 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ContainerScroll } from "@/components/scroll-custom-comp";
 import Image from "next/image";
-import { ArrowRightIcon } from "@radix-ui/react-icons";
 import screen from "@/img/screen.png";
-import { useContext } from 'react';
-import { AuthContext } from '@/context/auth-context';
 import { IconCloud } from '@/components/icon-cloud';
 import { LayoutDashboard, LogIn, LogOut } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { useSession, signIn, signOut } from 'next-auth/react';
 
 const slugs = [
   "typescript",
@@ -32,8 +29,17 @@ const slugs = [
 
 export default function Home() {
 
-  const { keycloak } = useContext(AuthContext);
   const searchParams = useSearchParams();
+
+  const { data: session, status } = useSession();
+
+  async function keycloakSessionLogOut() {
+    try {
+      await fetch(`/api/auth/logout`, { method: 'GET' });
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   const handleLogin = async () => {
     await signIn('keycloak', {
@@ -41,8 +47,10 @@ export default function Home() {
     });
   }
 
-  const handleLogout = () => {
-    keycloak?.logout();
+  const handleLogout = async () => {
+    await signOut({
+      callbackUrl: searchParams?.get('callbackUrl') || '/',
+    });
   }
 
   return (
@@ -56,35 +64,47 @@ export default function Home() {
             <span className="max-w-[750px] mt-3 text-center text-lg font-light text-foreground">Gestiona tus documentos con inteligencia artificial</span>
             <div className="flex w-full items-center justify-center space-x-4 py-4 md:pb-6">
               {
-                keycloak?.authenticated ? (
-                  <>
-                    <Link href={"/documents?page=1"}>
-                      <Button
-                        variant={'default'}
-                        size={'sm'}
-                      >Ir a panel de control
-                        <LayoutDashboard className="ml-2 w-4 h-4" />
-                      </Button>
-                    </Link>
-                    <Button
-                      variant={'secondary'}
-                      size={'sm'}
-                      onClick={handleLogout}
-                    >Cerrar sesión
-                      <LogOut className="ml-2 w-4 h-4" />
-                    </Button>
-                  </>
-                ) : (
+                /* Cuando el estado de autenticación se esté cargando */
+                status === 'loading' ? (
                   <Button
-                    variant="default"
-                    className="ml-4"
-                    onClick={handleLogin}
+                    variant={'default'}
                     size={'sm'}
-                  >
-                    Iniciar sesión
-                    <LogIn className="ml-2 w-4 h-4" />
+                    disabled
+                  >Cargando...
                   </Button>
-                )
+                ) :
+                  /* Cuando esté autenticado y haya una sesión vigente */
+                  status === 'authenticated' && session ? (
+                    <>
+                      <Link href={"/documents?page=1"}>
+                        <Button
+                          variant={'default'}
+                          size={'sm'}
+                        >Ir a panel de control
+                          <LayoutDashboard className="ml-2 w-4 h-4" />
+                        </Button>
+                      </Link>
+                      <Button
+                        variant={'secondary'}
+                        size={'sm'}
+                        onClick={() => keycloakSessionLogOut().then(() => signOut({ callbackUrl: '/' }))}
+                        >Cerrar sesión
+                        <LogOut className="ml-2 w-4 h-4" />
+                      </Button>
+                    </>
+                  ) :
+                    /* Si no está autenticado */
+                    (
+                      <Button
+                        variant="default"
+                        className="ml-4"
+                        onClick={handleLogin}
+                        size={'sm'}
+                      >
+                        Iniciar sesión
+                        <LogIn className="ml-2 w-4 h-4" />
+                      </Button>
+                    )
               }
             </div>
           </section>
