@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Ellipsis, LogOut } from "lucide-react";
 import { usePathname } from "next/navigation";
-
+import { signOut } from 'next-auth/react';
 import { cn } from "@/lib/utils";
 import { getMenuList } from "@/lib/menu-list";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,15 @@ export function Menu({ isOpen }: MenuProps) {
   const pathname = usePathname();
   const menuList = getMenuList(pathname);
   const { handleLogout } = useContext(AuthContext);
+
+  async function keycloakSessionLogOut() {
+    try {
+        await fetch(`/api/auth/logout`, { method: 'GET' });
+    } catch (err) {
+        console.error(err);
+    }
+}
+
 
 
   return (
@@ -114,7 +123,7 @@ export function Menu({ isOpen }: MenuProps) {
               <Tooltip delayDuration={100}>
                 <TooltipTrigger asChild>
                   <Button
-                    onClick={handleLogout}
+                    onClick={() => keycloakSessionLogOut().then(() => signOut({ callbackUrl: 'http://localhost:3000' }))}
                     variant="outline"
                     className="w-full justify-center h-10 mt-5"
                   >

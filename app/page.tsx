@@ -10,6 +10,8 @@ import { useContext } from 'react';
 import { AuthContext } from '@/context/auth-context';
 import { IconCloud } from '@/components/icon-cloud';
 import { LayoutDashboard, LogIn, LogOut } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 
 const slugs = [
   "typescript",
@@ -31,9 +33,12 @@ const slugs = [
 export default function Home() {
 
   const { keycloak } = useContext(AuthContext);
+  const searchParams = useSearchParams();
 
-  const handleLogin = () => {
-    keycloak?.login();
+  const handleLogin = async () => {
+    await signIn('keycloak', {
+      callbackUrl: searchParams?.get('callbackUrl') || '/',
+    });
   }
 
   const handleLogout = () => {
