@@ -43,6 +43,11 @@ export default function SearchBar({
                     onChange={(e) => {
                         setFieldValue(e.target.value)
                     }}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            handleSubmit(e);
+                        }
+                    }}
                 />
                 <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
                     {isLoading ? (
