@@ -19,6 +19,7 @@ import { KardexDetalle } from '@/types/kardexDetalle';
 import { useToast } from '@/components/ui/use-toast';
 import { useSession } from 'next-auth/react';
 import ReporteSIU from '../reporteSIU';
+import { PDFDownloadLink } from '@react-pdf/renderer';
 
 interface FileData {
   Id: number;
@@ -44,7 +45,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
   const { toast } = useToast();
   const { data: session } = useSession();
   const printRef = useRef(null);
-  
+
 
   useEffect(() => {
 
@@ -89,7 +90,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
     setOpenModal(true);
   };
 
-  const downloadFile = () => {
+  const handleDownloadFile = () => {
     window.open(fileUrl, '_blank');
   }
 
@@ -132,12 +133,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
   const columns = useMemo(() => GetColumns({ onEdit, onDelete }), []);
 
   const handleDownloadReport = async () => {
-    const element = printRef.current;
-    if (!element) {
-      return;
-    }
-
-
+    window.open(`/files/${fileId}/report`, '_blank');
   }
 
   return (
@@ -167,10 +163,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
           </div>
         ) :
           (
-            <div className="container mx-auto p-4">           
-              <ReporteSIU 
-                printRef={printRef}
-              />
+            <div className="container mx-auto p-4">
               <div className="grid grid-cols-2 md:grid-cols-2 gap-6">
                 <div className="container mx-auto p-4 sm:block">
                   <PDFViewerComponent
@@ -184,18 +177,20 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
                     <Button
                       variant={'default'}
                       className='mr-4'
-                      onClick={downloadFile}
+                      size={'sm'}
+                      onClick={handleDownloadFile}
                     >
-                      <DownloadIcon className='mr-5' />
+                      <DownloadIcon className='h-4 w-4 mr-2' />
                       Descargar archivo
                     </Button>
-                    <Button
-                      variant={'default'}
-                      onClick={handleDownloadReport}
-                    >
-                      <FileDown className='mr-3' />
-                      Descargar reporte
-                    </Button>
+                      <Button
+                        variant={'default'}
+                        onClick={handleDownloadReport}
+                        size={'sm'}
+                      >
+                        <FileDown className='h-4 w-4 mr-2' />
+                        Descargar reporte
+                      </Button>
                   </div>
 
                   <div className="grid grid-cols-1 mt-5 mb-2 space-x-3">
