@@ -22,7 +22,6 @@ const slugs = [
   "git",
   "github",
   "visualstudiocode",
-  "azure",
   "tailwindcss",
 ]
 
