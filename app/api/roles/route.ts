@@ -4,6 +4,7 @@ export async function POST() {
     try {
         const accessToken = await getAccessToken();
 
+        // Primero obtengo el token RPT
         const res = await fetch(`${process.env.NEXT_PUBLIC_KEYCLOAK_URL}realms/ucsg/protocol/openid-connect/token`, {
             method: 'POST',
             headers: {
@@ -26,6 +27,7 @@ export async function POST() {
 
         const rptToken = data.access_token;
 
+        // Luego obtengo los permisos y roles mediante Fine Grained Authorization
         const rolesResponse = await fetch(`${process.env.NEXT_PUBLIC_KEYCLOAK_URL}realms/ucsg/protocol/openid-connect/token/introspect`, {
             method: 'POST',
             headers: {

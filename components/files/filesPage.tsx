@@ -18,8 +18,6 @@ import ConfirmDeleteFile from '../modals/confirm-delete-file';
 import { KardexDetalle } from '@/types/kardexDetalle';
 import { useToast } from '@/components/ui/use-toast';
 import { useSession } from 'next-auth/react';
-import ReporteSIU from '../reporteSIU';
-import { PDFDownloadLink } from '@react-pdf/renderer';
 
 interface FileData {
   Id: number;

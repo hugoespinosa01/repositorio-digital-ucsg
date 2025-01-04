@@ -1,70 +1,106 @@
 import { NextResponse } from "next/server";
 import { Pinecone } from "@pinecone-database/pinecone";
-import { VoyageEmbeddings } from "@langchain/community/embeddings/voyage";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { PineconeStore } from "@langchain/pinecone";
-import { getEmbeddings } from "@/lib/pinecone";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   const { query } = await req.json();
+  let results: any[] = [];
 
   if (!query) {
     return NextResponse.json({ error: "Query is required" }, { status: 400 });
   }
 
   try {
-    
-    // 1. Initializa el cliente Pinecone
+    // 1. Inicializa el cliente Pinecone
     const pc = new Pinecone({
       apiKey: process.env.PINECONE_API_KEY!,
     });
 
-    // 2. Initializa los embeddings
+    // 2. Inicializa los embeddings
     const embeddings = new OpenAIEmbeddings({
       model: "text-embedding-ada-002",
     });
 
-    // 3. Initialize PineconeVectorStore
+    // 3. Inicializa PineconeVectorStore
     const vectorStore = new PineconeStore(embeddings, {
       pineconeIndex: pc.Index(process.env.PINECONE_INDEX as string),
       namespace: "documentos-ucsg",
     });
 
-    //const index = pc.index(process.env.PINECONE_INDEX as string);
-    // // const status = await index.describeIndexStats();
-    //const queryVector = await getEmbeddings(query);
-    
-    // const queryResult = await index.namespace("documentos-ucsg").query({
-    //   vector: queryVector,
-    //   topK: 5,
-    //   includeMetadata: true,
-    //   includeValues: true,
-    // })
-
-    //console.log('Query Request:', queryResult);
-    
     // 4. Realiza la búsqueda usando el algoritmo heurístico de Maximal Marginal Relevance
     const retrieved = await vectorStore.maxMarginalRelevanceSearch(query, {
-      k: 5,
+      k: 3,
     });
 
-    // 5. Obtiene los documentos de la base de datos
-    const results = await Promise.all(retrieved.map(async (result) => {
-      const doc = await prisma?.documento.findUnique({
+    // 5. Verifica si el primer resultado contiene el query
+    if (retrieved.length === 0 || !searchString(retrieved[0].metadata.fileName, query)) {
+      // Si no contiene el query, realiza la búsqueda en la base de datos
+      const similarDocs = await prisma?.tipoDocumentoKardex.findMany({
         where: {
-          Id: result.metadata.fileId,
+          OR: [
+            {
+              NoIdentificacion: {
+                contains: query,
+              },
+            },
+            {
+              Alumno: {
+                contains: query.toUpperCase(),
+              },
+            },
+            {
+              Carrera: {
+                contains: query.toUpperCase(),
+              },
+            },
+          ],
         },
       });
-      return doc;
-    }));
+
+      if (!similarDocs) {
+        return NextResponse.json({ message: "Error al buscar documentos" }, { status: 500 });
+      }
+
+      // Obtiene los documentos de la base de datos
+      results = await Promise.all(similarDocs.map(async (doc) => {
+        const documento = await prisma?.documento.findUnique({
+          where: {
+            Id: doc.IdDocumento,
+          },
+        });
+        return documento;
+      }));
+    } else {
+      // Si contiene el query, obtiene los documentos de la base de datos
+      results = await Promise.all(retrieved.map(async (result) => {
+        const doc = await prisma?.documento.findUnique({
+          where: {
+            Id: result.metadata.fileId,
+          },
+        });
+        return doc;
+      }));
+    }
 
     return NextResponse.json({ message: "Documento buscado con éxito", results }, { status: 200 });
+
   } catch (error) {
     console.error("Error performing similarity search:", error);
     return NextResponse.json(
       { error: "Failed to perform similarity search" },
       { status: 500 }
     );
+  }
+}
+
+function searchString(fullText: string, searchText: string): number {
+  if (searchText.split(" ").filter(word => word.trim() !== "").some(word => fullText.includes(word))) {
+    console.log("Coincide parcialmente");
+    return 1;
+  } else {
+    console.log("No coincide");
+    return 0;
   }
 }

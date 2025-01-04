@@ -73,7 +73,7 @@ IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Ti
 BEGIN
     CREATE TABLE [TipoDocumentoKardex] (
         Id int NOT NULL PRIMARY KEY IDENTITY(1,1),
-        IdDocumento int,
+        IdDocumento int not null,
         Alumno varchar(255),
         NoIdentificacion varchar(255),
         Estado int,

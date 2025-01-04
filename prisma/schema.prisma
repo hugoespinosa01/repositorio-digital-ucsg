@@ -89,12 +89,12 @@ model DocumentoDetalleKardex {
 
 model TipoDocumentoKardex {
   Id                      Int                      @id(map: "PK__TipoDocu__3214EC0758A323E6") @default(autoincrement())
-  IdDocumento             Int?
+  IdDocumento             Int
   Alumno                  String?                  @db.VarChar(255)
   NoIdentificacion        String?                  @db.VarChar(255)
   Estado                  Int?
   Carrera                 String?                  @db.VarChar(100)
   NotaGraduacionSeminario Decimal?                 @db.Decimal(18, 2)
   DocumentoDetalleKardex  DocumentoDetalleKardex[]
-  Documento               Documento?               @relation(fields: [IdDocumento], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "IdDocumento_fk")
+  Documento               Documento                @relation(fields: [IdDocumento], references: [Id], onUpdate: NoAction, map: "IdDocumento_fk")
 }
