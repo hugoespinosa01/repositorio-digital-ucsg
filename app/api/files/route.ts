@@ -71,6 +71,13 @@ export async function POST(request: NextRequest) {
 
         const { fields } = extractedData;
 
+
+        const carreraId = await checkCarrera(fields.Carrera.value);
+
+        if (carreraId.length === 0) {
+            throw new Error('El documento no es válido o no se pudo extraer la carrera');
+        }
+
         //Extraigo datos del documento (producto de Azure AI Intelligence)
         const datosExtraidos = {
             alumno: fields.Alumno.value.replace('\n', '') ?? '',
@@ -83,7 +90,6 @@ export async function POST(request: NextRequest) {
         await populateDetalleMaterias(datosExtraidos, fields);
 
         // Busco el ID de la carrera
-        const carreraId = await checkCarrera(datosExtraidos.carrera);
 
         //Busco la carpeta root
         const carpetaRoot = await prisma.carpeta.findFirst({
@@ -178,12 +184,12 @@ export async function POST(request: NextRequest) {
         }
         return NextResponse.json(result);
 
-    } catch (err) {
+    } catch (err : any) {
         console.error('Error creating document:', err);
         const errResponse = {
             error: 'Error creating document',
             status: 500,
-            message: err,
+            message: err.message,
         }
         return NextResponse.json(errResponse, { status: 500 });
     }

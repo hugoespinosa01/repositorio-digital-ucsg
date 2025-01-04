@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import LoadingDocuments from './loading';
 import Image from 'next/image';
@@ -25,6 +25,7 @@ import MoveFileModal from '../modals/move-file-modal';
 import { SearchResult } from '@/types/searchResult';
 import { TextShimmer } from '../loading-text-effect';
 import { getAccessToken } from '@/utils/session-token-accessor';
+import { X } from 'lucide-react';
 
 
 const PAGE_SIZE = 6;
@@ -45,17 +46,19 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
   const [openModalDelete, setOpenModalDelete] = useState<boolean>(false);
   const [results, setResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [isAlreadySearched, setIsAlreadySearched] = useState<boolean>(false);
   const [query, setQuery] = useState<string>('');
   const { fetchChildren, childrenDocsAndFiles, loadingChildren, totalChildren } = useContext(ChildrenContext);
-  console.log(query);
-  
 
-  // Limpiar resultados de búsqueda si no hay query
+
+  // Limpiar el query de búsqueda
   useEffect(() => {
-    if (query.length === 0) {
+    if (query === '') {
       setResults([]);
+      setIsAlreadySearched(false);
     }
   }, [query]);
+
 
   useEffect(() => {
     if (currentPage < 1 || isNaN(currentPage)) {
@@ -120,7 +123,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
     try {
       setIsSearching(true);
       setResults([]);
-    
+
       const response = await fetch('/api/search', {
         method: 'POST',
         headers: {
@@ -137,6 +140,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
 
       const { results } = await response.json();
       setResults(results);
+      setIsAlreadySearched(true);
     } catch (err) {
       console.error('Error searching:', err);
     } finally {
@@ -217,10 +221,22 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                             ))
                           }
                         </div>
+                        {
+                          results.length === 0 && isAlreadySearched && (
+                            <div className='text-center py-4 bg-white shadow-md rounded-b-md'>
+                              <X className='mx-auto h-8 w-8 text-gray-400' />
+                              <h3 className='mt-2 text-sm font-semibold text-gray-900'>Sin resultados</h3>
+                              <p className='mt-1 text-sm mx-auto max-w-prose text-gray-500'>
+                                Lo sentimos, no pudimos encontrar resultados para {' '}
+                                <span className='text-red-600 font-medium'>{query}</span>.
+                              </p>
+                            </div>
+                          )
+                        }
 
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {!isSearching && results.length == 0 && childrenDocsAndFiles.map((doc, index) =>
+                          {!isSearching && !isAlreadySearched && results.length == 0 && childrenDocsAndFiles.map((doc, index) =>
                             doc.Tipo === 'Archivo' ? (
                               <FileCard
                                 onClick={handleFileClick}
@@ -302,10 +318,22 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                         ))
                         }
                       </div>
+                      {
+                        results.length === 0 && isAlreadySearched && (
+                          <div className='text-center py-4 rounded-b-md'>
+                            <X className='mx-auto h-8 w-8 text-gray-400' />
+                            <h3 className='mt-2 text-sm font-semibold text-gray-900'>Sin resultados</h3>
+                            <p className='mt-1 text-sm mx-auto max-w-prose text-gray-500'>
+                              Lo sentimos, no pudimos encontrar resultados para {' '}
+                              <span className='text-red-600 font-medium'>{query}</span>.
+                            </p>
+                          </div>
+                        )
+                      }
 
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {!isSearching && results.length == 0 && folders.map((doc) => (
+                        {!isSearching && !isAlreadySearched && results.length === 0 && folders.map((doc) => (
 
                           <FolderCard
                             key={doc.Id}

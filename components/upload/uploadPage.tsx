@@ -8,8 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import FileUpload from '@/components/custom-fileuploader';
 import GetBackButton from '../getback-button';
-import { useContext } from 'react';
-import { AuthContext } from '@/context/auth-context';
 import { Loader2 } from 'lucide-react';
 
 const MAX_FILE_SIZE = 1024 * 1024 * 10; // 10MB
@@ -17,6 +15,7 @@ const MAX_FILE_SIZE = 1024 * 1024 * 10; // 10MB
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [fileId, setFileId] = useState<string | null>(null);
   const router = useRouter();
 
   const { handleSubmit } = useForm();
@@ -61,14 +60,25 @@ export default function UploadPage() {
           description: "El archivo se subió correctamente.",
           variant: "default",
         });
-        router.push("/documents?page=1");
+        // router.push("/documents?page=1");
+        const data = await response.json();
+        setFileId(data.data.Id);
+
+      } else {
+        const data = await response.json();
+        toast({
+          title: "Error al subir documento",
+          description: data.message,
+          variant: "destructive",
+        });
       }
       console.log("Archivo subido");
 
-    } catch (err) {
+    } catch (err: any) {
+      console.log("Error al subir archivo", err);
       toast({
         title: "Error",
-        description: "Hubo un problema al subir el documento.",
+        description: err,
         variant: "destructive",
       });
     } finally {
@@ -105,16 +115,30 @@ export default function UploadPage() {
               isSubmitting ? (
                 <Button
                   disabled
+                  size={"sm"}
                   className="w-full sm:w-auto min-w-[120px]"
                 >
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Cargando...
                 </Button>
               ) :
-                <Button type="submit" className='w-full sm:w-auto min-w-[120px]'>
+                <Button type="submit" size={"sm"} className='w-full sm:w-auto min-w-[120px]'>
                   Cargar
                 </Button>
             }
+            {
+              fileId && (
+                <Button
+                  onClick={() => router.push(`/files/${fileId}`)}
+                  size={"sm"}
+                  className='w-full sm:w-auto min-w-[120px] ml-6'
+                  variant={"secondary"}
+                >
+                  Ver documento
+                </Button>
+              )
+            }
+
           </form>
         </div>
       </CardContent>
