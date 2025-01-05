@@ -129,7 +129,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query, parentId }),
       });
 
       if (!response.ok) {

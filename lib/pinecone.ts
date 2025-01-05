@@ -36,7 +36,9 @@ export async function loadToPinecone(fileName: string, document: Documento, fiel
             metadata: {
                 text: JSON.stringify(fields).replace("\\n", " "),
                 fileName: document.NombreArchivo,
-                fileId: document.Id
+                fileId: document.Id,
+                carrera: fields.carrera,
+                folderId: document.IdCarpeta ?? 0
             }
         }]
 

@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   // Obtengo la carrera asignada al usuario
   const carrera = session?.user.carrera.join();
 
-  const { query, parentId } = await req.json();
+  const { query } = await req.json();
   let results: any[] = [];
 
   if (!query) {
@@ -46,7 +46,6 @@ export async function POST(req: Request) {
       k: 3,
       filter: {
         carrera: carrera,
-        parentId: parentId ? parentId : null,
       },
     });
 
@@ -66,18 +65,6 @@ export async function POST(req: Request) {
                 contains: query.toUpperCase(),
               },
             },
-            {
-              Documento: {
-                IdCarpeta: Number(parentId),
-              }
-            },
-            {
-              Documento: {
-                Carpeta: {
-                  IdCarpetaPadre: Number(parentId),
-                }
-              }
-            }
           ],
           AND: [
             {

@@ -13,7 +13,10 @@ export const checkCarrera = async (carrera: string) => {
         if (!_carreraId) {
             throw new Error('Carrera no encontrada');
         }
-        carreraId.push(_carreraId.Id);
+        carreraId.push({
+            id: _carreraId.Id,
+            nombre: _carreraId.Nombre
+        });
     }
     if (carrera.toLowerCase().includes('civil')) {
         // Busco el Id de la carrera correspondiente
@@ -25,7 +28,10 @@ export const checkCarrera = async (carrera: string) => {
         if (!_carreraId) {
             throw new Error('Carrera no encontrada');
         }
-        carreraId.push(_carreraId.Id);
+        carreraId.push({
+            id: _carreraId.Id,
+            nombre: _carreraId.Nombre
+        });
     }
     return carreraId;
 }

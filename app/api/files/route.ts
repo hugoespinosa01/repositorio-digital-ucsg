@@ -72,9 +72,10 @@ export async function POST(request: NextRequest) {
         const { fields } = extractedData;
 
 
-        const carreraId = await checkCarrera(fields.Carrera.value);
+        // Busco el ID de la carrera
+        const carreraArray = await checkCarrera(fields.Carrera.value);
 
-        if (carreraId.length === 0) {
+        if (carreraArray.length === 0) {
             throw new Error('El documento no es válido o no se pudo extraer la carrera');
         }
 
@@ -82,14 +83,13 @@ export async function POST(request: NextRequest) {
         const datosExtraidos = {
             alumno: fields.Alumno.value.replace('\n', '') ?? '',
             noIdentificacion: fields.NoIdentificacion.value.replace('-', '') ?? '',
-            carrera: fields.Carrera.value.replace('\n', '') ?? '',
+            carrera: carreraArray[0].nombre ?? '',
             materiasAprobadas: [] as Materia[]
         }
 
         // Extraigo las materias aprobadas y las guardo en un array
         await populateDetalleMaterias(datosExtraidos, fields);
 
-        // Busco el ID de la carrera
 
         //Busco la carpeta root
         const carpetaRoot = await prisma.carpeta.findFirst({
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
         const carpetaObjetivo = await prisma.carpeta.findFirst({
             where: {
                 IdCarrera: {
-                    in: carreraId
+                    in: carreraArray.map(item => item.id)
                 },
                 Estado: 1,
                 IdCarpetaPadre: carpetaRoot?.Id
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
         if (!carpetaObjetivo) {
             await prisma.carpeta.create({
                 data: {
-                    IdCarrera: carreraId[0],
+                    IdCarrera: carreraArray[0].id,
                     IdCarpetaPadre: carpetaRoot?.Id,
                     Nombre: datosExtraidos.carrera,
                     Estado: 1

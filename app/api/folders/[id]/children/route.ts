@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
+import auth from '@/lib/auth';
+import { checkCarrera } from '@/utils/checkCarrera';
 
 interface Params {
     params: { id: string };
@@ -7,13 +10,32 @@ interface Params {
 
 export async function GET(request: NextRequest, { params }: Params) {
     try {
+
+        const session = await getServerSession(auth);
+
+        if (!session) {
+            return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+        }
+
+        const carrera = session?.user.carrera.join();
+
+        if (!carrera) {
+            return NextResponse.json({ error: 'Carrera no encontrada' }, { status: 400 });
+        }
+
+        const carreraArray = await checkCarrera(carrera);
+
+
         const page = Number(request.nextUrl.searchParams.get('page'));
         const pageSize = Number(request.nextUrl.searchParams.get('page_size'));
 
         const carpetas = await prisma.carpeta.findMany({
             where: {
                 IdCarpetaPadre: Number(params.id),
-                Estado: 1
+                Estado: 1,
+                IdCarrera: {
+                    in: carreraArray.map(item => item.id)
+                }
             }
         });
 
@@ -34,7 +56,10 @@ export async function GET(request: NextRequest, { params }: Params) {
         const countCarpetas = await prisma.carpeta.count({
             where: {
                 IdCarpetaPadre: Number(params.id),
-                Estado: 1
+                Estado: 1,
+                IdCarrera: {
+                    in: carreraArray.map(item => item.id)
+                }
             }
         });
 

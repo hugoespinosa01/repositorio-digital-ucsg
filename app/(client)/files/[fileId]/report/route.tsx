@@ -178,8 +178,8 @@ const MyDocument = ({
                                 <Text style={styles.col1}>{materia.Ciclo}</Text>
                                 <Text style={styles.col2}>{materia.Materia}</Text>
                                 <Text style={styles.col3}>{materia.Periodo}</Text>
-                                <Text style={styles.col4}>{materia.Nota}</Text>
-                                <Text style={styles.col5}>{materia.Matricula}</Text>
+                                <Text style={styles.col4}>{Number(materia.Calificacion)}</Text>
+                                <Text style={styles.col5}>{materia.NoMatricula}</Text>
                             </View>
                         ))
                     }

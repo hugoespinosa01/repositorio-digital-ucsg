@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { LayoutGrid, LogOut, User } from "lucide-react";
-
+import { useSession } from 'next-auth/react';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -20,22 +20,30 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { useContext, useEffect, useState } from "react";
-import { AuthContext } from "@/context/auth-context";
+import {  useEffect, useState } from "react";
+import { signOut } from 'next-auth/react';
 
 export function UserNav() {
 
   const [email, setEmail] = useState<string>('');
   const [name, setName] = useState<string>('');
+  const { data: session } = useSession();
 
-  const {handleLogout, keycloak} = useContext(AuthContext);
+  async function keycloakSessionLogOut() {
+    try {
+        await fetch(`/api/auth/logout`, { method: 'GET' });
+    } catch (err) {
+        console.error(err);
+    }
+}
+
 
   useEffect(() => {
-    if (keycloak) {
-      setEmail(keycloak.tokenParsed?.email);
-      setName(keycloak.tokenParsed?.given_name + ' ' + keycloak.tokenParsed?.family_name);
+    if (session) {
+      setEmail(session.user.email || '');
+      setName(session.user.name || '');
     }
-  }, [keycloak]);
+  }, [session]);
 
   const createAvatarInitials = (name: string) => {
     const initials = name.match(/\b\w/g) || [];
@@ -88,7 +96,10 @@ export function UserNav() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="hover:cursor-pointer" onClick={handleLogout}>
+        <DropdownMenuItem 
+          className="hover:cursor-pointer" 
+          onClick={() => keycloakSessionLogOut().then(() => signOut({ callbackUrl: '/' }))}
+          >
           <LogOut className="w-4 h-4 mr-3 text-muted-foreground" />
           Cerrar sesión
         </DropdownMenuItem>

@@ -132,22 +132,22 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
 
   const handleDownloadReport = async () => {
 
-    const response = await fetch(`/api/roles`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    });
+    // const response = await fetch(`/api/roles`, {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   }
+    // });
 
-    if (!response.ok) {
-      throw new Error(`Error al obtener el archivo: ${response.statusText}`);
-    }
+    // if (!response.ok) {
+    //   throw new Error(`Error al obtener el archivo: ${response.statusText}`);
+    // }
 
-    const data = await response.json();
+    // const data = await response.json();
 
-    console.log(data);
+    // console.log(data);
     
-    //window.open(`/files/${fileId}/report`, '_blank');
+    window.open(`/files/${fileId}/report`, '_blank');
   }
 
   return (

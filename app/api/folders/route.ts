@@ -11,7 +11,11 @@ export async function GET(request: NextRequest) {
 
     // Obtengo la sesión
     const session = await getServerSession(auth);
-    
+
+    if (!session) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
     // Obtengo la carrera asignada al usuairo
     const carrera = session?.user.carrera.join();
     let rootFolder = null;
@@ -29,7 +33,7 @@ export async function GET(request: NextRequest) {
         IdCarpetaPadre: null,
         Estado: 1,
         IdCarrera: {
-          in: carreraId
+          in: carreraId.map(item => item.id)
         }
       },
       skip: (page - 1) * pageSize,
@@ -77,8 +81,15 @@ export async function GET(request: NextRequest) {
 export async function POST(request: Request) {
   try {
 
-    //Verificamos la carrera asignada al usuario autenticado
-    const carrera = request.headers.get('x-carrera');
+    const session = await getServerSession(auth);
+
+    if (!session) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
+    // Obtengo la carrera asignada al usuario
+    const carrera = session?.user.carrera.join();
+
     const body = await request.json();
     var ruta = "";
 
@@ -108,7 +119,7 @@ export async function POST(request: Request) {
         IdCarpetaPadre: body.IdCarpetaPadre || null,
         FechaCreacion: new Date(),
         FechaActualizacion: new Date(),
-        IdCarrera: carreraId[0] || null,
+        IdCarrera: carreraId[0].id || null,
         Estado: 1,
         Tipo: 'Carpeta',
         Ruta: ruta,

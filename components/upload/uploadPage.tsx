@@ -131,6 +131,7 @@ export default function UploadPage() {
                 <Button
                   onClick={() => router.push(`/files/${fileId}`)}
                   size={"sm"}
+                  type='button'
                   className='w-full sm:w-auto min-w-[120px] ml-6'
                   variant={"secondary"}
                 >

@@ -25,7 +25,6 @@ interface MenuProps {
 export function Menu({ isOpen }: MenuProps) {
   const pathname = usePathname();
   const menuList = getMenuList(pathname);
-  const { handleLogout } = useContext(AuthContext);
 
   async function keycloakSessionLogOut() {
     try {

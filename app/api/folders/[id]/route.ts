@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
+import { getServerSession } from 'next-auth';
+import auth from '@/lib/auth';
+import { checkCarrera } from '@/utils/checkCarrera';
 
 interface Params {
     params: { id: string };
@@ -8,6 +11,12 @@ interface Params {
 
 export async function GET(request: Request, { params }: Params) {
     try {
+
+        const session = await getServerSession(auth);
+
+        if (!session) {
+            return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+        }
 
         const carpeta = await prisma.carpeta.findFirst({
             where: {
@@ -36,6 +45,12 @@ export async function GET(request: Request, { params }: Params) {
 
 export async function DELETE(request: Request, { params }: Params) {
     try {
+
+        const session = await getServerSession(auth);
+
+        if (!session) {
+            return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+        }
 
 
         const childrenFolders = await prisma.carpeta.findMany({
@@ -88,6 +103,12 @@ export async function DELETE(request: Request, { params }: Params) {
 export async function PUT(request: Request, { params }: Params) {
     try {
 
+        const session = await getServerSession(auth);
+
+        if (!session) {
+            return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+        }
+
         const body = await request.json();
 
         if (!body.Nombre) {
@@ -128,6 +149,13 @@ export async function PUT(request: Request, { params }: Params) {
 
 export async function PATCH(request: Request, { params }: Params) {
     try {
+
+        const session = await getServerSession(auth);
+
+        if (!session) {
+            return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+        }
+
         const body = await request.json();
 
         if (!body.IdCarpetaPadre) {

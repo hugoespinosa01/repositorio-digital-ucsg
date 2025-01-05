@@ -139,6 +139,8 @@ export async function GET(request: Request, { params }: Params) {
 export async function PUT(request: Request, { params }: Params) {
     try {
 
+        
+
         const documentId = params.id;
         const body = await request.json();
 
