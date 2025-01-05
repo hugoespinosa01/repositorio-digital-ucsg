@@ -57,7 +57,7 @@ export default function Home() {
       <main className="min-h-[calc(100vh-57px-97px)] flex-1">
         <div className='container relative pb-10'>
           <section className="mx-auto flex max-w-[980px] flex-col items-center gap-2 py-8 md:py-12 md:pb-8 lg:py-24 lg:pb-6">
-            <h1 className="text-6xl font-bold">
+            <h1 className="text-6xl font-bold drop-shadow-[0px_0px_59px_rgba(255,0,123,0.6)]">
               Sinergia
             </h1>
             <span className="max-w-[750px] mt-3 text-center text-lg font-light text-foreground">Gestiona tus documentos con inteligencia artificial</span>
