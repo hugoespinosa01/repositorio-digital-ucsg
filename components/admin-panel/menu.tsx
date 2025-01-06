@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Ellipsis, LogOut } from "lucide-react";
+import { Ellipsis, Loader2, LogOut } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { signOut } from 'next-auth/react';
 import { cn } from "@/lib/utils";
@@ -15,8 +15,7 @@ import {
   TooltipContent,
   TooltipProvider
 } from "@/components/ui/tooltip";
-import { useContext } from "react";
-import { AuthContext } from "@/context/auth-context";
+import { useState } from "react";
 
 interface MenuProps {
   isOpen: boolean | undefined;
@@ -25,22 +24,26 @@ interface MenuProps {
 export function Menu({ isOpen }: MenuProps) {
   const pathname = usePathname();
   const menuList = getMenuList(pathname);
+  const [isLoading, setIsLoading] = useState(false);
 
   async function keycloakSessionLogOut() {
     try {
-        await fetch(`/api/auth/logout`, { method: 'GET' });
+      setIsLoading(true);
+      await fetch(`/api/auth/logout`, { method: 'GET' });
     } catch (err) {
-        console.error(err);
+      console.error(err);
+    } finally {
+      setIsLoading(false);
     }
-}
+  }
 
 
 
   return (
     <ScrollArea className="h-screen overflow-auto">
-      <nav 
+      <nav
         className="mt-5"
-        >
+      >
         <ul className="flex flex-col h-[calc(100vh-48px-36px-16px-32px)] lg:h-[calc(100vh-32px-40px-32px)] items-start space-y-1 px-2">
           {menuList.map(({ groupLabel, menus }, index) => (
             <li className={cn("w-full", groupLabel ? "pt-5" : "")} key={index}>
@@ -121,23 +124,39 @@ export function Menu({ isOpen }: MenuProps) {
             <TooltipProvider disableHoverableContent>
               <Tooltip delayDuration={100}>
                 <TooltipTrigger asChild>
-                  <Button
-                    onClick={() => keycloakSessionLogOut().then(() => signOut({ callbackUrl: '/' }))}
-                    variant="outline"
-                    className="w-full justify-center h-10 mt-5"
-                  >
-                    <span className={cn(isOpen === false ? "" : "mr-4")}>
-                      <LogOut size={18} />
-                    </span>
-                    <p
-                      className={cn(
-                        "whitespace-nowrap",
-                        isOpen === false ? "opacity-0 hidden" : "opacity-100"
-                      )}
-                    >
-                      Cerrar sesión
-                    </p>
-                  </Button>
+                  {
+                    isLoading ? (
+                      <Button
+                        disabled
+                        variant="outline"
+                        className="w-full justify-center h-10 mt-5"
+                      >
+                        <Loader2 className="h-10 w-10 animate-spin" />
+                      </Button>
+                    ) :
+                      <Button
+                        onClick={() => {
+                          keycloakSessionLogOut().then(() => signOut({ callbackUrl: '/' }))
+                          //clearPermissions();
+                        }}
+                        variant="outline"
+                        className="w-full justify-center h-10 mt-5"
+                      >
+                        <span className={cn(isOpen === false ? "" : "mr-4")}>
+                          <LogOut size={18} />
+                        </span>
+                        <p
+                          className={cn(
+                            "whitespace-nowrap",
+                            isOpen === false ? "opacity-0 hidden" : "opacity-100"
+                          )}
+                        >
+                          Cerrar sesión
+                        </p>
+                      </Button>
+                  }
+
+
                 </TooltipTrigger>
                 {isOpen === false && (
                   <TooltipContent side="right">Cerrar sesión</TooltipContent>

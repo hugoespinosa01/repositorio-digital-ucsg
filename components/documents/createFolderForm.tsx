@@ -29,7 +29,6 @@ import {
 import { Loader2 } from "lucide-react";
 import { FolderContext } from "@/context/folder-context";
 import { Folder } from "@/types/folder";
-import { AuthContext } from "@/context/auth-context";
 
 const formSchema = z.object({
   nombre: z.string({
@@ -51,7 +50,6 @@ interface CreateFolderFormProps {
 export default function CreateFolderForm({editMode, setOpenModal, folder, parentId }: CreateFolderFormProps) {
 
   const { createFolder, isSubmitting, updateFolder} = useContext(FolderContext);
-  const {keycloak} = useContext(AuthContext);
  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -68,20 +66,11 @@ export default function CreateFolderForm({editMode, setOpenModal, folder, parent
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     
-    if (editMode && folder && keycloak?.token) {
-      updateFolder(folder.Id, values.nombre, setOpenModal, keycloak?.token);
+    if (editMode && folder) {
+      updateFolder(folder.Id, values.nombre, setOpenModal, Number(parentId));
       return;
-    //}
-
-    // if (editMode && folder) {
-    //   updateFolder(folder.Id, values.nombre, setOpenModal, "");
-    //   return;
-    // }
-
-    // createFolder(values.nombre, setOpenModal, Number(parentId), '');
-
-    } else if (keycloak?.token) {
-      createFolder(values.nombre, setOpenModal, Number(parentId), keycloak?.token);
+    } else {
+      createFolder(values.nombre, setOpenModal, Number(parentId));
     }
     
   }

@@ -11,6 +11,10 @@ export const searchParentFolders = async (idCarpetaPadre: number) => {
         }
     });
 
+    if (carpetaPadre) {
+        parentFoldersList.push(carpetaPadre);
+    }
+
     //Buscar las carpetas padre hasta llegar a la raíz
     while (carpetaPadre?.IdCarpetaPadre) {
         const carpeta = await prisma.carpeta.findFirst({

@@ -1,71 +1,67 @@
 'use client';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
-import { createContext } from 'react';
-import { useState, useEffect } from 'react';
-import Keycloak from 'keycloak-js'
+interface Permission {
+    scopes: string[];
+    rsid: string;
+    rsname: string;
+}
 
-export const AuthContext = createContext<{
-    keycloak: Keycloak | null;
-    handleLogout: () => void;
-    token: string | null;
-    setToken: (token: string) => void;
-}>({
-    keycloak: null,
-    handleLogout: () => { },
-    token: null,
-    setToken: () => { }
-});
+interface AuthContextValue {
+    permissions: Permission[];
+    loading: boolean;
+    error: string | null;
+}
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-    const [keycloak, setKeycloak] = useState<Keycloak | null>(null);
-    const [token, setToken] = useState<string | null>(null);
+export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [permissions, setPermissions] = useState<Permission[]>([]);
+    const [loading, setLoading] = useState(false); // Si no hay permisos, mostrar loading
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const initKeycloak = async () => {
-            const keycloakInstance = new Keycloak(keycloakOptions);
+        const fetchPermissions = async () => {
             try {
-                await keycloakInstance.init({ 
-                    onLoad: 'check-sso',
-                    redirectUri: window.location.origin,
+                const res = await fetch('/api/auth/permissions', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
                 });
-                setKeycloak(keycloakInstance);
-                
-                if (keycloakInstance.token) {
-                    setToken(keycloakInstance.token ?? null);
+
+                if (!res.ok) {
+                    throw new Error(`Error al obtener los permisos: ${res.statusText}`);
                 }
 
-                if (keycloakInstance.isTokenExpired(30)){
-                    await keycloakInstance.updateToken(60);
-                    setToken(keycloakInstance.token ?? null);
-                }
+                const data = await res.json();
+                setPermissions(data.data.permissions);
 
-            } catch (error) {
-                console.error(error)
+                // Guardar permisos en localStorage
+            } catch (err) {
+                setError((err as Error).message);
+            } finally {
+                setLoading(false);
             }
-        }
-        initKeycloak();
-    }, [])
+        };
 
-    const handleLogout = () => {
-        if (keycloak) {
-            keycloak.logout();
+        // Solo llamar a la API si no hay permisos en localStorage
+        if (!permissions.length) {
+            fetchPermissions();
         }
-    }
-
-    const keycloakOptions = {
-        url: process.env.NEXT_PUBLIC_KEYCLOAK_URL ?? '',
-        realm: process.env.NEXT_PUBLIC_KEYCLOAK_REALM ?? '',
-        clientId: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID ?? '',
-    }
+    }, []);
 
     return (
-        <AuthContext.Provider value={{
-            keycloak,
-            handleLogout,
-            token,
-            setToken
-        }}>
+        <AuthContext.Provider value={{ permissions, loading, error }}>
             {children}
         </AuthContext.Provider>
-    )
-}
+    );
+};
+
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth debe ser usado dentro de un AuthProvider');
+    }
+    return context;
+};

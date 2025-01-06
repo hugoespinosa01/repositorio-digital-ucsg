@@ -20,7 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import {  useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { signOut } from 'next-auth/react';
 
 export function UserNav() {
@@ -31,11 +31,11 @@ export function UserNav() {
 
   async function keycloakSessionLogOut() {
     try {
-        await fetch(`/api/auth/logout`, { method: 'GET' });
+      await fetch(`/api/auth/logout`, { method: 'GET' });
     } catch (err) {
-        console.error(err);
+      console.error(err);
     }
-}
+  }
 
 
   useEffect(() => {
@@ -49,7 +49,7 @@ export function UserNav() {
     const initials = name.match(/\b\w/g) || [];
     return ((initials.shift() || '') + (initials.pop() || '')).toUpperCase();
   }
-  
+
   return (
     <DropdownMenu>
       <TooltipProvider disableHoverableContent>
@@ -96,10 +96,13 @@ export function UserNav() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem 
-          className="hover:cursor-pointer" 
-          onClick={() => keycloakSessionLogOut().then(() => signOut({ callbackUrl: '/' }))}
-          >
+        <DropdownMenuItem
+          className="hover:cursor-pointer"
+          onClick={() => {
+            keycloakSessionLogOut().then(() => signOut({ callbackUrl: '/' }))
+            //clearPermissions();
+          }}
+        >
           <LogOut className="w-4 h-4 mr-3 text-muted-foreground" />
           Cerrar sesión
         </DropdownMenuItem>

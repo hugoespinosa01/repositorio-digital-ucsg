@@ -1,10 +1,21 @@
 import { getAccessToken } from "@/utils/session-token-accessor";
+import { getServerSession } from "next-auth";
+import auth from "@/lib/auth";
 
-export async function POST() {
+export async function GET() {
     try {
         const accessToken = await getAccessToken();
+        const session = await getServerSession(auth);
 
-        // Primero obtengo el token RPT
+        if (!session) {
+            return new Response(JSON.stringify({ error: 'No autorizado' }), {
+                status: 401,
+            });
+        }
+
+        //Primero obtengo el token RPT
+        // Si el usuario autenticado se le ha negado todos los recursos
+        // entonces el token RPT no se generará y generará ERROR en esta API
         const res = await fetch(`${process.env.NEXT_PUBLIC_KEYCLOAK_URL}realms/ucsg/protocol/openid-connect/token`, {
             method: 'POST',
             headers: {
@@ -20,7 +31,7 @@ export async function POST() {
         })
 
         if (!res.ok) {
-            throw new Error(`Error al obtener el archivo: ${res.statusText}`);
+            throw new Error(`Error al obtener el token: ${res.statusText}`);
         }
 
         const data = await res.json();
@@ -35,18 +46,16 @@ export async function POST() {
             },
             body: new URLSearchParams({
                 'token': rptToken,
-                'username': 'hespinosa',
+                'username': session.user.email || '',
                 'client_id': process.env.KEYCLOAK_BACKEND_CLIENT_ID || 'repositorio-digital-backend',
                 'client_secret': process.env.KEYCLOAK_CLIENT_SECRET || '',
             }),
         });
 
         const permissions = await rolesResponse.json();
-
-        console.log(permissions.authorization);
         
         return new Response(JSON.stringify({
-            message: 'Roles obtenidos correctamente',
+            message: 'Permisos obtenidos correctamente',
             data: permissions.authorization
         }), {
             headers: {

@@ -46,7 +46,6 @@ export async function POST(req: Request) {
       k: 3,
       filter: {
         carrera: carrera,
-        parentId: parentId ? parentId : null,
       },
     });
 

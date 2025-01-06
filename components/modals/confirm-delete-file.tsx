@@ -1,7 +1,5 @@
 import React from 'react'
 import { Button } from '../ui/button';
-import { useContext } from 'react';
-import { AuthContext } from '@/context/auth-context';
 import { Credenza, CredenzaBody, CredenzaContent, CredenzaFooter, CredenzaHeader, CredenzaTitle, CredenzaClose } from '../custom-modal';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react'; // Replace with the correct path or library
@@ -19,7 +17,6 @@ export default function ConfirmDeleteFile({
     persistSamePage?: boolean
 }) {
 
-    const { keycloak } = useContext(AuthContext);
     const { toast } = useToast();
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -32,9 +29,6 @@ export default function ConfirmDeleteFile({
 
             const response = await fetch(`/api/files/${Number(idFile)}`, {
                 method: 'DELETE',
-                headers: {
-                    'Authorization': keycloak?.token ? `Bearer ${keycloak.token}` : '',
-                }
             });
 
             if (!response.ok) {

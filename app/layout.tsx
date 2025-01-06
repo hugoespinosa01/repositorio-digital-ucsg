@@ -6,6 +6,7 @@ import { GeistSans } from 'geist/font/sans';
 import { FolderProvider } from '@/context/folder-context'
 import { ChildrenProvider } from '@/context/children-context';
 import SessionProviderWrapper from '@/utils/sessionProviderWrapper';
+import { AuthProvider } from '@/context/auth-context';
 
 export const metadata: Metadata = {
   title: 'Sinergia | Repositorio digital documental',
@@ -19,8 +20,8 @@ export default function RootLayout({
 }) {
   return (
     <SessionProviderWrapper>
-      <html lang="es" suppressHydrationWarning>
-        <body className={GeistSans.className}>
+        <html lang="es" suppressHydrationWarning>
+          <body className={GeistSans.className}>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
               <FolderProvider>
                 <ChildrenProvider>
@@ -31,8 +32,8 @@ export default function RootLayout({
               </FolderProvider>
               <Toaster />
             </ThemeProvider>
-        </body>
-      </html>
+          </body>
+        </html>
     </SessionProviderWrapper>
   );
 }

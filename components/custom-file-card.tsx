@@ -2,6 +2,7 @@ import React from 'react';
 import { File, Trash2, FolderInput } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { cn } from '@/lib/utils';
+import useAuthRoles  from '@/hooks/useAuthRoles';
 
 interface FileCardProps {
   fileName: string;
@@ -11,9 +12,21 @@ interface FileCardProps {
   onClick?: (id: number) => void;
   onMove?: (id: number) => void;
   orderId?: number;
+  canEditFile: boolean;
+  canDeleteFile: boolean;
 }
 
-export function FileCard({ fileName, creationDate, file, onDelete, onClick, onMove, orderId }: FileCardProps) {
+export function FileCard({ 
+    fileName,
+    creationDate,
+    file,
+    onDelete,
+    onClick,
+    onMove,
+    orderId,
+    canEditFile,
+    canDeleteFile,
+  }: FileCardProps) {
   const [showActions, setShowActions] = React.useState(false);
 
   const handleActionClick = (e: React.MouseEvent, action: () => void) => {
@@ -47,40 +60,43 @@ export function FileCard({ fileName, creationDate, file, onDelete, onClick, onMo
         <div className={`relative ml-2 shrink-0 ${showActions ? 'visible' : 'invisible group-hover:visible'}`}>
           <div className="absolute right-0 top-0 flex items-center space-x-1">
 
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={(e) => onDelete && handleActionClick(e, () => onDelete(file?.Id))}
-                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4 text-gray-600 hover:text-red-600" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Eliminar
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            {
+              canDeleteFile && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={(e) => onDelete && handleActionClick(e, () => onDelete(file?.Id))}
+                        className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4 text-gray-600 hover:text-red-600" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Eliminar
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>)
+            }
 
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={(e) => onMove && handleActionClick(e, () => onMove(file?.Id))}
-                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                  >
-                    <FolderInput className="w-4 h-4 text-gray-600 hover:text-blue-600" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Mover
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-
-
+            {
+              canEditFile && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={(e) => onMove && handleActionClick(e, () => onMove(file?.Id))}
+                        className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                      >
+                        <FolderInput className="w-4 h-4 text-gray-600 hover:text-yellow-600" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Mover
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>)
+            }
           </div>
         </div>
       </div>

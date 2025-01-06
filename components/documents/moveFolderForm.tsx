@@ -43,7 +43,6 @@ import {
 } from "lucide-react"
 import { FolderContext } from "@/context/folder-context"
 import { Loader2 } from "lucide-react";
-import { AuthContext } from "@/context/auth-context"
 import SelectDemo from "../custom-select"
 
 
@@ -54,7 +53,6 @@ const formSchema = z.object({
 export default function MoveFolderForm({ idFolder, idFile, setOpenModal }: { idFolder?: number, idFile?: number, setOpenModal: (open: boolean) => void }) {
 
     const { folders, moveFolder, pageSize, isSubmitting } = useContext(FolderContext);
-    const { keycloak } = useContext(AuthContext)
 
     const foldersForMove = folders.filter(folder => folder.Id != idFolder);
 
@@ -65,18 +63,16 @@ export default function MoveFolderForm({ idFolder, idFile, setOpenModal }: { idF
         }
     })
 
-    const moveFile = (idFile: number, destino: number, setOpenModal: (open: boolean) => void, pageSize: number, token: string) => {
+    const moveFile = (idFile: number, destino: number, setOpenModal: (open: boolean) => void, pageSize: number) => {
 
     }
 
     function onSubmit(values: z.infer<typeof formSchema>) {
 
-        if (keycloak?.token) {
-            if (idFile) {
-                moveFile(idFile, values.carpeta_destino, setOpenModal, pageSize, keycloak.token);
-            } else {
-                moveFolder(idFolder, values.carpeta_destino, setOpenModal, pageSize, keycloak.token);
-            }
+        if (idFile) {
+            moveFile(idFile, values.carpeta_destino, setOpenModal, pageSize);
+        } else {
+            moveFolder(idFolder, values.carpeta_destino, setOpenModal, pageSize);
         }
     }
 
@@ -87,7 +83,7 @@ export default function MoveFolderForm({ idFolder, idFile, setOpenModal }: { idF
                     control={form.control}
                     name="carpeta_destino"
                     render={({ field }) => (
-                        <SelectDemo/>
+                        <SelectDemo />
                     )}
                 />
                 <div className="flex justify-center sm:justify-end">

@@ -24,8 +24,8 @@ import SearchBar from '../custom-searchbar';
 import MoveFileModal from '../modals/move-file-modal';
 import { SearchResult } from '@/types/searchResult';
 import { TextShimmer } from '../loading-text-effect';
-import { getAccessToken } from '@/utils/session-token-accessor';
 import { X } from 'lucide-react';
+import useAuthRoles from '@/hooks/useAuthRoles';
 
 
 const PAGE_SIZE = 6;
@@ -50,6 +50,13 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
   const [query, setQuery] = useState<string>('');
   const { fetchChildren, childrenDocsAndFiles, loadingChildren, totalChildren } = useContext(ChildrenContext);
 
+  const { permissions } = useAuthRoles(true);
+
+  const hasPermission = (resource: string, action: string) => {
+    return permissions.some(
+      (perm) => perm.rsname === resource && perm.scopes.includes(`scope:${action}`)
+    );
+  };
 
   // Limpiar el query de búsqueda
   useEffect(() => {
@@ -158,6 +165,8 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
         </CardTitle>
         <DocumentHeader
           handleCreateFolder={handleCreateFolder}
+          canCreateFolder={hasPermission('res:folders', 'create')}
+          canUploadDocument={hasPermission('res:documents', 'create')}
         />
 
       </CardHeader>
@@ -209,6 +218,8 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                           {
                             results.length > 0 && results.map((res, index) => (
                               <FileCard
+                                canEditFile={hasPermission('res:documents', 'update')}
+                                canDeleteFile={hasPermission('res:documents', 'delete')}
                                 key={index}
                                 orderId={index}
                                 onClick={handleFileClick}
@@ -239,6 +250,8 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                           {!isSearching && !isAlreadySearched && results.length == 0 && childrenDocsAndFiles.map((doc, index) =>
                             doc.Tipo === 'Archivo' ? (
                               <FileCard
+                                canEditFile={hasPermission('res:documents', 'update')}
+                                canDeleteFile={hasPermission('res:documents', 'delete')}
                                 onClick={handleFileClick}
                                 onDelete={handleDeleteFile}
                                 onMove={handleMoveFile}
@@ -249,6 +262,8 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                               />
                             ) : (
                               <FolderCard
+                                canEditFolder={hasPermission('res:folders', 'update')}
+                                canDeleteFolder={hasPermission('res:folders', 'delete')}
                                 key={index}
                                 folder={doc}
                                 fileName={doc.Nombre}
@@ -306,6 +321,8 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {results.length > 0 && results.map((res, index) => (
                           <FileCard
+                            canEditFile={hasPermission('res:documents', 'update')}
+                            canDeleteFile={hasPermission('res:documents', 'delete')}
                             orderId={index}
                             key={index}
                             onClick={handleFileClick}
@@ -336,6 +353,8 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                         {!isSearching && !isAlreadySearched && results.length === 0 && folders.map((doc) => (
 
                           <FolderCard
+                            canEditFolder={hasPermission('res:folders', 'update')}
+                            canDeleteFolder={hasPermission('res:folders', 'delete')}
                             key={doc.Id}
                             folder={doc}
                             fileName={doc.Nombre}

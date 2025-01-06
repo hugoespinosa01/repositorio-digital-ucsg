@@ -30,12 +30,12 @@ import { Folder } from "@/types/folder";
 
 export default function SelectDemo() {
   const [open, setOpen] = useState<boolean>(false);
-  const [value, setValue] = useState<Folder|null>(null);
+  const [value, setValue] = useState<string|null>(null);
 
   const { folders, fetchFolders } = useContext(FolderContext);
 
   useEffect(() => {
-    fetchFolders(1, 10, "");
+    fetchFolders(1, 10);
   }, [])
 
   console.log(folders);
@@ -74,17 +74,17 @@ export default function SelectDemo() {
             <CommandList>
               <CommandEmpty>No se encontraron carpetas</CommandEmpty>
               <CommandGroup>
-                {folders.map((organization) => (
+                {folders.map((folder : Folder) => (
                   <CommandItem
-                    key={organization.value}
-                    value={organization.value}
+                    key={folder.Id}
+                    value={folder.Nombre}
                     onSelect={(currentValue) => {
                       setValue(currentValue === value ? "" : currentValue);
                       setOpen(false);
                     }}
                   >
-                    {organization.label}
-                    {value === organization.value && (
+                    {folder.Nombre}
+                    {value === folder.Nombre && (
                       <Check size={16} strokeWidth={2} className="ml-auto" />
                     )}
                   </CommandItem>

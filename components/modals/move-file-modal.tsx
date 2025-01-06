@@ -1,7 +1,6 @@
 import React from 'react'
 import { Button } from '../ui/button';
 import { useContext } from 'react';
-import { AuthContext } from '@/context/auth-context';
 import { Credenza, CredenzaBody, CredenzaContent, CredenzaDescription, CredenzaHeader, CredenzaTitle, CredenzaClose } from '../custom-modal';
 import { useToast } from '@/components/ui/use-toast';
 import { useRouter } from 'next/navigation';
@@ -17,7 +16,6 @@ export default function MoveFileModal({
     idFile: number | undefined,
 }) {
 
-    const { keycloak } = useContext(AuthContext);
     const { toast } = useToast();
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -30,9 +28,6 @@ export default function MoveFileModal({
 
             const response = await fetch(`/api/files/${Number(idFile)}`, {
                 method: 'DELETE',
-                headers: {
-                    'Authorization': keycloak?.token ? `Bearer ${keycloak.token}` : '',
-                }
             });
 
             if (!response.ok) {

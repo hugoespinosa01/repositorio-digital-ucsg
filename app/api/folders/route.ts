@@ -109,9 +109,11 @@ export async function POST(request: Request) {
 
     const parentFoldersList = await searchParentFolders(body.IdCarpetaPadre);
 
-    for (const parentFolder of parentFoldersList) {
-      ruta += `/${parentFolder.Nombre}`;
+    for (const parentFolder of parentFoldersList.sort((a, b) => a.Id - b.Id)) {
+      ruta += `/${parentFolder?.Nombre}`;
     }
+
+    ruta += `/${body.Nombre}`;
 
     const newCarpeta = await prisma.carpeta.create({
       data: {

@@ -6,9 +6,10 @@ import { ContainerScroll } from "@/components/scroll-custom-comp";
 import Image from "next/image";
 import screen from "@/img/screen.png";
 import { IconCloud } from '@/components/icon-cloud';
-import { LayoutDashboard, LogIn, LogOut } from 'lucide-react';
+import { LayoutDashboard, LogIn } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { useSession, signIn, signOut } from 'next-auth/react';
+import { useSession, signIn } from 'next-auth/react';
+import { LogoutButton } from '@/components/logoutButton';
 
 const slugs = [
   "typescript",
@@ -32,22 +33,8 @@ export default function Home() {
 
   const { data: session, status } = useSession();
 
-  async function keycloakSessionLogOut() {
-    try {
-      await fetch(`/api/auth/logout`, { method: 'GET' });
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
   const handleLogin = async () => {
     await signIn('keycloak', {
-      callbackUrl: searchParams?.get('callbackUrl') || '/',
-    });
-  }
-
-  const handleLogout = async () => {
-    await signOut({
       callbackUrl: searchParams?.get('callbackUrl') || '/',
     });
   }
@@ -56,10 +43,11 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       <main className="min-h-[calc(100vh-57px-97px)] flex-1">
         <div className='container relative pb-10'>
-          <section className="mx-auto flex max-w-[980px] flex-col items-center gap-2 py-8 md:py-12 md:pb-8 lg:py-24 lg:pb-6">
-            <h1 className="text-6xl font-bold drop-shadow-[0px_0px_59px_rgba(255,0,123,0.6)]">
+          <section className="mx-auto mt-32 flex max-w-[980px] flex-col items-center gap-4 py-10 md:py-12 md:pb-8 lg:py-24 lg:pb-6">
+            <h1 className="text-6xl font-bold drop-shadow-[0px_0px_45px_rgba(255,0,123,0.7)]">
               Sinergia
             </h1>
+
             <span className="max-w-[750px] mt-3 text-center text-lg font-light text-foreground">Gestiona tus documentos con inteligencia artificial</span>
             <div className="flex w-full items-center justify-center space-x-4 py-4 md:pb-6">
               {
@@ -83,13 +71,7 @@ export default function Home() {
                           <LayoutDashboard className="ml-2 w-4 h-4" />
                         </Button>
                       </Link>
-                      <Button
-                        variant={'secondary'}
-                        size={'sm'}
-                        onClick={() => keycloakSessionLogOut().then(() => signOut({ callbackUrl: '/' }))}
-                        >Cerrar sesión
-                        <LogOut className="ml-2 w-4 h-4" />
-                      </Button>
+                      <LogoutButton/>
                     </>
                   ) :
                     /* Si no está autenticado */
@@ -134,6 +116,14 @@ export default function Home() {
           <div className="w-full flex">
             <div className="relative flex size-full max-w-lg items-center justify-center overflow-hidden rounded-lg border bg-background px-20 pb-20 pt-8 ">
               <IconCloud iconSlugs={slugs} />
+            </div>
+            <div className='mx-auto ml-28 flex items-center'>
+              <h4
+                className='text-2xl text-foreground'
+              >
+                Construido con las últimas tecnologías de vanguardia para la
+                <span className='text-primary'> Falcultad de Ingeniería</span> 
+              </h4>
             </div>
           </div>
 
