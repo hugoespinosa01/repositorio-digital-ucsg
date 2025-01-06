@@ -10,7 +10,7 @@ export async function GET() {
         const idToken = await getIdToken();
 
         // this will log out the user on Keycloak side
-        var url =`${process.env.NEXT_PUBLIC_KEYCLOAK_URL}realms/ucsg/protocol/openid-connect/logout?id_token_hint=${idToken}&post_logout_redirect_uri=${encodeURIComponent(process.env.NEXTAUTH_URL || '')}`;
+        var url =`${process.env.KEYCLOAK_URL}realms/ucsg/protocol/openid-connect/logout?id_token_hint=${idToken}&post_logout_redirect_uri=${encodeURIComponent(process.env.NEXTAUTH_URL || '')}`;
 
         try {
             await fetch(url, { method: 'GET' });

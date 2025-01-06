@@ -6,7 +6,7 @@ import KeycloakProvider from 'next-auth/providers/keycloak';
 
 async function refreshAccessToken(token: JWT) {
     const resp = await fetch(
-        `${process.env.NEXT_PUBLIC_KEYCLOAK_URL}realms/ucsg/protocol/openid-connect/token`,
+        `${process.env.KEYCLOAK_URL}realms/ucsg/protocol/openid-connect/token`,
         {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({
@@ -36,7 +36,7 @@ const auth: NextAuthOptions = {
         KeycloakProvider({
             clientId: process.env.KEYCLOAK_BACKEND_CLIENT_ID || '',
             clientSecret: process.env.KEYCLOAK_CLIENT_SECRET || '',
-            issuer: process.env.NEXT_PUBLIC_KEYCLOAK_ISSUER || '',
+            issuer: process.env.KEYCLOAK_ISSUER || '',
         }),
     ],
     callbacks: {

@@ -26,7 +26,7 @@ export const config = {
 
 //     try {
 //         //Validación de token
-//         const publicKey = `-----BEGIN PUBLIC KEY-----\n${process.env.NEXT_PUBLIC_KEY}\n-----END PUBLIC KEY-----`;
+//         const publicKey = `-----BEGIN PUBLIC KEY-----\n${process.env.KEYCLOAK_KEY}\n-----END PUBLIC KEY-----`;
 //         const publicKeyForValidation = await jose.importSPKI(publicKey, "RS256");
 //         const { payload } = await jose.jwtVerify(token, publicKeyForValidation);
 //         const expirationTime = payload?.exp as number;

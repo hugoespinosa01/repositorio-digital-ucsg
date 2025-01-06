@@ -16,7 +16,7 @@ export async function GET() {
         //Primero obtengo el token RPT
         // Si el usuario autenticado se le ha negado todos los recursos
         // entonces el token RPT no se generará y generará ERROR en esta API
-        const res = await fetch(`${process.env.NEXT_PUBLIC_KEYCLOAK_URL}realms/ucsg/protocol/openid-connect/token`, {
+        const res = await fetch(`${process.env.KEYCLOAK_URL}realms/ucsg/protocol/openid-connect/token`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -39,7 +39,7 @@ export async function GET() {
         const rptToken = data.access_token;
 
         // Luego obtengo los permisos y roles mediante Fine Grained Authorization
-        const rolesResponse = await fetch(`${process.env.NEXT_PUBLIC_KEYCLOAK_URL}realms/ucsg/protocol/openid-connect/token/introspect`, {
+        const rolesResponse = await fetch(`${process.env.KEYCLOAK_URL}realms/ucsg/protocol/openid-connect/token/introspect`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',

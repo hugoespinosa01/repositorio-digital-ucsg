@@ -2,7 +2,6 @@ import React from 'react'
 import { Button } from '@/components/ui/button'
 import { LogOut } from 'lucide-react'
 import { signOut } from 'next-auth/react'
-import { clearPermissions } from '@/utils/clearPermissions'
 
 export function LogoutButton() {
     async function keycloakSessionLogOut() {
