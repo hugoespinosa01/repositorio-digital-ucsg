@@ -26,6 +26,7 @@ import { SearchResult } from '@/types/searchResult';
 import { TextShimmer } from '../loading-text-effect';
 import { X } from 'lucide-react';
 import useAuthRoles from '@/hooks/useAuthRoles';
+import { Button } from '../ui/button';
 
 
 const PAGE_SIZE = 6;
@@ -169,7 +170,6 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
           canCreateFolder={hasPermission('res:folders', 'create')}
           canUploadDocument={hasPermission('res:documents', 'create')}
         />
-
       </CardHeader>
       <CardContent>
         {(loading || loadingChildren) ? (

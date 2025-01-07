@@ -25,7 +25,7 @@ export default function RootLayout({
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
               <FolderProvider>
                 <ChildrenProvider>
-                  <div vaul-drawer-wrapper="" className="bg-background">
+                  <div vaul-drawer-wrapper="" aria-hidden="false" className="bg-background">
                     {children}
                   </div>
                 </ChildrenProvider>
