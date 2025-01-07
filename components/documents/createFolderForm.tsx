@@ -45,12 +45,13 @@ interface CreateFolderFormProps {
   setOpenModal: (open: boolean) => void;
   folder?: Folder | null;
   parentId?: string | null | undefined;
+  currentPage: number;
 }
 
-export default function CreateFolderForm({editMode, setOpenModal, folder, parentId }: CreateFolderFormProps) {
+export default function CreateFolderForm({ editMode, setOpenModal, folder, parentId, currentPage }: CreateFolderFormProps) {
 
-  const { createFolder, isSubmitting, updateFolder} = useContext(FolderContext);
- 
+  const { createFolder, isSubmitting, updateFolder } = useContext(FolderContext);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -65,14 +66,14 @@ export default function CreateFolderForm({editMode, setOpenModal, folder, parent
   }, [editMode, folder]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    
+
     if (editMode && folder) {
-      updateFolder(folder.Id, values.nombre, setOpenModal, Number(parentId));
+      updateFolder(folder.Id, values.nombre, setOpenModal, Number(parentId), currentPage);
       return;
     } else {
-      createFolder(values.nombre, setOpenModal, Number(parentId));
+      createFolder(values.nombre, setOpenModal, Number(parentId), currentPage);
     }
-    
+
   }
 
   return (
@@ -100,16 +101,16 @@ export default function CreateFolderForm({editMode, setOpenModal, folder, parent
         <div className="flex justify-center sm:justify-end">
           {
             isSubmitting ? (
-              <Button disabled className="w-full sm:w-auto min-w-[120px]">
+              <Button disabled type="button" className="w-full sm:w-auto min-w-[120px]">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Cargando...
               </Button>
-            ) : 
-            <Button type="submit" className="w-full sm:w-auto min-w-[120px]">
-              {
-                editMode ? 'Actualizar' : 'Crear'
-              }
-            </Button>
+            ) :
+              <Button type="submit" className="w-full sm:w-auto min-w-[120px]">
+                {
+                  editMode ? 'Actualizar' : 'Crear'
+                }
+              </Button>
           }
 
         </div>

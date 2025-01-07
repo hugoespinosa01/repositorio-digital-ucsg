@@ -1,14 +1,15 @@
 'use client';
-import React, { createContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { useToast } from '@/components/ui/use-toast';
 import { Folder } from "@/types/folder";
+import { ChildrenContext } from "./children-context";
 
 export const FolderContext = createContext<{
     folders: any[];
     fetchFolders: (currentPage: number, pageSize: number) => Promise<void>;
     loading: boolean;
-    createFolder: (nombre: string, setOpenModal: (open: boolean) => void, parentId: number) => Promise<void>;
-    updateFolder: (id: number, nombre: string, setOpenModal: (open: boolean) => void, parentId: number) => Promise<void>;
+    createFolder: (nombre: string, setOpenModal: (open: boolean) => void, parentId: number, currentPage: number) => Promise<void>;
+    updateFolder: (id: number, nombre: string, setOpenModal: (open: boolean) => void, parentId: number, currentPage: number) => Promise<void>;
     deleteFolder: (id: number, currentPage: number, pageSize: number) => Promise<void>;
     moveFolder: (id: number | undefined, newId: number, setOpenModal: (open: boolean) => void, pageSize: number) => Promise<void>;
     isSubmitting: boolean;
@@ -35,6 +36,7 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
     const [loading, setLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [pageSize, setPageSize] = useState(6);
+    const {fetchChildren} = useContext(ChildrenContext);
 
     async function fetchFolders(currentPage: number, pageSize: number) {
         try {
@@ -68,7 +70,7 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }
 
-    async function createFolder(nombre: string, setOpenModal: (open: boolean) => void, parentId: number) {
+    async function createFolder(nombre: string, setOpenModal: (open: boolean) => void, parentId: number, currentPage: number) {
         try {
 
             setIsSubmitting(true);
@@ -97,14 +99,14 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
                 description: "La carpeta ha sido creada exitosamente",
                 variant: "default",
             });
-
-            // setFolders([...folders, data.data]);
-            fetchFolders(1, pageSize);
+            
             if (parentId) {
-
+                fetchChildren(parentId.toString(), currentPage, pageSize);
+            } else {
+                fetchFolders(currentPage, pageSize);
             }
-            setOpenModal(false);
-
+                        
+        
         } catch (error) {
             console.error("Error en el envío del formulario:", error);
             toast({
@@ -114,6 +116,7 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
             });
         } finally {
             setIsSubmitting(false);
+            setOpenModal(false);
         }
     }
 
@@ -183,7 +186,6 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
                 setLoading(false);
                 throw new Error(errorData.error || 'Error al eliminar la carpeta');
             }
-
 
             setLoading(false);
         } catch (error) {

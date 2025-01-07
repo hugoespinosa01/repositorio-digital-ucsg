@@ -20,7 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <SessionProviderWrapper>
-        <html lang="es" suppressHydrationWarning>
+        <html lang="es" suppressHydrationWarning={true}>
           <body className={GeistSans.className}>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
               <FolderProvider>

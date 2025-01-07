@@ -57,22 +57,20 @@ export default function MoveFileModal({
     return (
         <div>
             <Credenza open={openModal} onOpenChange={setOpenModal}>
-            <CredenzaContent>
-                <CredenzaHeader>
-                    <CredenzaTitle>
-                        Mover carpeta
-                    </CredenzaTitle>
-                </CredenzaHeader>
-                <CredenzaDescription>
-                    <div className="text-center sm:text-start">
+                <CredenzaContent>
+                    <CredenzaHeader>
+                        <CredenzaTitle>
+                            Mover carpeta
+                        </CredenzaTitle>
+                    </CredenzaHeader>
+                    <CredenzaDescription className="text-center sm:text-start">
                         Selecciona el destino de la carpeta
-                    </div>
-                </CredenzaDescription>
-                <CredenzaBody>
-                    <MoveFolderForm idFile={idFile} setOpenModal={setOpenModal}/>
-                </CredenzaBody>
-            </CredenzaContent>
-        </Credenza>
+                    </CredenzaDescription>
+                    <CredenzaBody>
+                        <MoveFolderForm idFile={idFile} setOpenModal={setOpenModal} />
+                    </CredenzaBody>
+                </CredenzaContent>
+            </Credenza>
         </div>
     )
 }

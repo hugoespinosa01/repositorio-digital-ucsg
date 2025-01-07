@@ -60,8 +60,7 @@ export default function SelectDemo() {
             <ChevronDown
               size={16}
               strokeWidth={2}
-              className="shrink-0 text-muted-foreground/80"
-              aria-hidden="true"
+              className="shrink-0 text-muted-foreground/80"              
             />
           </Button>
         </PopoverTrigger>

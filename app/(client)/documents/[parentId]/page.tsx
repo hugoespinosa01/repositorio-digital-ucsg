@@ -1,5 +1,6 @@
 'use client';
 
+import React from "react";
 import Link from "next/link";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import {
@@ -21,32 +22,7 @@ export default function DocumentDetail() {
   const params = useParams<{ parentId: string }>();
   const [parent, setParent] = useState<Folder | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-
-  const path = parent?.Ruta ?? '/';
-  const pathArray = path.split('/');
-
-  const parentIds = parent?.IdHijos ?? '';
-  const parentArray = parentIds.split(',');
-
-  const pathArrayWithoutEmpty = pathArray.filter(item => item !== '');
-
-  const pathsForBreadcrumb = pathArrayWithoutEmpty.map((item, index) => {
-    if (item !== '') {
-      return {
-        name: item,
-        id: parentArray[index] ? Number(parentArray[index]) : 0
-      }
-    }
-  });
-
-  const fetchParent = async () => {
-    // Fetch parent data
-    setLoading(true);
-    const response = await fetch(`/api/folders/${params.parentId}`);
-    const res = await response.json();
-    setParent(res.data);
-    setLoading(false);
-  }
+  const [pathsForBreadcrumb, setPathsForBreadcrumb] = useState<{  name: string }[]>([]);
 
   useEffect(() => {
     if (params.parentId) {
@@ -54,58 +30,74 @@ export default function DocumentDetail() {
     }
   }, [params.parentId]);
 
+  useEffect(() => {
+    if (parent) {
+      const paths = parent.Ruta.split('/').filter(item => item !== '').map((item, index) => {
+        return {
+          name: item
+        }
+      });
+      setPathsForBreadcrumb(paths);
+    }
+  }, [parent]);
+
+  const fetchParent = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/folders/${params.parentId}`);
+      if (!response.ok) {
+        throw new Error('Error fetching parent data');
+      }
+      const res = await response.json();
+      setParent(res.data);
+    } catch (error) {
+      console.error('Failed to fetch parent data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <ContentLayout title="Sinergia">
       {
         loading ? (
           <LoadingBreadcrumb />
         ) : (
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/">Inicio</Link>
-              </BreadcrumbLink >
-            </BreadcrumbItem >
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href={'/documents?page=1'}>Mis documentos</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            {
-              parent && pathsForBreadcrumb.map((item, index) => {
-                if (index === pathsForBreadcrumb.length - 1) {
-                  return (
-                    <>
-                      <BreadcrumbSeparator key={index + 1} />
-                      <BreadcrumbItem key={index}>
-                        <BreadcrumbPage>
-                          {item?.name}
-                        </BreadcrumbPage>
-                      </BreadcrumbItem>
-                    </>
-                  )
-                } else {
-                  return (
-                    <>
-                      <BreadcrumbSeparator key={index + 1}/>
-                      <BreadcrumbItem key={index}>
-                        <BreadcrumbLink asChild>
-                          <Link href={`/documents/${item?.id}?page=1`}>{item?.name}</Link>
-                        </BreadcrumbLink>
-                      </BreadcrumbItem>
-                    </>
-                  )
-                }
-              })
-            }
-          </BreadcrumbList >
-        </Breadcrumb >)
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href="/">Inicio</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href={'/documents?page=1'}>Mis documentos</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              {
+                parent && pathsForBreadcrumb?.map((item, index) => {
+                  // if (index === pathsForBreadcrumb.length - 1) {
+                    return (
+                      <React.Fragment key={index}>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                          <BreadcrumbPage>
+                            {item?.name}
+                          </BreadcrumbPage>
+                        </BreadcrumbItem>
+                      </React.Fragment>
+                    )
+                  //} 
+                })
+              }
+            </BreadcrumbList>
+          </Breadcrumb>
+        )
       }
 
       <DocumentsPage parentId={params.parentId} />
-    </ContentLayout >
+    </ContentLayout>
   )
 }
-

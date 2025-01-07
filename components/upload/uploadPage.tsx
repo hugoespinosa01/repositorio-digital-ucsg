@@ -91,7 +91,7 @@ export default function UploadPage() {
 
       <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between'>
         <CardTitle>
-          <h1 className="text-2xl font-bold mb-4">Carga de documentos digitalizados</h1>
+          <p className="text-2xl font-bold mb-4">Carga de documentos digitalizados</p>
           <GetBackButton />
         </CardTitle>
       </CardHeader>

@@ -32,31 +32,49 @@ export async function GET(request: NextRequest) {
       where: {
         IdCarpetaPadre: null,
         Estado: 1,
-        IdCarrera: {
-          in: carreraId.map(item => item.id)
-        }
+        OR: [
+          {
+            IdCarrera: null
+          },
+          {
+            IdCarrera: {
+              in: carreraId.map(item => item.id)
+            },
+          }
+        ]
       },
+
       skip: (page - 1) * pageSize,
       take: pageSize,
     });
 
-    if (carpetas.length === 0) {
-      //Busco la carpeta raíz
-      rootFolder = await prisma.carpeta.findFirst({
-        where: {
-          IdCarpetaPadre: null,
-          Estado: 1,
-        },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-      });
-    }
+    // if (carpetas.length === 0) {
+    //   //Busco la carpeta raíz
+    //   rootFolder = await prisma.carpeta.findFirst({
+    //     where: {
+    //       IdCarpetaPadre: null,
+    //       Estado: 1,
+    //     },
+    //     skip: (page - 1) * pageSize,
+    //     take: pageSize,
+    //   });
+    // }
 
     const totalLength = await prisma.carpeta.count({
       where: {
         IdCarpetaPadre: null,
-        Estado: 1
-      }
+        Estado: 1,
+        OR: [
+          {
+            IdCarrera: null
+          },
+          {
+            IdCarrera: {
+              in: carreraId.map(item => item.id)
+            },
+          }
+        ]
+      },
     });
 
     const result = {
@@ -106,12 +124,14 @@ export async function POST(request: Request) {
     }
 
     const carreraId = await checkCarrera(carrera);
+    let parentFoldersList = [];
 
-    const parentFoldersList = await searchParentFolders(body.IdCarpetaPadre);
-
-    for (const parentFolder of parentFoldersList.sort((a, b) => a.Id - b.Id)) {
-      ruta += `/${parentFolder?.Nombre}`;
-    }
+    if (body.IdCarpetaPadre) {
+      parentFoldersList = await searchParentFolders(body.IdCarpetaPadre);
+      for (const parentFolder of parentFoldersList.sort((a, b) => a.Id - b.Id)) {
+        ruta += `/${parentFolder?.Nombre}`;
+      }
+    } 
 
     ruta += `/${body.Nombre}`;
 
@@ -121,7 +141,7 @@ export async function POST(request: Request) {
         IdCarpetaPadre: body.IdCarpetaPadre || null,
         FechaCreacion: new Date(),
         FechaActualizacion: new Date(),
-        IdCarrera: carreraId[0].id || null,
+        IdCarrera: carreraId.length > 1 ? null : carreraId[0].id,
         Estado: 1,
         Tipo: 'Carpeta',
         Ruta: ruta,

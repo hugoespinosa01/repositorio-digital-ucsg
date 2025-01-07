@@ -53,8 +53,6 @@ export const ChildrenProvider = ({ children }: { children: React.ReactNode }) =>
         }
     }
 
-
-
     return (
         <ChildrenContext.Provider value={{
             childrenDocsAndFiles,

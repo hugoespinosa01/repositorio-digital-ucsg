@@ -160,9 +160,10 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
       <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between'>
 
         <CardTitle>
-          <h1 className="text-2xl font-bold mb-4">Documentos</h1>
+          <p className="text-2xl font-bold mb-4">Documentos</p>
           <GetBackButton />
         </CardTitle>
+        
         <DocumentHeader
           handleCreateFolder={handleCreateFolder}
           canCreateFolder={hasPermission('res:folders', 'create')}
@@ -393,6 +394,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
           editMode={editMode}
           folder={folder}
           parentId={parentId}
+          currentPage={currentPage}
         />
 
         <MoveFolderModal

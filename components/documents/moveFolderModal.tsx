@@ -24,10 +24,8 @@ export default function MoveFolderModal({ openModal, setOpenModal, idFolder }: M
                         Mover carpeta
                     </CredenzaTitle>
                 </CredenzaHeader>
-                <CredenzaDescription>
-                    <div className="text-center sm:text-start">
+                <CredenzaDescription className="text-center sm:text-start">
                         Selecciona el destino de la carpeta
-                    </div>
                 </CredenzaDescription>
                 <CredenzaBody>
                     <MoveFolderForm idFolder={idFolder} setOpenModal={setOpenModal}/>

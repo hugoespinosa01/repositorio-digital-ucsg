@@ -68,7 +68,6 @@ export default function MoveFolderForm({ idFolder, idFile, setOpenModal }: { idF
     }
 
     function onSubmit(values: z.infer<typeof formSchema>) {
-
         if (idFile) {
             moveFile(idFile, values.carpeta_destino, setOpenModal, pageSize);
         } else {
@@ -89,7 +88,7 @@ export default function MoveFolderForm({ idFolder, idFile, setOpenModal }: { idF
                 <div className="flex justify-center sm:justify-end">
                     {
                         isSubmitting ?
-                            <Button disabled className="w-full sm:w-auto min-w-[120px]" type="submit">
+                            <Button disabled className="w-full sm:w-auto min-w-[120px]" type="button">
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 Cargando...
                             </Button> :

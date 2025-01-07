@@ -155,7 +155,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
       <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between'>
 
         <CardTitle>
-          <h1 className="text-2xl font-bold mb-4">Detalle del archivo {fileData?.NombreArchivo}</h1>
+          <p className="text-2xl font-bold mb-4">Detalle del archivo {fileData?.NombreArchivo}</p>
           <GetBackButton />
         </CardTitle>
 

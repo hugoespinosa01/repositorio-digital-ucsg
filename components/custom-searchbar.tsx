@@ -55,11 +55,10 @@ export default function SearchBar({
                             className="animate-spin"
                             size={16}
                             strokeWidth={2}
-                            aria-hidden="true"
                             role="presentation"
                         />
                     ) : (
-                        <Search size={16} strokeWidth={2} aria-hidden="true" />
+                        <Search size={16} strokeWidth={2} />
                     )}
                 </div>
 
@@ -71,7 +70,7 @@ export default function SearchBar({
                                 aria-label="Search"
                                 onClick={handleSubmit}
                             >
-                                <Sparkles size={16} strokeWidth={2} aria-hidden="true" />
+                                <Sparkles size={16} strokeWidth={2} />
                             </button>
                         </TooltipTrigger>
                         <TooltipContent>
