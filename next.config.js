@@ -16,6 +16,9 @@ const nextConfig = {
   },
   output: 'standalone',
   reactStrictMode: false,
+  experimental: {
+    missingSuspenseWithCSRBailout: false,
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },

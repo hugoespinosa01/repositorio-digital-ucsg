@@ -1,6 +1,7 @@
 import { getAccessToken } from "@/utils/session-token-accessor";
 import { getServerSession } from "next-auth";
 import auth from "@/lib/auth";
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
