@@ -5,6 +5,7 @@ import { checkCarrera } from '@/utils/checkCarrera';
 import { searchParentFolders } from '@/utils/searchParentFolders';
 import { getServerSession } from 'next-auth';
 import auth from '@/lib/auth';
+import type { Folder } from "@/types/folder";
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,38 +28,40 @@ export async function GET(request: NextRequest) {
     const carreraId = await checkCarrera(carrera);
     const page = Number(request.nextUrl.searchParams.get('page'));
     const pageSize = Number(request.nextUrl.searchParams.get('page_size'));
+    const query = request.nextUrl.searchParams.get('query') || '';
+    let carpetas: any[] = [];
 
-    const carpetas = await prisma.carpeta.findMany({
-      where: {
-        IdCarpetaPadre: null,
-        Estado: 1,
-        OR: [
-          {
-            IdCarrera: null
-          },
-          {
-            IdCarrera: {
-              in: carreraId.map(item => item.id)
+    if (query?.length == 0 && page != 0  && pageSize != 0) {
+      carpetas = await prisma.carpeta.findMany({
+        where: {
+          IdCarpetaPadre: null,
+          Estado: 1,
+          OR: [
+            {
+              IdCarrera: null
             },
-          }
-        ]
-      },
+            {
+              IdCarrera: {
+                in: carreraId.map(item => item.id)
+              },
+            }
+          ]
+        },
 
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-    });
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      });
+    } else {
+      carpetas = await prisma.carpeta.findMany({
+        where: {
+          Estado: 1,
+          Nombre: {
+            contains: query,
+          },
+        },
+      });
+    }
 
-    // if (carpetas.length === 0) {
-    //   //Busco la carpeta raíz
-    //   rootFolder = await prisma.carpeta.findFirst({
-    //     where: {
-    //       IdCarpetaPadre: null,
-    //       Estado: 1,
-    //     },
-    //     skip: (page - 1) * pageSize,
-    //     take: pageSize,
-    //   });
-    // }
 
     const totalLength = await prisma.carpeta.count({
       where: {
@@ -131,7 +134,7 @@ export async function POST(request: Request) {
       for (const parentFolder of parentFoldersList.sort((a, b) => a.Id - b.Id)) {
         ruta += `/${parentFolder?.Nombre}`;
       }
-    } 
+    }
 
     ruta += `/${body.Nombre}`;
 

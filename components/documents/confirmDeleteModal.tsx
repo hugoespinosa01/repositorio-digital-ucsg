@@ -18,15 +18,16 @@ interface ConfirmDeleteModalProps {
     currentPage: number;
     pageSize: number;
     idFolder: number;
+    parentId?: string | null | undefined;
 }
 
-export default function ConfirmDeleteModal({ openModal, setOpenModal, currentPage, idFolder, pageSize }: ConfirmDeleteModalProps) {
+export default function ConfirmDeleteModal({ openModal, setOpenModal, currentPage, idFolder, pageSize, parentId }: ConfirmDeleteModalProps) {
 
     const { deleteFolder } = useContext(FolderContext);
 
     const handleAccept = () => {
         setOpenModal(false);
-        deleteFolder(idFolder, currentPage, pageSize);
+        deleteFolder(idFolder, currentPage, pageSize, Number(parentId));
     }
 
     return (
@@ -37,10 +38,8 @@ export default function ConfirmDeleteModal({ openModal, setOpenModal, currentPag
                         Confirmación
                     </CredenzaTitle>
                 </CredenzaHeader>
-                <CredenzaDescription>
-                    <div className="text-center sm:text-start">
-                        Eliminar carpeta
-                    </div>
+                <CredenzaDescription className="text-center sm:text-start">
+                    Eliminar carpeta
                 </CredenzaDescription>
                 <CredenzaBody>
                     ¿Estás seguro de que deseas eliminar esta carpeta?

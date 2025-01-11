@@ -12,9 +12,11 @@ interface MoveFolderModalProps {
     openModal: boolean;
     setOpenModal: (open: boolean) => void;
     idFolder: number;
+    currentPage: number;
+    parentId?: string | null | undefined ;
 }
 
-export default function MoveFolderModal({ openModal, setOpenModal, idFolder }: MoveFolderModalProps) {
+export default function MoveFolderModal({ openModal, setOpenModal, idFolder, currentPage, parentId}: MoveFolderModalProps) {
 
     return (
         <Credenza open={openModal} onOpenChange={setOpenModal}>
@@ -28,7 +30,7 @@ export default function MoveFolderModal({ openModal, setOpenModal, idFolder }: M
                         Selecciona el destino de la carpeta
                 </CredenzaDescription>
                 <CredenzaBody>
-                    <MoveFolderForm idFolder={idFolder} setOpenModal={setOpenModal}/>
+                    <MoveFolderForm idFolder={idFolder} setOpenModal={setOpenModal} currentPage={currentPage}  parentId={Number(parentId)}  />
                 </CredenzaBody>
             </CredenzaContent>
         </Credenza>

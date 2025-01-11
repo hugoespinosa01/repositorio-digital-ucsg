@@ -53,7 +53,6 @@ export async function DELETE(request: Request, { params }: Params) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
         }
 
-
         const childrenFolders = await prisma.carpeta.findMany({
             where: {
                 IdCarpetaPadre: Number(params.id),
@@ -116,23 +115,22 @@ export async function PUT(request: Request, { params }: Params) {
             return NextResponse.json({ error: 'Nombre requerido' }, { status: 400 });
         }
 
-        if (!body.IdCarpetaPadre) {
-            return NextResponse.json({ error: 'Carpeta padre requerida' }, { status: 400 });
-        }
-
         if (typeof body.Nombre !== 'string') {
             return NextResponse.json({ error: 'El nombre debe ser texto' }, { status: 400 });
         }
 
-        if (typeof body.IdCarpetaPadre !== 'number') {
+        if (body.IdCarpetaPadre && typeof body.IdCarpetaPadre !== 'number') {
             return NextResponse.json({ error: 'El id de la carpeta padre debe ser un número' }, { status: 400 });
         }
 
         let ruta = "";
-        const parentFoldersList = await searchParentFolders(body.IdCarpetaPadre);
 
-        for (const parentFolder of parentFoldersList.sort((a, b) => a.Id - b.Id)) {
-            ruta += `/${parentFolder?.Nombre}`;
+        if (body.IdCarpetaPadre) {
+            const parentFoldersList = await searchParentFolders(body.IdCarpetaPadre);
+
+            for (const parentFolder of parentFoldersList.sort((a, b) => a.Id - b.Id)) {
+                ruta += `/${parentFolder?.Nombre}`;
+            }
         }
 
         ruta += `/${body.Nombre}`;

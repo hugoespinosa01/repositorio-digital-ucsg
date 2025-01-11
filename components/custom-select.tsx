@@ -1,98 +1,95 @@
-"use client";
+'use client';
 
-import { Check, ChevronDown, Plus } from "lucide-react";
-import { useState, useContext, useEffect } from "react";
-import { FolderContext } from "@/context/folder-context";
+import { useMemo } from 'react';
+import { SingleValue } from 'react-select';
+import AsyncSelect from 'react-select/async';
+import makeAnimated from 'react-select/animated';
+import { Folder } from '@/types/folder';
 
-import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { Folder } from "@/types/folder";
+type Props = {
+    onChange: (value?: string) => void;
+    value?: string | null | undefined;
+    disabled?: boolean;
+    placeholder?: string;
+}
 
-// const folders = [
-//   {
-//     value: "originui",
-//     label: "Origin UI",
-//   },
-//   {
-//     value: "cruip",
-//     label: "Cruip",
-//   },
-// ];
+export const CustomSelect = ({
+    value,
+    onChange,
+    disabled,
+    placeholder
+}: Props) => {
 
-export default function SelectDemo() {
-  const [open, setOpen] = useState<boolean>(false);
-  const [value, setValue] = useState<string|null>(null);
+    const onSelect = (newValue: SingleValue<{ label: string, value: string }>)=> {
+        const option = newValue as SingleValue<{ label: string, value: string }>;
+        onChange(option?.value);
+    }
 
-  const { folders, fetchFolders } = useContext(FolderContext);
+    // const formattedValue = useMemo(() => {
+    //     return options.find((option) => option.value === value);
+    // }, [options, value]);
 
-  useEffect(() => {
-    fetchFolders(1, 10);
-  }, [])
+    interface Option {
+        label: string;
+        value: string;
+    }
 
-  console.log(folders);
-  
+    const loadOptions = async (searchValue: string): Promise<Option[]> => {
+        const res = await fetch('/api/folders?query=' + searchValue);
+        const data = await res.json();
+        return data.data.map((folder: Folder) => ({ label: folder.Nombre, value: folder.Id.toString() }));
+    }
 
-  return (
-    <div className="space-y-2">
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            id="select-42"
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className="w-full justify-between bg-background px-3 font-normal outline-offset-0 hover:bg-background focus-visible:border-ring focus-visible:outline-[3px] focus-visible:outline-ring/20"
-          >
-            <span className={cn("truncate", !value && "text-muted-foreground")}>
-              {value
-                ? folders.find((organization) => organization.value === value)?.label
-                : "Selecciona una carpeta"}
-            </span>
-            <ChevronDown
-              size={16}
-              strokeWidth={2}
-              className="shrink-0 text-muted-foreground/80"              
-            />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          className="w-full min-w-[var(--radix-popper-anchor-width)] border-input p-0"
-          align="start"
-        >
-          <Command>
-            <CommandInput placeholder="Busca una carpeta" />
-            <CommandList>
-              <CommandEmpty>No se encontraron carpetas</CommandEmpty>
-              <CommandGroup>
-                {folders.map((folder : Folder) => (
-                  <CommandItem
-                    key={folder.Id}
-                    value={folder.Nombre}
-                    onSelect={(currentValue) => {
-                      setValue(currentValue === value ? "" : currentValue);
-                      setOpen(false);
-                    }}
-                  >
-                    {folder.Nombre}
-                    {value === folder.Nombre && (
-                      <Check size={16} strokeWidth={2} className="ml-auto" />
-                    )}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-    </div>
-  );
+    return (
+        <AsyncSelect
+            closeMenuOnSelect={false}
+            components={makeAnimated()}
+            placeholder={placeholder}
+            className="w-full text-sm h-10"
+            styles={{
+                input: (base) => ({
+                    ...base,
+                    ":active": {
+                        borderColor: '#ba4665'
+                    }
+                }),
+                control: (base) => ({
+                    ...base,
+                    borderColor: '#ba4665',
+                    backgroundColor: 'transparent',
+
+                    ":hover": {
+                        borderColor: '#ba4665',
+                    },
+                    ":focus": {
+                        borderColor: '#ba4665',
+                    },
+                    ":active": {
+                        borderColor: '#ba4665',
+                    }
+                }),
+                option: (base) => (
+                    {
+                        ...base,
+                        ":active": {
+                            backgroundColor: '#ba4665',
+                            borderColor: '#ba4665',
+                        },
+                        ":hover": {
+                            backgroundColor: '#d4c9cc',
+                        }
+                    }
+                )
+            }}
+            // value={formattedValue}
+            onChange={(newValue) => {
+                const selectedOption = newValue as SingleValue<{ label: string, value: string }>;
+                onSelect(selectedOption);
+            }}
+            defaultOptions
+            loadOptions={loadOptions}
+            // options={options}
+            isDisabled={disabled}
+        />
+    )
 }

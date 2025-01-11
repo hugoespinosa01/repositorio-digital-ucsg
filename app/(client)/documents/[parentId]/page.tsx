@@ -22,7 +22,7 @@ export default function DocumentDetail() {
   const params = useParams<{ parentId: string }>();
   const [parent, setParent] = useState<Folder | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [pathsForBreadcrumb, setPathsForBreadcrumb] = useState<{  name: string }[]>([]);
+  const [pathsForBreadcrumb, setPathsForBreadcrumb] = useState<{ name: string }[]>([]);
 
   useEffect(() => {
     if (params.parentId) {
@@ -79,16 +79,16 @@ export default function DocumentDetail() {
               {
                 parent && pathsForBreadcrumb?.map((item, index) => {
                   // if (index === pathsForBreadcrumb.length - 1) {
-                    return (
-                      <React.Fragment key={index}>
-                        <BreadcrumbSeparator />
-                        <BreadcrumbItem>
-                          <BreadcrumbPage>
-                            {item?.name}
-                          </BreadcrumbPage>
-                        </BreadcrumbItem>
-                      </React.Fragment>
-                    )
+                  return (
+                    <React.Fragment key={index}>
+                      <BreadcrumbSeparator />
+                      <BreadcrumbItem>
+                        <BreadcrumbPage>
+                          {item?.name}
+                        </BreadcrumbPage>
+                      </BreadcrumbItem>
+                    </React.Fragment>
+                  )
                   //} 
                 })
               }

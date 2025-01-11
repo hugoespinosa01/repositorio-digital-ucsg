@@ -43,13 +43,12 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
   const [idFolder, setIdFolder] = useState<number>(0);
   const [idFile, setIdFile] = useState<number>(0);
   const [editMode, setEditMode] = useState(false);
-  const { folders, fetchFolders, loading, totalFolders } = useContext(FolderContext);
+  const { folders, fetchFolders, loading, totalFolders, fetchChildren, childrenDocsAndFiles, loadingChildren, totalChildren} = useContext(FolderContext);
   const [openModalDelete, setOpenModalDelete] = useState<boolean>(false);
   const [results, setResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [isAlreadySearched, setIsAlreadySearched] = useState<boolean>(false);
   const [query, setQuery] = useState<string>('');
-  const { fetchChildren, childrenDocsAndFiles, loadingChildren, totalChildren } = useContext(ChildrenContext);
 
   const { permissions } = useAuthRoles(true);
 
@@ -170,6 +169,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
           canCreateFolder={hasPermission('res:folders', 'create')}
           canUploadDocument={hasPermission('res:documents', 'create')}
         />
+
       </CardHeader>
       <CardContent>
         {(loading || loadingChildren) ? (
@@ -398,6 +398,8 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
         />
 
         <MoveFolderModal
+          parentId={parentId}
+          currentPage={currentPage}
           openModal={openMoveFolderModal}
           setOpenModal={setOpenMoveFolderModal}
           idFolder={idFolder}
@@ -410,6 +412,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
         />
 
         <ConfirmDeleteModal
+          parentId={parentId}
           openModal={openDeleteModal}
           setOpenModal={setOpenDeleteModal}
           idFolder={idFolder}

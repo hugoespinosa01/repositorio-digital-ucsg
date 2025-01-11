@@ -33,16 +33,24 @@ export async function GET(request: NextRequest, { params }: Params) {
             where: {
                 IdCarpetaPadre: Number(params.id),
                 Estado: 1,
-                IdCarrera: {
-                    in: carreraArray.map(item => item.id)
-                }
-            }
+                OR: [
+                    {
+                        IdCarrera: null
+                    },
+                    {
+                        IdCarrera: {
+                            in: carreraArray.map(item => item.id)
+                        },
+                    }
+                ]
+
+            },
         });
 
         const documentos = await prisma.documento.findMany({
             where: {
                 IdCarpeta: Number(params.id),
-                Estado: 1
+                Estado: 1,
             }
         });
 
@@ -57,9 +65,16 @@ export async function GET(request: NextRequest, { params }: Params) {
             where: {
                 IdCarpetaPadre: Number(params.id),
                 Estado: 1,
-                IdCarrera: {
-                    in: carreraArray.map(item => item.id)
-                }
+                OR: [
+                    {
+                        IdCarrera: null
+                    },
+                    {
+                        IdCarrera: {
+                            in: carreraArray.map(item => item.id)
+                        },
+                    }
+                ]
             }
         });
 

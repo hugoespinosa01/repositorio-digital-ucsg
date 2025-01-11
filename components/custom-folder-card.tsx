@@ -36,7 +36,7 @@ export function FolderCard({ folder, fileName, creationDate, onEdit, onDelete, o
                         <FolderOpen className="w-6 h-6 text-yellow-600" />
                     </div>
                     <div className="min-w-0">
-                        <h3 className="font-medium group-hover:text-yellow-700 transition-colors truncate">
+                        <h3 className="font-medium group-hover:text-yellow-700 transition-colors truncate group-hover:max-w-[60%]">
                             {fileName}
                         </h3>
                         <p className="text-sm text-gray-500 truncate">Creado el: {new Date(creationDate).toLocaleDateString()}</p>
