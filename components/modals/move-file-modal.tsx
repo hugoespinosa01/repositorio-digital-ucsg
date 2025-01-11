@@ -10,10 +10,12 @@ export default function MoveFileModal({
     openModal,
     setOpenModal,
     idFile,
+    currentPage
 }: {
     openModal: boolean,
     setOpenModal: (open: boolean) => void,
     idFile: number | undefined,
+    currentPage: number
 }) {
 
     const { toast } = useToast();
@@ -66,7 +68,7 @@ export default function MoveFileModal({
                         Selecciona el destino de la carpeta
                     </CredenzaDescription>
                     <CredenzaBody>
-                        <MoveFolderForm idFile={idFile} setOpenModal={setOpenModal} />
+                        <MoveFolderForm idFile={idFile} setOpenModal={setOpenModal} currentPage={currentPage}/>
                     </CredenzaBody>
                 </CredenzaContent>
             </Credenza>

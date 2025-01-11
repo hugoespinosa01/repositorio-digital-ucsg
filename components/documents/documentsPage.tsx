@@ -406,6 +406,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
         />
 
         <MoveFileModal
+          currentPage={currentPage}
           openModal={openMoveFileModal}
           setOpenModal={setOpenMoveFileModal}
           idFile={idFile}
