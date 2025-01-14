@@ -48,14 +48,16 @@ import { useState } from "react"
 import CreatableSelect from 'react-select/creatable';
 import { SingleValue } from 'react-select';
 import { CustomSelect } from "../custom-select"
+import { useToast } from "@/components/ui/use-toast"
 
 const formSchema = z.object({
     carpeta_destino: z.string()
 });
 
-export default function MoveFolderForm({ idFolder, idFile, setOpenModal, currentPage, parentId}: { idFolder?: number, idFile?: number, setOpenModal: (open: boolean) => void, currentPage: number, parentId?: number }) {
+export default function MoveFolderForm({ idFolder, idFile, setOpenModal, currentPage, parentId }: { idFolder?: number, idFile?: number, setOpenModal: (open: boolean) => void, currentPage: number, parentId?: number }) {
 
-    const { moveFolder, pageSize, isSubmitting } = useContext(FolderContext);
+    const { moveFolder, pageSize, isSubmitting, fetchChildren, fetchFolders } = useContext(FolderContext);
+    const { toast } = useToast();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -64,13 +66,50 @@ export default function MoveFolderForm({ idFolder, idFile, setOpenModal, current
         }
     })
 
-    const moveFile = (idFile: number, destino: number, setOpenModal: (open: boolean) => void, pageSize: number) => {
+    const moveFile = async (idFile: number, destino: number, setOpenModal: (open: boolean) => void, pageSize: number, currentPage: number, parentId: number | undefined) => {
+        
+        try {
+            const response = await fetch(`/api/files/${idFile}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ IdCarpetaPadre: destino })
+            });
 
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Error al mover la carpeta");
+            }
+
+            toast({
+                title: "Carpeta movida",
+                description: "La carpeta ha sido movida exitosamente",
+                variant: "default",
+            });
+
+            if (parentId) {
+                fetchChildren(destino.toString(), currentPage, pageSize);
+            } else {
+                fetchFolders(currentPage, pageSize);
+            }
+
+        } catch (err) {
+            console.error(err);
+            toast({
+                title: "Error",
+                description: "Error al mover la carpeta",
+                variant: "destructive",
+            });
+        } finally {
+            setOpenModal(false);
+        }
     }
 
     function onSubmit(values: z.infer<typeof formSchema>) {
         if (idFile) {
-            moveFile(idFile, Number(values.carpeta_destino), setOpenModal, pageSize);
+            moveFile(idFile, Number(values.carpeta_destino), setOpenModal, pageSize, currentPage, parentId);
         } else {
             moveFolder(idFolder, Number(values.carpeta_destino), setOpenModal, pageSize, currentPage, parentId);
         }
@@ -89,6 +128,7 @@ export default function MoveFolderForm({ idFolder, idFile, setOpenModal, current
                                     placeholder="Selecciona una carpeta"
                                     onChange={field.onChange}
                                     idFolder={idFolder}
+                                    idFile={idFile}
                                 />
                             </FormControl>
                         </FormItem>

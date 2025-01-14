@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
+import auth from '@/lib/auth';
+import { Prisma } from '@prisma/client';
+
 
 interface Params {
     params: { id: string };
@@ -139,8 +143,6 @@ export async function GET(request: Request, { params }: Params) {
 export async function PUT(request: Request, { params }: Params) {
     try {
 
-        
-
         const documentId = params.id;
         const body = await request.json();
 
@@ -198,5 +200,63 @@ export async function PUT(request: Request, { params }: Params) {
     } catch (error) {
         console.error('Error actualizando documento:', error);
         return NextResponse.json({ error: 'Error actualizando documento' }, { status: 500 });
+    }
+}
+
+export async function PATCH(request: Request, { params }: Params) {
+    try {
+
+        const session = await getServerSession(auth);
+
+        if (!session) {
+            return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+        }
+
+        const body = await request.json();
+
+        if (!body.IdCarpetaPadre) {
+            return NextResponse.json({ error: 'Carpeta destino requerida' }, { status: 400 });
+        }
+
+        if (typeof body.IdCarpetaPadre !== 'number') {
+            return NextResponse.json({ error: 'El id de la carpeta destino debe ser un número' }, { status: 400 });
+        }
+
+        const carpeta = await prisma.carpeta.findFirst({
+            where: {
+                Id: body.IdCarpetaPadre,
+                Estado: 1
+            }
+        });
+
+        if (!carpeta) {
+            return NextResponse.json({ error: 'Carpeta destino no encontrada' }, { status: 404 });
+        }
+
+        const updatedDocumento = await prisma.documento.update({
+            where: {
+                Id: Number(params.id)
+            },
+            data: {
+                IdCarpeta: body.IdCarpetaPadre,
+            }
+        });
+
+        const response = {
+            message: 'Carpeta movida',
+            status: 200,
+            data: updatedDocumento,
+            targetFolder: body.IdCarpetaPadre
+        }
+
+        return NextResponse.json(response);
+    } catch (error) {
+        console.error('Error actualizando la carpeta:', error);
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2025') {
+                return NextResponse.json({ error: 'Carpeta o documento no encontrado' }, { status: 404 });
+            }
+        }
+        return NextResponse.json({ error: 'Error actualizando la carpeta:' }, { status: 500 });
     }
 }

@@ -281,7 +281,6 @@ export const FolderProvider = ({ children }: { children: React.ReactNode }) => {
             });
         } finally {
             setIsSubmitting(false);
-            setIsSubmitting(false);
             setOpenModal(false);
         }
     }

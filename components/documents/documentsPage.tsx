@@ -107,7 +107,6 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
   }
 
   const handleMoveFile = (id: number) => {
-    console.log('Move file', id);
     setIdFile(id);
     setOpenMoveFileModal(true);
   }

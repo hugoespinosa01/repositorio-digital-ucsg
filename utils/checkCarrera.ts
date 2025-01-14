@@ -7,7 +7,7 @@ export const checkCarrera = async (carrera: string) => {
         // Busco el Id de la carrera correspondiente
         const _carreraId = await prisma.carrera.findFirst({
             where: {
-                Nombre: "Ingeniería en Computación",
+                Nombre: "INGENIERÍA EN SISTEMAS COMPUTACIONALES",
             }
         })
         if (!_carreraId) {
@@ -22,7 +22,7 @@ export const checkCarrera = async (carrera: string) => {
         // Busco el Id de la carrera correspondiente
         const _carreraId = await prisma.carrera.findFirst({
             where: {
-                Nombre: "Ingeniería Civil",
+                Nombre: "INGENIERÍA CIVIL",
             }
         });
         if (!_carreraId) {

@@ -104,7 +104,7 @@ ALTER TABLE [dbo].[DocumentoDetalleKardex] ADD CONSTRAINT IdDocumentoKardex_fk F
 --DDL INSERTS
 
 INSERT INTO [dbo].[Carrera]   ([Nombre])
-VALUES ('INGENIERÍA EN COMPUTACIÓN');
+VALUES ('INGENIERÍA EN SISTEMAS COMPUTACIONALES');
 
 INSERT INTO [dbo].[Carrera]   ([Nombre])
 VALUES ('INGENIERÍA CIVIL');

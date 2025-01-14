@@ -8,13 +8,15 @@ type Props = {
     disabled?: boolean;
     placeholder?: string;
     idFolder?: number;
+    idFile?: number;
 }
 
 export const CustomSelect = ({
     onChange,
     disabled,
     placeholder,
-    idFolder
+    idFolder,
+    idFile
 }: Props) => {
 
     const onSelect = (newValue: SingleValue<{ label: string, value: string }>)=> {
@@ -22,17 +24,18 @@ export const CustomSelect = ({
         onChange(option?.value);
     }
 
-    // const formattedValue = useMemo(() => {
-    //     return options.find((option) => option.value === value);
-    // }, [options, value]);
-
     interface Option {
         label: string;
         value: string;
     }
 
     const loadOptions = async (searchValue: string): Promise<Option[]> => {
-        const res = await fetch(`/api/folders?id=${idFolder}&query=${searchValue}`);
+        let res = null;
+        if (idFolder) {
+            res = await fetch(`/api/folders?id=${idFolder}&query=${searchValue}`);
+        } else{
+            res = await fetch(`/api/folders?query=${searchValue}`);
+        }
         const data = await res.json();
         return data.data.map((folder: Folder) => ({ label: folder.Nombre, value: folder.Id.toString() }));
     }

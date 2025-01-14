@@ -67,38 +67,12 @@ export async function POST(req: Request) {
 
     let similarDocs: any[] = [];
 
-
     // 5. Verifica si el primer resultado contiene el query
     if (retrieved.length === 0 || !searchString(retrieved[0].metadata.fileName, query)) {
       // Si no contiene el query, realiza la búsqueda en la base de datos
-      similarDocs = await prisma?.tipoDocumentoKardex.findMany({
-        where: {
-          OR: [
-            {
-              NoIdentificacion: {
-                contains: query,
-              },
-            },
-            {
-              Alumno: {
-                contains: query.toUpperCase(),
-              },
-            },
-          ],
-          AND: [
-            {
-              Estado: 1,
-            },
-            {
-              Carrera: {
-                in: carrera.split(','),
-              },
-            },
-          ]
-        },
-      });
-
       if (parentId) {
+        similarDocs = await buscarDocumentos(Number(parentId), query, carrera);
+      } else {
         similarDocs = await prisma?.tipoDocumentoKardex.findMany({
           where: {
             OR: [
@@ -122,22 +96,6 @@ export async function POST(req: Request) {
                   in: carrera.split(','),
                 },
               },
-              {
-                OR: [
-                  {
-                    Documento: {
-                      Carpeta: {
-                        IdCarpetaPadre: Number(parentId),
-                      },
-                    },
-                  },
-                  {
-                    Documento: {
-                      IdCarpeta: Number(parentId),
-                    },
-                  },
-                ]
-              }
             ]
           },
         });
@@ -187,4 +145,61 @@ function searchString(fullText: string, searchText: string): number {
     console.log("No coincide");
     return 0;
   }
+}
+
+
+async function getCarpetasHijas(idCarpeta: number) {
+
+  const carpetas = await prisma.carpeta.findMany({
+    where: { IdCarpetaPadre: idCarpeta },
+    select: { Id: true },
+  });
+
+  const idsHijas = carpetas.map((c) => c.Id);
+  for (const id of idsHijas) {
+    const idsNietas = await getCarpetasHijas(id); // Llamada recursiva
+    idsHijas.push(...idsNietas);
+  }
+  return idsHijas;
+}
+
+async function buscarDocumentos(idCarpeta: number, query: string, carrera: string) {
+  const carpetas = await getCarpetasHijas(idCarpeta);
+  carpetas.push(idCarpeta); // Agrega la carpeta raíz
+
+  const documentos = await prisma.tipoDocumentoKardex.findMany({
+    where: {
+      OR: [
+        {
+          NoIdentificacion: {
+            contains: query,
+          },
+        },
+        {
+          Alumno: {
+            contains: query.toUpperCase(),
+          },
+        },
+      ],
+      AND: [
+        {
+          Estado: 1,
+        },
+        {
+          Carrera: {
+            in: carrera.split(','),
+          },
+        },
+        {
+          Documento: {
+            IdCarpeta: {
+                  in: carpetas
+            }
+          },
+        }
+      ]
+    },
+  });
+
+return documentos;
 }
