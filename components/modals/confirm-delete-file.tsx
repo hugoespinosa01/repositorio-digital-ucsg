@@ -1,33 +1,40 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { Button } from '../ui/button';
 import { Credenza, CredenzaBody, CredenzaContent, CredenzaFooter, CredenzaHeader, CredenzaTitle, CredenzaClose } from '../custom-modal';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react'; // Replace with the correct path or library
 import { useRouter } from 'next/navigation';
+import { FolderContext } from '@/context/folder-context';
 
 export default function ConfirmDeleteFile({
     openModal,
     setOpenModal,
-    idFile,
-    persistSamePage
+    fileId,
+    persistSamePage,
+    parentId,
+    currentPage,
+    pageSize,
 }: {
     openModal: boolean,
     setOpenModal: (open: boolean) => void,
-    idFile: number | undefined,
-    persistSamePage?: boolean
+    fileId: number | undefined,
+    persistSamePage?: boolean,
+    parentId?: string | null | undefined,
+    currentPage: number,
+    pageSize: number
 }) {
 
     const { toast } = useToast();
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const {fetchFolders, fetchChildren} = useContext(FolderContext);
 
 
     const handleAcceptDelete = async () => {
         try {
-            setOpenModal(false);
             setIsSubmitting(true);
 
-            const response = await fetch(`/api/files/${Number(idFile)}`, {
+            const response = await fetch(`/api/files/${Number(fileId)}`, {
                 method: 'DELETE',
             });
 
@@ -40,6 +47,10 @@ export default function ConfirmDeleteFile({
                 description: "La información ha sido eliminada exitosamente",
                 variant: "default",
             });
+
+            if (parentId) {
+                fetchChildren(parentId, currentPage, pageSize)
+            }
 
             if (!persistSamePage) {
                 router.back();
@@ -56,6 +67,7 @@ export default function ConfirmDeleteFile({
             });
         } finally {
             setIsSubmitting(false);
+            setOpenModal(false);
         }
     }
 

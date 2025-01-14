@@ -29,6 +29,8 @@ export async function GET(request: NextRequest) {
     const page = Number(request.nextUrl.searchParams.get('page'));
     const pageSize = Number(request.nextUrl.searchParams.get('page_size'));
     const query = request.nextUrl.searchParams.get('query') || '';
+    const folderId = Number(request.nextUrl.searchParams.get('id') || '0');
+    
     let carpetas: any[] = [];
 
     if (query?.length == 0 && page != 0  && pageSize != 0) {
@@ -54,6 +56,9 @@ export async function GET(request: NextRequest) {
     } else {
       carpetas = await prisma.carpeta.findMany({
         where: {
+          Id: {
+            notIn: [folderId]
+          },
           Estado: 1,
           Nombre: {
             contains: query,

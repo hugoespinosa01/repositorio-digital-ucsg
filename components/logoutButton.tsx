@@ -18,7 +18,6 @@ export function LogoutButton() {
                 size={'sm'}
                 onClick={() => {
                     keycloakSessionLogOut().then(() => signOut({ callbackUrl: '/' }))
-                    //clearPermissions();
                 }}
             >Cerrar sesión
                 <LogOut className="ml-2 w-4 h-4" />

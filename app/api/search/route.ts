@@ -42,17 +42,36 @@ export async function POST(req: Request) {
     });
 
     // 4. Realiza la búsqueda usando el algoritmo heurístico de Maximal Marginal Relevance
-    const retrieved = await vectorStore.maxMarginalRelevanceSearch(query, {
-      k: 3,
-      filter: {
-        carrera: carrera,
-      },
-    });
+    let retrieved: any[] = [];
+
+    if (parentId) {
+      retrieved = await vectorStore.maxMarginalRelevanceSearch(query, {
+        k: 3,
+        filter: {
+          carrera: {
+            $in: carrera.split(','),
+          },
+          folderId: Number(parentId) || 0,
+        },
+      });
+    } else {
+      retrieved = await vectorStore.maxMarginalRelevanceSearch(query, {
+        k: 3,
+        filter: {
+          carrera: {
+            $in: carrera.split(','),
+          },
+        },
+      });
+    }
+
+    let similarDocs: any[] = [];
+
 
     // 5. Verifica si el primer resultado contiene el query
     if (retrieved.length === 0 || !searchString(retrieved[0].metadata.fileName, query)) {
       // Si no contiene el query, realiza la búsqueda en la base de datos
-      const similarDocs = await prisma?.tipoDocumentoKardex.findMany({
+      similarDocs = await prisma?.tipoDocumentoKardex.findMany({
         where: {
           OR: [
             {
@@ -65,18 +84,6 @@ export async function POST(req: Request) {
                 contains: query.toUpperCase(),
               },
             },
-            {
-              Documento: {
-                IdCarpeta: Number(parentId),
-              }
-            },
-            {
-              Documento: {
-                Carpeta: {
-                  IdCarpetaPadre: Number(parentId),
-                }
-              }
-            }
           ],
           AND: [
             {
@@ -84,12 +91,57 @@ export async function POST(req: Request) {
             },
             {
               Carrera: {
-                equals: carrera.toUpperCase(),
+                in: carrera.split(','),
               },
-            }
+            },
           ]
         },
       });
+
+      if (parentId) {
+        similarDocs = await prisma?.tipoDocumentoKardex.findMany({
+          where: {
+            OR: [
+              {
+                NoIdentificacion: {
+                  contains: query,
+                },
+              },
+              {
+                Alumno: {
+                  contains: query.toUpperCase(),
+                },
+              },
+            ],
+            AND: [
+              {
+                Estado: 1,
+              },
+              {
+                Carrera: {
+                  in: carrera.split(','),
+                },
+              },
+              {
+                OR: [
+                  {
+                    Documento: {
+                      Carpeta: {
+                        IdCarpetaPadre: Number(parentId),
+                      },
+                    },
+                  },
+                  {
+                    Documento: {
+                      IdCarpeta: Number(parentId),
+                    },
+                  },
+                ]
+              }
+            ]
+          },
+        });
+      }
 
       if (!similarDocs) {
         return NextResponse.json({ message: "Error al buscar documentos" }, { status: 500 });

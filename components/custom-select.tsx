@@ -1,23 +1,20 @@
 'use client';
-
-import { useMemo } from 'react';
 import { SingleValue } from 'react-select';
 import AsyncSelect from 'react-select/async';
-import makeAnimated from 'react-select/animated';
 import { Folder } from '@/types/folder';
 
 type Props = {
     onChange: (value?: string) => void;
-    value?: string | null | undefined;
     disabled?: boolean;
     placeholder?: string;
+    idFolder?: number;
 }
 
 export const CustomSelect = ({
-    value,
     onChange,
     disabled,
-    placeholder
+    placeholder,
+    idFolder
 }: Props) => {
 
     const onSelect = (newValue: SingleValue<{ label: string, value: string }>)=> {
@@ -35,15 +32,13 @@ export const CustomSelect = ({
     }
 
     const loadOptions = async (searchValue: string): Promise<Option[]> => {
-        const res = await fetch('/api/folders?query=' + searchValue);
+        const res = await fetch(`/api/folders?id=${idFolder}&query=${searchValue}`);
         const data = await res.json();
         return data.data.map((folder: Folder) => ({ label: folder.Nombre, value: folder.Id.toString() }));
     }
 
     return (
         <AsyncSelect
-            closeMenuOnSelect={false}
-            components={makeAnimated()}
             placeholder={placeholder}
             className="w-full text-sm h-10"
             styles={{
@@ -74,6 +69,7 @@ export const CustomSelect = ({
                         ":active": {
                             backgroundColor: '#ba4665',
                             borderColor: '#ba4665',
+                            color: 'white'
                         },
                         ":hover": {
                             backgroundColor: '#d4c9cc',
@@ -87,6 +83,7 @@ export const CustomSelect = ({
                 onSelect(selectedOption);
             }}
             defaultOptions
+            cacheOptions
             loadOptions={loadOptions}
             // options={options}
             isDisabled={disabled}

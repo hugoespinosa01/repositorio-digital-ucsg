@@ -32,7 +32,7 @@ export default function DocumentDetail() {
 
   useEffect(() => {
     if (parent) {
-      const paths = parent.Ruta.split('/').filter(item => item !== '').map((item, index) => {
+      const paths = parent.Ruta?.split('/').filter(item => item !== '').map((item, index) => {
         return {
           name: item
         }

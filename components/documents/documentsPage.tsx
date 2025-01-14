@@ -64,7 +64,10 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
       setResults([]);
       setIsAlreadySearched(false);
     }
-  }, [query]);
+    if (isSearching) {
+      setIsAlreadySearched(false);
+    }
+  }, [query, isSearching]);
 
 
   useEffect(() => {
@@ -235,11 +238,11 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                         </div>
                         {
                           results.length === 0 && isAlreadySearched && (
-                            <div className='text-center py-4 bg-white shadow-md rounded-b-md'>
+                            <div className='text-center py-4 rounded-b-md'>
                               <X className='mx-auto h-8 w-8 text-gray-400' />
                               <h3 className='mt-2 text-sm font-semibold text-gray-900'>Sin resultados</h3>
                               <p className='mt-1 text-sm mx-auto max-w-prose text-gray-500'>
-                                Lo sentimos, no pudimos encontrar resultados para {' '}
+                                Lo sentimos, no pudimos encontrar resultados para
                                 <span className='text-red-600 font-medium'>{query}</span>.
                               </p>
                             </div>
@@ -424,9 +427,12 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
 
         {/* Modal para confirmar eliminación de archivo */}
         <ConfirmDeleteFile
+          parentId={parentId}
+          currentPage={currentPage}
+          pageSize={PAGE_SIZE}
           openModal={openModalDelete}
           setOpenModal={setOpenModalDelete}
-          idFile={idFile}
+          fileId={idFile}
           persistSamePage={true}
         />
       </CardContent>

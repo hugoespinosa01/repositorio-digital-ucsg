@@ -41,8 +41,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
   const { toast } = useToast();
-  const { data: session } = useSession();
-  const printRef = useRef(null);
+
 
 
   useEffect(() => {
@@ -130,23 +129,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
 
   const columns = useMemo(() => GetColumns({ onEdit, onDelete }), []);
 
-  const handleDownloadReport = async () => {
-
-    // const response = await fetch(`/api/roles`, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   }
-    // });
-
-    // if (!response.ok) {
-    //   throw new Error(`Error al obtener el archivo: ${response.statusText}`);
-    // }
-
-    // const data = await response.json();
-
-    // console.log(data);
-    
+  const handleDownloadReport = async () => {    
     window.open(`/files/${fileId}/report`, '_blank');
   }
 
@@ -279,9 +262,11 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
 
                   {/* Modal para confirmar eliminación de archivo */}
                   <ConfirmDeleteFile
+                    pageSize={6}
+                    currentPage={1}
                     openModal={openModalDelete}
                     setOpenModal={setOpenModalDelete}
-                    idFile={fileData?.Id}
+                    fileId={Number(fileId)}
                   />
 
                 </div>

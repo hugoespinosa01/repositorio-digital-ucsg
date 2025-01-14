@@ -90,7 +90,6 @@ export async function POST(request: NextRequest) {
         // Extraigo las materias aprobadas y las guardo en un array
         await populateDetalleMaterias(datosExtraidos, fields);
 
-
         //Busco la carpeta root
         const carpetaRoot = await prisma.carpeta.findFirst({
             where: {

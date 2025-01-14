@@ -47,7 +47,7 @@ export async function loadToPinecone(fileName: string, document: Documento, fiel
         const pineconeIndex = await client.index(process.env.PINECONE_INDEX || "documentos-ucsg");
         
         // Establezco un namespace para el índice (este va a aglomerar a todos los documentos)
-        const namespace = pineconeIndex.namespace("documentos-ucsg");
+        const namespace = pineconeIndex.namespace(process.env.PINECONE_NAMESPACE || "documentos-ucsg");
 
         await namespace.upsert(vector);
 

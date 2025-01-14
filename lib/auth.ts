@@ -3,8 +3,10 @@ import { jwtDecode } from 'jwt-decode';
 import type { NextAuthOptions } from 'next-auth';
 import { JWT } from 'next-auth/jwt';
 import KeycloakProvider from 'next-auth/providers/keycloak';
+import { signOut } from 'next-auth/react';
 
 async function refreshAccessToken(token: JWT) {
+
     const resp = await fetch(
         `${process.env.KEYCLOAK_URL}realms/ucsg/protocol/openid-connect/token`,
         {
@@ -42,6 +44,7 @@ const auth: NextAuthOptions = {
     callbacks: {
         async jwt({ token, account }) {
             const nowTimeStamp = Math.floor(Date.now() / 1000);
+
 
             if (account) {
                 // Disponible solo la primera vez el callback es llamado en una nueva sesión

@@ -71,7 +71,7 @@ export default function MoveFolderForm({ idFolder, idFile, setOpenModal, current
     function onSubmit(values: z.infer<typeof formSchema>) {
         if (idFile) {
             moveFile(idFile, Number(values.carpeta_destino), setOpenModal, pageSize);
-        } else if (parentId) {
+        } else {
             moveFolder(idFolder, Number(values.carpeta_destino), setOpenModal, pageSize, currentPage, parentId);
         }
     }
@@ -87,8 +87,8 @@ export default function MoveFolderForm({ idFolder, idFile, setOpenModal, current
                             <FormControl>
                                 <CustomSelect
                                     placeholder="Selecciona una carpeta"
-                                    value={field.value}
                                     onChange={field.onChange}
+                                    idFolder={idFolder}
                                 />
                             </FormControl>
                         </FormItem>
