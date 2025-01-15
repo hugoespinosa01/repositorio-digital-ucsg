@@ -8,22 +8,32 @@ const styles = StyleSheet.create({
     body: {
         paddingTop: 30,
         paddingBottom: 60,
-        paddingHorizontal: 25,
-        fontSize: 14,
+        paddingHorizontal: 60,
+        fontSize: 9,
     },
     image: {
-        width: 100,
-        height: 95,
-        alignSelf: 'flex-start',
+        width: 115,
+        height: 109,
     },
     containerHeader: {
-        marginTop: 5,
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
+    },
+    containerHeaderFooter: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'absolute',
+        bottom: 30,
+        left: 20,
+        right: 20,
     },
     colHeader: {
         alignItems: 'center',
+        justifyContent: 'center',
     },
     anotherColHeader: {
         alignItems: 'center',
@@ -31,19 +41,19 @@ const styles = StyleSheet.create({
     },
     title: {
         textAlign: 'center',
-        fontSize: 16,
+        fontSize: 11,
         marginBottom: 5,
         fontFamily: 'Helvetica-Bold',
     },
     subtitle: {
         textAlign: 'center',
-        fontSize: 15,
+        fontSize: 11,
         fontFamily: 'Helvetica-Bold',
         marginBottom: 5
     },
     caption: {
         fontFamily: 'Helvetica-Bold',
-        fontSize: 14,
+        fontSize: 10,
         textAlign: 'center',
         marginBottom: 5,
         padding: 5,
@@ -55,19 +65,20 @@ const styles = StyleSheet.create({
         marginBottom: 5,
         marginTop: 5,
         lineHeight: 1.2,
-        fontSize: 13,
+        fontSize: 9,
     },
     key: {
         flexDirection: 'row',
+        marginBottom: 5,
+        marginTop: 5,
     },
     table: {
         width: '100%',
-        fontSize: 13,
+        fontSize: 9,
     },
     row: {
         display: 'flex',
         flexDirection: 'row',
-        borderTop: '1px solid #EEE',
         paddingTop: 8,
         paddingBottom: 8,
     },
@@ -75,8 +86,8 @@ const styles = StyleSheet.create({
         borderTop: 'none',
     },
     notes: {
-        marginTop: 10,
-        fontSize: 10,
+        marginTop: 20,
+        fontSize: 8,
         lineHeight: 1.3,
     },
     bold: {
@@ -98,10 +109,21 @@ const styles = StyleSheet.create({
     col4: {
         width: '25%',
         fontWeight: 'bold',
+        textAlign: 'right',
     },
     col5: {
         width: '30%',
         fontWeight: 'bold',
+        textAlign: 'right',
+    },
+    pageNumber: {
+        position: 'absolute',
+        fontSize: 9,
+        bottom: 15,
+        left: 20,
+        right: 20,
+        textAlign: 'center',
+        color: 'grey',
     },
 });
 
@@ -132,100 +154,99 @@ const MyDocument = ({
 }: ReportType) => (
     <Document>
         <Page size="A4" style={styles.body}>
-            <View>
-                <View style={styles.containerHeader}>
-                    <View style={styles.colHeader}>
-                        <Image
-                            src={"img/logo_ucsg.png"}
-                            style={styles.image}
-                        />
-                    </View>
-                    <View style={styles.colHeader}>
-                        <Text style={styles.title}>UNIVERSIDAD CATÓLICA DE SANTIAGO DE GUAYAQUIL</Text>
-                        <Text style={styles.subtitle}>FACULTAD DE INGENIERIA</Text>
-                        <Text style={styles.subtitle}>CARRERA DE {Carrera?.toUpperCase()}</Text>
-                    </View>
+            <View style={styles.containerHeader}>
+                <View style={styles.colHeader}>
+                    <Image
+                        src={"img/logo_ucsg.png"}
+                        style={styles.image}
+                    />
                 </View>
-                <Text style={styles.caption}>CERTIFICADO DE MATERIAS APROBADAS</Text>
-                <View style={styles.data}>
-
-                    <View style={styles.key}>
-                        <Text style={styles.bold}>NIVEL: </Text>
-                        <Text>GRADO</Text>
-                    </View>
-
-                    <View style={styles.key}>
-                        <Text style={styles.bold}>ALUMNO: </Text>
-                        <Text>{Alumno}</Text>
-                    </View>
-
-                    <View style={styles.key}>
-                        <Text style={styles.bold}># DE IDENTIFICACIÓN: </Text>
-                        <Text>{NoIdentificacion}</Text>
-                    </View>
+                <View style={styles.colHeader}>
+                    <Text style={styles.title}>UNIVERSIDAD CATÓLICA DE SANTIAGO DE GUAYAQUIL</Text>
+                    <Text style={styles.subtitle}>FACULTAD DE INGENIERIA</Text>
+                    <Text style={styles.subtitle}>CARRERA DE {Carrera?.toUpperCase()}</Text>
                 </View>
-                <View style={styles.table}>
-                    <View style={[styles.row, styles.bold, styles.header]}>
-                        <Text style={styles.col1}>CICLO</Text>
-                        <Text style={styles.col2}>MATERIA</Text>
-                        <Text style={styles.col3}>PERIODO</Text>
-                        <Text style={styles.col4}>NOTA</Text>
-                        <Text style={styles.col5}># MATRÍCULA</Text>
-                    </View>
-                    {
-                        DetalleMaterias.map((materia: any, index: number) => (
-                            <View style={styles.row} key={index} wrap={false}>
-                                <Text style={styles.col1}>{materia.Ciclo}</Text>
-                                <Text style={styles.col2}>{materia.Materia}</Text>
-                                <Text style={styles.col3}>{materia.Periodo}</Text>
-                                <Text style={styles.col4}>{Number(materia.Calificacion)}</Text>
-                                <Text style={styles.col5}>{materia.NoMatricula}</Text>
-                            </View>
-                        ))
-                    }
-                </View>
-                <View
-                    style={styles.notes}
-                >
-                    <Text>CERTIFICAMOS QUE LAS MATERIAS Y NOTAS CORRESPONDEN A LOS REGISTROS ACADÉMICOS A NUESTRO CARGO DE ACUERDO AL
-                        REGLAMENTO ACADÉMICO VIGENTE DE LA UNIVERSIDAD.</Text>
-                    <View style={styles.key}>
-                        <Text style={styles.bold}>FECHA DE EMISIÓN DEL CERTIFICADO: </Text>
-                        <Text>{new Date().toLocaleDateString()}</Text>
-                    </View>
-                    <View style={styles.key}>
-                        <Text style={styles.bold}>PROMEDIO DE SEMINARIO DE GRADUACION: </Text>
-                        <Text>{NotaGraduacionSeminario}</Text>
-                    </View>
-                    <View style={styles.containerHeader}>
-                        <View style={styles.anotherColHeader}>
-                            <Text>
-                                Dirección: Av. Carlos Julio Arosemena Km. 1 1/2
-                                Apartado Postal: 09014671
-                                Teléfonos: 2206952 Ext. 2657
-                            </Text>
-                        </View>
-                        <View style={styles.anotherColHeader}>
-                            <Text>
-                                Guayaquil - Ecuador
-                            </Text>
-                        </View>
-                        <View style={styles.anotherColHeader}>
-                            <Text>
-                                Website: www.ucsg.edu.ec
-                                Email: webmaster@cu.ucsg.edu.ec
-                            </Text>
-                        </View>
-                    </View>
-                </View>
-
-
             </View>
+            <Text style={styles.caption}>CERTIFICADO DE MATERIAS APROBADAS</Text>
+            <View style={styles.data}>
+
+                <View style={styles.key}>
+                    <Text style={styles.bold}>NIVEL: </Text>
+                    <Text>GRADO</Text>
+                </View>
+
+                <View style={styles.key}>
+                    <Text style={styles.bold}>ALUMNO: </Text>
+                    <Text>{Alumno}</Text>
+                </View>
+
+                <View style={styles.key}>
+                    <Text style={styles.bold}># DE IDENTIFICACIÓN: </Text>
+                    <Text>{NoIdentificacion}</Text>
+                </View>
+            </View>
+            <View style={styles.table}>
+                <View style={[styles.row, styles.bold, styles.header]}>
+                    <Text style={styles.col1}>CICLO</Text>
+                    <Text style={styles.col2}>MATERIA</Text>
+                    <Text style={styles.col3}>PERIODO</Text>
+                    <Text style={styles.col4}>NOTA</Text>
+                    <Text style={styles.col5}># MATRÍCULA</Text>
+                </View>
+                {
+                    DetalleMaterias.map((materia: any, index: number) => (
+                        <View style={styles.row} key={index} wrap={false}>
+                            <Text style={styles.col1}>{materia.Ciclo}</Text>
+                            <Text style={styles.col2}>{materia.Materia}</Text>
+                            <Text style={styles.col3}>{materia.Periodo}</Text>
+                            <Text style={styles.col4}>{Number(materia.Calificacion)}</Text>
+                            <Text style={styles.col5}>{materia.NoMatricula}</Text>
+                        </View>
+                    ))
+                }
+            </View>
+            <View
+                style={styles.notes}
+            >
+                <Text>CERTIFICAMOS QUE LAS MATERIAS Y NOTAS CORRESPONDEN A LOS REGISTROS ACADÉMICOS A NUESTRO CARGO DE ACUERDO AL
+                    REGLAMENTO ACADÉMICO VIGENTE DE LA UNIVERSIDAD.</Text>
+                
+                <View style={styles.key}>
+                    <Text style={styles.bold}>FECHA DE EMISIÓN DEL CERTIFICADO: </Text>
+                    <Text>{new Date().toLocaleDateString()}</Text>
+                </View>
+                
+                <View style={styles.key}>
+                    <Text style={styles.bold}>PROMEDIO DE SEMINARIO DE GRADUACION: </Text>
+                    <Text>{NotaGraduacionSeminario}</Text>
+                </View>
+            </View>
+            <View style={styles.containerHeaderFooter}>
+                <View style={styles.anotherColHeader}>
+                    <Text>
+                        Dirección: Av. Carlos Julio Arosemena Km. 1 1/2
+                        Apartado Postal: 09014671
+                        Teléfonos: 2206952 Ext. 2657
+                    </Text>
+                </View>
+                <View style={styles.anotherColHeader}>
+                    <Text>
+                        Guayaquil - Ecuador
+                    </Text>
+                </View>
+                <View style={styles.anotherColHeader}>
+                    <Text>
+                        Website: www.ucsg.edu.ec
+                        Email: webmaster@cu.ucsg.edu.ec
+                    </Text>
+                </View>
+            </View>
+            <Text style={styles.pageNumber} render={({ pageNumber, totalPages }) => (
+                `${pageNumber} / ${totalPages}`
+            )} fixed />
         </Page>
     </Document>
 );
-
-
 
 export async function GET(request: Request, { params }: { params: { fileId: string } }) {
 

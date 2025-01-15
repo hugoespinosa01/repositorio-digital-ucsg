@@ -14,6 +14,17 @@ dotenv.config();
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
 const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME || '';
 
+type Row = {
+    Matr1: {
+        value: string | undefined;
+    };
+    Matr2: { 
+        value: string | undefined;
+    };
+    Matr3: {
+        value: string | undefined;
+    };
+};
 
 
 export async function GET(request: Request) {
@@ -62,15 +73,27 @@ export async function POST(request: NextRequest) {
         //Subo al blob storage
         const blobName = await uploadToBlobStorage(pdfData);
 
-        // Extraigo los datos del documento (usar modelo modelo_computacion_v1)
-        const extractedData = await extractData(pdfData, 'prueba_modelo_civil_v2') as unknown as ExtractedData;
+        const classifiedDoc = await classifyDocument(pdfData);
+
+        if (!classifiedDoc) {
+            throw new Error('Error classifying document');
+        }
+
+        let extractedData = null;
+
+        // Clasifica los documentos según la carrera
+        if (classifiedDoc == 'kardex-computacion') {
+            extractedData = await extractData(pdfData, 'computacion-1-model') as unknown as ExtractedData;
+        } else if (classifiedDoc == 'kardex-civil') {
+            // Extraigo los datos del documento (usar modelo modelo_computacion_v1)
+            extractedData = await extractData(pdfData, 'prueba_modelo_civil_v2') as unknown as ExtractedData;
+        }
 
         if (!extractedData) {
             throw new Error('Error extracting data');
         }
 
         const { fields } = extractedData;
-
 
         // Busco el ID de la carrera
         const carreraArray = await checkCarrera(fields.Carrera.value);
@@ -88,6 +111,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Extraigo las materias aprobadas y las guardo en un array
+        
         await populateDetalleMaterias(datosExtraidos, fields);
 
         //Busco la carpeta root
@@ -183,7 +207,7 @@ export async function POST(request: NextRequest) {
         }
         return NextResponse.json(result);
 
-    } catch (err : any) {
+    } catch (err: any) {
         console.error('Error creating document:', err);
         const errResponse = {
             error: 'Error creating document',
@@ -193,6 +217,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(errResponse, { status: 500 });
     }
 }
+
 
 const populateDetalleMaterias = async (datosExtraidos: any, fields: any) => {
     // Verifica que "detalle-materias" y sus valores existan antes de iterar
@@ -204,11 +229,19 @@ const populateDetalleMaterias = async (datosExtraidos: any, fields: any) => {
                 materia: materia.properties?.Materia?.value ?? "",
                 periodo: materia.properties?.periodo?.value ?? "",
                 calificacion: materia.properties?.Calificacion?.value ?? "",
-                noMatricula: materia.properties?.noMatricula?.value ?? ""
+                noMatricula: transformData(materia.properties)
             });
         }
     }
 }
+
+function transformData(data: Row): number {
+    if (data?.Matr1?.value?.includes("+") || data?.Matr1?.value?.includes("A")) return 1;
+    if (data?.Matr2?.value?.includes("+") || data?.Matr1?.value?.includes("A")) return 2;
+    if (data?.Matr3?.value?.includes("+") || data?.Matr1?.value?.includes("A")) return 3;
+    else return 0;
+}
+
 
 const extractData = async (file: ArrayBuffer, model: string) => {
     try {
@@ -237,27 +270,50 @@ const extractData = async (file: ArrayBuffer, model: string) => {
 
 }
 
+const classifyDocument = async (file: ArrayBuffer) => {
+    try {
+        const endpoint = process.env.FORM_CUSTOM_CLASSIFICATION_ENDPOINT || "<endpoint>";
+        const credential = new AzureKeyCredential(process.env.FORM_CUSTOM_CLASSIFICATION_API_KEY || "<api key>");
+        const client = new DocumentAnalysisClient(endpoint, credential);
+
+        const poller = await client.beginClassifyDocument('clasificador-modelo-kardex', file)
+
+        const { documents } = await poller.pollUntilDone();
+
+        if (!documents) {
+            return NextResponse.json({ error: 'Error extracting data' }, { status: 500 });
+        }
+
+        return documents[0].docType;
+
+    } catch (err) {
+        console.error('Error classifying data:', err);
+        return NextResponse.json({ error: 'Error classifying data', status: 500 });
+    }
+}
+
+
 const uploadToBlobStorage = async (pdfData: ArrayBuffer): Promise<string> => {
     try {
         const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
         const containerClient = blobServiceClient.getContainerClient(containerName);
         const blobName = `${uuidv4()}.pdf`;
         const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-    
+
         const blobResponse = await blockBlobClient.uploadData(pdfData, {
             blobHTTPHeaders: { blobContentType: 'application/pdf' }
         });
-    
+
         if (!blobResponse) {
             throw new Error('Error uploading blob');
         }
-    
+
         console.log('Blob subido con éxito');
-    
+
         return blobName as string;
     } catch (err) {
         console.error('Error uploading blob:', err);
         throw new Error('Error uploading blob');
     }
-    
+
 }

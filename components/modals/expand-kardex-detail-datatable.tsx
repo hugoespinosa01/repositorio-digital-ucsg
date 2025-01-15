@@ -27,10 +27,8 @@ export default function ExpandKardexDetail({ openModal, setOpenModal, data, onEd
                             Detalle
                         </CredenzaTitle>
                     </CredenzaHeader>
-                    <CredenzaDescription>
-                        <div className="text-center sm:text-start">
-                            {/* Detalle de materias aprobadas */}
-                        </div>
+                    <CredenzaDescription className="text-center sm:text-start">
+                            Detalle de materias aprobadas de acuerdo con los datos extraídos
                     </CredenzaDescription>
                     <CredenzaBody className='flex justify-center items-center'>
                         <div>

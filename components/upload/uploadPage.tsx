@@ -29,6 +29,7 @@ export default function UploadPage() {
         description: "Por favor, selecciona un archivo PDF.",
         variant: "destructive",
       });
+      setIsSubmitting(false);
       return;
     }
 
