@@ -8,7 +8,7 @@ on:
 
 env:
   APPLICATION_PUBLISH_PROFILE: ${{ secrets.APP_PUBLISH_PROFILE }}
-  WEBAPP_NAME: "repositorio-digital-ucsg"
+  WEBAPP_NAME: "sinergia-digital-ucsg"
 
 jobs:
   build:
@@ -34,6 +34,5 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.WEBAPP_NAME }}
-          slot-name: "Production"
           publish-profile: ${{ env.APPLICATION_PUBLISH_PROFILE }}
           package: ./build/standalone
