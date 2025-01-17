@@ -8,7 +8,7 @@ on:
 
 env:
   APPLICATION_PUBLISH_PROFILE: ${{ secrets.APP_PUBLISH_PROFILE }}
-  WEBAPP_NAME: "repositorio-digital-sinergia"
+  WEBAPP_NAME: "repositorio-digital-ucsg"
 
 jobs:
   build:
