@@ -15,7 +15,8 @@ const nextConfig = {
     ]
   },
   output: 'standalone',
-  reactStrictMode: false,
+  reactStrictMode: true,
+  distDir: 'build',
   experimental: {
     missingSuspenseWithCSRBailout: false,
   },
