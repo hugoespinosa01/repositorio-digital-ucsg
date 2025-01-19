@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
 
         //Extraigo datos del documento (producto de Azure AI Intelligence)
         const datosExtraidos = {
-            alumno: fields.Alumno.value.replace('\n', '') ?? '',
+            alumno: formatData(fields.Alumno.value),
             noIdentificacion: fields.NoIdentificacion.value.replace('-', '') ?? '',
             carrera: carreraArray[0].nombre ?? '',
             materiasAprobadas: [] as Materia[]
@@ -218,7 +218,6 @@ export async function POST(request: NextRequest) {
     }
 }
 
-
 const populateDetalleMaterias = async (datosExtraidos: any, fields: any) => {
     // Verifica que "detalle-materias" y sus valores existan antes de iterar
     if (fields["detalle-materias"]?.values) {
@@ -233,6 +232,13 @@ const populateDetalleMaterias = async (datosExtraidos: any, fields: any) => {
             });
         }
     }
+}
+
+const formatData = (data: string) => {
+    if (data.includes("\n")){
+        return data.replace("\n", " ");
+    }
+    return data;
 }
 
 function transformData(data: Row): number {

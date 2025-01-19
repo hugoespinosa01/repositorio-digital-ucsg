@@ -18,6 +18,8 @@ import ConfirmDeleteFile from '../modals/confirm-delete-file';
 import { KardexDetalle } from '@/types/kardexDetalle';
 import { useToast } from '@/components/ui/use-toast';
 import { useSession } from 'next-auth/react';
+import useAuthRoles from '@/hooks/useAuthRoles';
+import LoadingFilePage from './loading';
 
 interface FileData {
   Id: number;
@@ -41,8 +43,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
   const { toast } = useToast();
-
-
+  const { permissions } = useAuthRoles(true);
 
   useEffect(() => {
 
@@ -52,6 +53,11 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
 
   }, [fileId]);
 
+  const hasPermission = (resource: string, action: string) => {
+    return permissions.some(
+      (perm: any) => perm.rsname === resource && perm.scopes.includes(`scope:${action}`)
+    );
+  };
 
   const fetchFile = async (fileId: string) => {
     setLoading(true);
@@ -99,25 +105,25 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
     setOpenModalDelete(true);
   }
 
-  const handleAcceptDelete = async () => {
-    setOpenModalDelete(false);
+  // const handleAcceptDelete = async () => {
+  //   setOpenModalDelete(false);
 
-    const response = await fetch(`/api/files/${Number(fileId)}`, {
-      method: 'DELETE',
-    });
+  //   const response = await fetch(`/api/files/${Number(fileId)}`, {
+  //     method: 'DELETE',
+  //   });
 
-    if (!response.ok) {
-      throw new Error(`Error al eliminar el archivo: ${response.statusText}`);
-    }
+  //   if (!response.ok) {
+  //     throw new Error(`Error al eliminar el archivo: ${response.statusText}`);
+  //   }
 
-    toast({
-      title: "Confirmación",
-      description: "La información ha sido eliminada exitosamente",
-      variant: "default",
-    });
+  //   toast({
+  //     title: "Confirmación",
+  //     description: "La información ha sido eliminada exitosamente",
+  //     variant: "default",
+  //   });
 
-    router.back();
-  }
+  //   router.back();
+  // }
 
   const onEdit = useCallback((row: any) => {
     console.log('Edit', row);
@@ -129,7 +135,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
 
   const columns = useMemo(() => GetColumns({ onEdit, onDelete }), []);
 
-  const handleDownloadReport = async () => {    
+  const handleDownloadReport = async () => {
     window.open(`/files/${fileId}/report`, '_blank');
   }
 
@@ -142,21 +148,25 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
           <GetBackButton />
         </CardTitle>
 
-        <Button
-          variant={'destructive'}
-          onClick={handleDelete}
-          size={'sm'}
-        >
-          <Trash className='mr-2' size={15} />
-          Eliminar
-        </Button>
+        {
+          hasPermission('res:documents', 'delete') && (
+            <Button
+              variant={'destructive'}
+              onClick={handleDelete}
+              size={'sm'}
+            >
+              <Trash className='mr-2' size={15} />
+              Eliminar
+            </Button>
+          )
+        }
 
       </CardHeader>
 
       <CardContent>
         {(loading) ? (
           <div className="container mx-auto p-4">
-            <LoadingDocuments />
+            <LoadingFilePage />
           </div>
         ) :
           (
@@ -180,14 +190,14 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
                       <DownloadIcon className='h-4 w-4 mr-2' />
                       Descargar archivo
                     </Button>
-                      <Button
-                        variant={'default'}
-                        onClick={handleDownloadReport}
-                        size={'sm'}
-                      >
-                        <FileDown className='h-4 w-4 mr-2' />
-                        Descargar reporte
-                      </Button>
+                    <Button
+                      variant={'default'}
+                      onClick={handleDownloadReport}
+                      size={'sm'}
+                    >
+                      <FileDown className='h-4 w-4 mr-2' />
+                      Descargar reporte
+                    </Button>
                   </div>
 
                   <div className="grid grid-cols-1 mt-5 mb-2 space-x-3">

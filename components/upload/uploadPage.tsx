@@ -15,6 +15,7 @@ const MAX_FILE_SIZE = 1024 * 1024 * 10; // 10MB
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isSubmittingVerDocumento, setIsSubmittingVerDocumento] = useState<boolean>(false);
   const [fileId, setFileId] = useState<string | null>(null);
   const router = useRouter();
 
@@ -108,8 +109,9 @@ export default function UploadPage() {
             <div>
               <p>
                 <strong>Consideraciones:</strong><br />
-                • El tamaño máximo del archivo debe ser de 10MB<br />
-                • Solo se permiten archivos PDF
+                • Solo se permiten archivos PDF.<br />
+                • El tamaño máximo del archivo debe ser de 10 MB.<br />
+                • No deben subirse documentos protegidos con contraseña.
               </p>
             </div>
             {
@@ -128,19 +130,19 @@ export default function UploadPage() {
                 </Button>
             }
             {
-              fileId && (
-                <Button
-                  onClick={() => router.push(`/files/${fileId}`)}
-                  size={"sm"}
-                  type='button'
-                  className='w-full sm:w-auto min-w-[120px] ml-6'
-                  variant={"secondary"}
-                >
-                  Ver documento
-                </Button>
-              )
+              fileId &&
+              <Button
+                onClick={() => {
+                  router.push(`/files/${fileId}`)
+                }}
+                size={"sm"}
+                type='button'
+                className='w-full sm:w-auto min-w-[120px] ml-6'
+                variant={"secondary"}
+              >
+                Ver documento
+              </Button>
             }
-
           </form>
         </div>
       </CardContent>

@@ -8,6 +8,7 @@ on:
 
 env:
   APPLICATION_PUBLISH_PROFILE: ${{ secrets.APP_PUBLISH_PROFILE }}
+  #Poner el mismo nombre que el app service en Azure
   WEBAPP_NAME: "sinergia-digital-ucsg"
 
 jobs:

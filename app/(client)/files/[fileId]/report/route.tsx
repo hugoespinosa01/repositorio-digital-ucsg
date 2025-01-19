@@ -6,14 +6,13 @@ import { prisma } from '@/lib/prisma';
 // Create styles
 const styles = StyleSheet.create({
     body: {
-        paddingTop: 30,
         paddingBottom: 60,
         paddingHorizontal: 60,
         fontSize: 9,
     },
     image: {
-        width: 115,
-        height: 109,
+        width: 163,
+        height: 165,
     },
     containerHeader: {
         display: 'flex',
@@ -35,6 +34,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
+    colHeaderImage: {
+        alignItems: 'flex-start',
+        justifyContent: 'flex-start',
+    },
     anotherColHeader: {
         alignItems: 'center',
         width: '33%',
@@ -55,8 +58,7 @@ const styles = StyleSheet.create({
         fontFamily: 'Helvetica-Bold',
         fontSize: 10,
         textAlign: 'center',
-        marginBottom: 5,
-        padding: 5,
+        padding: 4,
         borderTop: '1px solid #000',
         borderBottom: '1px solid #000',
     },
@@ -79,11 +81,12 @@ const styles = StyleSheet.create({
     row: {
         display: 'flex',
         flexDirection: 'row',
-        paddingTop: 8,
-        paddingBottom: 8,
+        paddingTop: 7,
+        paddingBottom: 7,
     },
     header: {
-        borderTop: 'none',
+        borderTop: '0.5px solid #000',
+        borderBottom: '0.5px solid #000',
     },
     notes: {
         marginTop: 20,
@@ -154,18 +157,23 @@ const MyDocument = ({
 }: ReportType) => (
     <Document>
         <Page size="A4" style={styles.body}>
+            <Image
+                src={"img/logo_ucsg.png"}
+                style={styles.image}
+            />
+
             <View style={styles.containerHeader}>
-                <View style={styles.colHeader}>
+                {/* <View style={styles.colHeaderImage}>
                     <Image
                         src={"img/logo_ucsg.png"}
                         style={styles.image}
                     />
-                </View>
-                <View style={styles.colHeader}>
+                </View> */}
+                {/* <View style={styles.colHeader}>
                     <Text style={styles.title}>UNIVERSIDAD CATÓLICA DE SANTIAGO DE GUAYAQUIL</Text>
                     <Text style={styles.subtitle}>FACULTAD DE INGENIERIA</Text>
-                    <Text style={styles.subtitle}>CARRERA DE {Carrera?.toUpperCase()}</Text>
-                </View>
+                    <Text s tyle={styles.subtitle}>CARRERA DE {Carrera?.toUpperCase()}</Text>
+                </View> */}
             </View>
             <Text style={styles.caption}>CERTIFICADO DE MATERIAS APROBADAS</Text>
             <View style={styles.data}>
@@ -210,12 +218,12 @@ const MyDocument = ({
             >
                 <Text>CERTIFICAMOS QUE LAS MATERIAS Y NOTAS CORRESPONDEN A LOS REGISTROS ACADÉMICOS A NUESTRO CARGO DE ACUERDO AL
                     REGLAMENTO ACADÉMICO VIGENTE DE LA UNIVERSIDAD.</Text>
-                
+
                 <View style={styles.key}>
                     <Text style={styles.bold}>FECHA DE EMISIÓN DEL CERTIFICADO: </Text>
                     <Text>{new Date().toLocaleDateString()}</Text>
                 </View>
-                
+
                 <View style={styles.key}>
                     <Text style={styles.bold}>PROMEDIO DE SEMINARIO DE GRADUACION: </Text>
                     <Text>{NotaGraduacionSeminario}</Text>

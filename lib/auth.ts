@@ -4,6 +4,7 @@ import type { NextAuthOptions } from 'next-auth';
 import { JWT } from 'next-auth/jwt';
 import KeycloakProvider from 'next-auth/providers/keycloak';
 import { signOut } from 'next-auth/react';
+import { redirect } from 'next/navigation';
 
 async function refreshAccessToken(token: JWT) {
 
@@ -83,6 +84,9 @@ const auth: NextAuthOptions = {
             return session;
         },
     },
+    pages: {
+        error: '/',
+    }
 };
 
 export default auth;
