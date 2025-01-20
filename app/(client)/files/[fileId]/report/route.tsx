@@ -6,19 +6,36 @@ import { prisma } from '@/lib/prisma';
 // Create styles
 const styles = StyleSheet.create({
     body: {
-        paddingBottom: 60,
-        paddingHorizontal: 60,
+        paddingBottom: 50,
+        paddingHorizontal: 40,
         fontSize: 9,
     },
     image: {
-        width: 163,
-        height: 165,
+        width: 95,
+        height: 55,
+    },
+    signature: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: 'Helvetica-Bold',
     },
     containerHeader: {
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
+        marginTop: 10,
+    },
+    containerHeaderSignature: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-around',
+        marginTop: 60,
+        position: 'absolute',
+        bottom: 40,
+        left: 40,
+        right: 40,
     },
     containerHeaderFooter: {
         display: 'flex',
@@ -26,9 +43,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         position: 'absolute',
-        bottom: 30,
-        left: 20,
-        right: 20,
+        bottom: 20,
+        left: 40,
+        right: 40,
+        borderTop: '1px solid #000',
+        fontSize: 7,
     },
     colHeader: {
         alignItems: 'center',
@@ -40,11 +59,15 @@ const styles = StyleSheet.create({
     },
     anotherColHeader: {
         alignItems: 'center',
-        width: '33%',
+        width: '45%',
+    },
+    anotherColHeaderLeft: {
+        alignItems: 'flex-start',
+        width: '45%',
     },
     title: {
         textAlign: 'center',
-        fontSize: 11,
+        fontSize: 12,
         marginBottom: 5,
         fontFamily: 'Helvetica-Bold',
     },
@@ -54,13 +77,19 @@ const styles = StyleSheet.create({
         fontFamily: 'Helvetica-Bold',
         marginBottom: 5
     },
+    degreeTitle: {
+        textAlign: 'center',
+        fontSize: 9,
+        fontFamily: 'Helvetica-Bold',
+        marginBottom: 5,
+    },
     caption: {
         fontFamily: 'Helvetica-Bold',
         fontSize: 10,
         textAlign: 'center',
-        padding: 4,
-        borderTop: '1px solid #000',
-        borderBottom: '1px solid #000',
+        padding: 5,
+        borderTop: '0.07rem solid #000',
+        borderBottom: '0.07rem solid #000',
     },
     data: {
         textAlign: 'left',
@@ -81,42 +110,44 @@ const styles = StyleSheet.create({
     row: {
         display: 'flex',
         flexDirection: 'row',
-        paddingTop: 7,
-        paddingBottom: 7,
+        paddingTop: 5,
+        paddingBottom: 5,
+        textTransform: 'uppercase',
+        fontSize: 7
     },
     header: {
-        borderTop: '0.5px solid #000',
-        borderBottom: '0.5px solid #000',
+        borderTop: '0.07rem solid #000',
+        borderBottom: '0.07rem solid #000',
     },
     notes: {
         marginTop: 20,
         fontSize: 8,
         lineHeight: 1.3,
+        position: 'absolute',
+        bottom: 20,
+        left: 40,
+        right: 40,
     },
     bold: {
         fontFamily: 'Helvetica-Bold',
     },
     // So Declarative and unDRY 👌
     col1: {
-        width: '27%',
-        fontWeight: 'bold',
+        width: '20%',
+        fontFamily: 'Helvetica-Bold',
     },
     col2: {
-        width: '20%',
-        fontWeight: 'bold',
+        width: '40%',
     },
     col3: {
-        width: '20%',
-        fontWeight: 'bold',
+        width: '15%',
     },
     col4: {
-        width: '25%',
-        fontWeight: 'bold',
+        width: '10%',
         textAlign: 'right',
     },
     col5: {
         width: '30%',
-        fontWeight: 'bold',
         textAlign: 'right',
     },
     pageNumber: {
@@ -128,6 +159,12 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         color: 'grey',
     },
+    line: {
+        height: '0.07rem',
+        backgroundColor: '#000',
+        width: '150%',
+        marginBottom: 4,
+    }
 });
 
 interface ReportType {
@@ -157,23 +194,18 @@ const MyDocument = ({
 }: ReportType) => (
     <Document>
         <Page size="A4" style={styles.body}>
-            <Image
-                src={"img/logo_ucsg.png"}
-                style={styles.image}
-            />
-
             <View style={styles.containerHeader}>
-                {/* <View style={styles.colHeaderImage}>
+                <View style={styles.colHeaderImage}>
                     <Image
                         src={"img/logo_ucsg.png"}
                         style={styles.image}
                     />
-                </View> */}
-                {/* <View style={styles.colHeader}>
+                </View>
+                <View style={styles.colHeader}>
                     <Text style={styles.title}>UNIVERSIDAD CATÓLICA DE SANTIAGO DE GUAYAQUIL</Text>
                     <Text style={styles.subtitle}>FACULTAD DE INGENIERIA</Text>
-                    <Text s tyle={styles.subtitle}>CARRERA DE {Carrera?.toUpperCase()}</Text>
-                </View> */}
+                    <Text style={styles.degreeTitle}>CARRERA DE {Carrera?.toUpperCase()}</Text>
+                </View>
             </View>
             <Text style={styles.caption}>CERTIFICADO DE MATERIAS APROBADAS</Text>
             <View style={styles.data}>
@@ -203,50 +235,60 @@ const MyDocument = ({
                 </View>
                 {
                     DetalleMaterias.map((materia: any, index: number) => (
-                        <View style={styles.row} key={index} wrap={false}>
+                        <View style={styles.row} key={index}>
                             <Text style={styles.col1}>{materia.Ciclo}</Text>
                             <Text style={styles.col2}>{materia.Materia}</Text>
                             <Text style={styles.col3}>{materia.Periodo}</Text>
                             <Text style={styles.col4}>{Number(materia.Calificacion)}</Text>
                             <Text style={styles.col5}>{materia.NoMatricula}</Text>
-                        </View>
-                    ))
+                        </View>)
+                    )
                 }
             </View>
-            <View
-                style={styles.notes}
-            >
-                <Text>CERTIFICAMOS QUE LAS MATERIAS Y NOTAS CORRESPONDEN A LOS REGISTROS ACADÉMICOS A NUESTRO CARGO DE ACUERDO AL
+            <View style={styles.notes} fixed>
+                <Text style={styles.bold}>CERTIFICAMOS QUE LAS MATERIAS Y NOTAS CORRESPONDEN A LOS REGISTROS ACADÉMICOS A NUESTRO CARGO DE ACUERDO AL
                     REGLAMENTO ACADÉMICO VIGENTE DE LA UNIVERSIDAD.</Text>
 
                 <View style={styles.key}>
                     <Text style={styles.bold}>FECHA DE EMISIÓN DEL CERTIFICADO: </Text>
-                    <Text>{new Date().toLocaleDateString()}</Text>
+                    <Text style={styles.bold}>{new Date().toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                    }).toUpperCase()}</Text>
                 </View>
 
                 <View style={styles.key}>
                     <Text style={styles.bold}>PROMEDIO DE SEMINARIO DE GRADUACION: </Text>
                     <Text>{NotaGraduacionSeminario}</Text>
                 </View>
+
+                <View style={styles.containerHeaderSignature}>
+                    <View style={styles.signature}>
+                        <View style={styles.line}></View>
+                        <Text>DIRECTOR/A DE CARRERA</Text>
+                    </View>
+
+                    <View style={styles.signature}>
+                        <View style={styles.line}></View>
+                        <Text>COORDINADOR/A ACADÉMICO 2</Text>
+                    </View>
+                </View>
             </View>
-            <View style={styles.containerHeaderFooter}>
-                <View style={styles.anotherColHeader}>
-                    <Text>
-                        Dirección: Av. Carlos Julio Arosemena Km. 1 1/2
-                        Apartado Postal: 09014671
-                        Teléfonos: 2206952 Ext. 2657
-                    </Text>
+            <View style={styles.containerHeaderFooter} fixed>
+                <View style={styles.anotherColHeaderLeft}>
+                    <Text style={styles.bold}>Dirección: Av. Carlos Julio Arosemena Km. 1 1/2</Text>
+                    <Text style={styles.bold}>Apartado Postal: 09014671</Text>
+                    <Text style={styles.bold}>Teléfonos: 3804600 Ext. 2657</Text>
                 </View>
                 <View style={styles.anotherColHeader}>
-                    <Text>
+                    <Text style={styles.bold}>
                         Guayaquil - Ecuador
                     </Text>
                 </View>
-                <View style={styles.anotherColHeader}>
-                    <Text>
-                        Website: www.ucsg.edu.ec
-                        Email: webmaster@cu.ucsg.edu.ec
-                    </Text>
+                <View style={styles.anotherColHeaderLeft}>
+                    <Text style={styles.bold}>Website: www.ucsg.edu.ec</Text>
+                    <Text style={styles.bold}>Email: webmaster@cu.ucsg.edu.ec</Text>
                 </View>
             </View>
             <Text style={styles.pageNumber} render={({ pageNumber, totalPages }) => (

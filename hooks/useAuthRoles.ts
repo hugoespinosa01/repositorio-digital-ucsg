@@ -1,5 +1,6 @@
 'use cache';
 
+import { useRouter } from 'next/navigation';
 import { useState, useCallback, useEffect } from 'react';
 
 interface Permissions {
@@ -12,6 +13,7 @@ function useAuthRoles(autoFetch = false) {
     const [permissions, setPermissions] = useState<Permissions[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const router = useRouter();
 
     const fetchPermissions = useCallback(async () => {
         setLoading(true); // Indica que la solicitud ha comenzado
@@ -32,6 +34,7 @@ function useAuthRoles(autoFetch = false) {
             setPermissions(data.data.permissions || []); // Asegúrate de manejar casos donde `data.data` sea `undefined`
         } catch (err: any) {
             setError(err.message || 'Error desconocido');
+            router.push('/'); // Redirige a la página de inicio en caso de error
         } finally {
             setLoading(false); // Indica que la solicitud ha terminado
         }
