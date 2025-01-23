@@ -32,10 +32,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-around',
         marginTop: 60,
-        position: 'absolute',
-        bottom: 40,
-        left: 40,
-        right: 40,
+        // position: 'absolute',
+        // bottom: 40,
+        // left: 40,
+        // right: 40,
     },
     containerHeaderFooter: {
         display: 'flex',
@@ -123,10 +123,6 @@ const styles = StyleSheet.create({
         marginTop: 20,
         fontSize: 8,
         lineHeight: 1.3,
-        position: 'absolute',
-        bottom: 20,
-        left: 40,
-        right: 40,
     },
     bold: {
         fontFamily: 'Helvetica-Bold',
@@ -193,36 +189,38 @@ const MyDocument = ({
 
 }: ReportType) => (
     <Document>
-        <Page size="A4" style={styles.body}>
-            <View style={styles.containerHeader}>
-                <View style={styles.colHeaderImage}>
-                    <Image
-                        src={"img/logo_ucsg.png"}
-                        style={styles.image}
-                    />
+        <Page size="A4" style={styles.body} wrap>
+            <View fixed>
+                <View style={styles.containerHeader}>
+                    <View style={styles.colHeaderImage}>
+                        <Image
+                            src={"img/logo_ucsg.png"}
+                            style={styles.image}
+                        />
+                    </View>
+                    <View style={styles.colHeader}>
+                        <Text style={styles.title}>UNIVERSIDAD CATÓLICA DE SANTIAGO DE GUAYAQUIL</Text>
+                        <Text style={styles.subtitle}>FACULTAD DE INGENIERIA</Text>
+                        <Text style={styles.degreeTitle}>CARRERA DE {Carrera?.toUpperCase()}</Text>
+                    </View>
                 </View>
-                <View style={styles.colHeader}>
-                    <Text style={styles.title}>UNIVERSIDAD CATÓLICA DE SANTIAGO DE GUAYAQUIL</Text>
-                    <Text style={styles.subtitle}>FACULTAD DE INGENIERIA</Text>
-                    <Text style={styles.degreeTitle}>CARRERA DE {Carrera?.toUpperCase()}</Text>
-                </View>
-            </View>
-            <Text style={styles.caption}>CERTIFICADO DE MATERIAS APROBADAS</Text>
-            <View style={styles.data}>
+                <Text style={styles.caption}>CERTIFICADO DE MATERIAS APROBADAS</Text>
+                <View style={styles.data} >
 
-                <View style={styles.key}>
-                    <Text style={styles.bold}>NIVEL: </Text>
-                    <Text>GRADO</Text>
-                </View>
+                    <View style={styles.key}>
+                        <Text style={styles.bold}>NIVEL: </Text>
+                        <Text>GRADO</Text>
+                    </View>
 
-                <View style={styles.key}>
-                    <Text style={styles.bold}>ALUMNO: </Text>
-                    <Text>{Alumno}</Text>
-                </View>
+                    <View style={styles.key}>
+                        <Text style={styles.bold}>ALUMNO: </Text>
+                        <Text>{Alumno}</Text>
+                    </View>
 
-                <View style={styles.key}>
-                    <Text style={styles.bold}># DE IDENTIFICACIÓN: </Text>
-                    <Text>{NoIdentificacion}</Text>
+                    <View style={styles.key}>
+                        <Text style={styles.bold}># DE IDENTIFICACIÓN: </Text>
+                        <Text>{NoIdentificacion}</Text>
+                    </View>
                 </View>
             </View>
             <View style={styles.table}>
@@ -239,56 +237,58 @@ const MyDocument = ({
                             <Text style={styles.col1}>{materia.Ciclo}</Text>
                             <Text style={styles.col2}>{materia.Materia}</Text>
                             <Text style={styles.col3}>{materia.Periodo}</Text>
-                            <Text style={styles.col4}>{Number(materia.Calificacion)}</Text>
+                            <Text style={styles.col4}>{Number(materia.Calificacion).toString() + " / 10.00"}</Text>
                             <Text style={styles.col5}>{materia.NoMatricula}</Text>
                         </View>)
                     )
                 }
             </View>
-            <View style={styles.notes} fixed>
-                <Text style={styles.bold}>CERTIFICAMOS QUE LAS MATERIAS Y NOTAS CORRESPONDEN A LOS REGISTROS ACADÉMICOS A NUESTRO CARGO DE ACUERDO AL
-                    REGLAMENTO ACADÉMICO VIGENTE DE LA UNIVERSIDAD.</Text>
+            <View fixed>
+                <View style={styles.notes}>
+                    <Text style={styles.bold}>CERTIFICAMOS QUE LAS MATERIAS Y NOTAS CORRESPONDEN A LOS REGISTROS ACADÉMICOS A NUESTRO CARGO DE ACUERDO AL
+                        REGLAMENTO ACADÉMICO VIGENTE DE LA UNIVERSIDAD.</Text>
 
-                <View style={styles.key}>
-                    <Text style={styles.bold}>FECHA DE EMISIÓN DEL CERTIFICADO: </Text>
-                    <Text style={styles.bold}>{new Date().toLocaleDateString('es-ES', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                    }).toUpperCase()}</Text>
-                </View>
-
-                <View style={styles.key}>
-                    <Text style={styles.bold}>PROMEDIO DE SEMINARIO DE GRADUACION: </Text>
-                    <Text>{NotaGraduacionSeminario}</Text>
-                </View>
-
-                <View style={styles.containerHeaderSignature}>
-                    <View style={styles.signature}>
-                        <View style={styles.line}></View>
-                        <Text>DIRECTOR/A DE CARRERA</Text>
+                    <View style={styles.key}>
+                        <Text style={styles.bold}>FECHA DE EMISIÓN DEL CERTIFICADO: </Text>
+                        <Text style={styles.bold}>{new Date().toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                        }).toUpperCase()}</Text>
                     </View>
 
-                    <View style={styles.signature}>
-                        <View style={styles.line}></View>
-                        <Text>COORDINADOR/A ACADÉMICO 2</Text>
+                    <View style={styles.key}>
+                        <Text style={styles.bold}>PROMEDIO DE SEMINARIO DE GRADUACION: </Text>
+                        <Text>{NotaGraduacionSeminario}</Text>
+                    </View>
+
+                    <View style={styles.containerHeaderSignature}>
+                        <View style={styles.signature}>
+                            <View style={styles.line}></View>
+                            <Text>DIRECTOR/A DE CARRERA</Text>
+                        </View>
+
+                        <View style={styles.signature}>
+                            <View style={styles.line}></View>
+                            <Text>COORDINADOR/A ACADÉMICO 2</Text>
+                        </View>
                     </View>
                 </View>
-            </View>
-            <View style={styles.containerHeaderFooter} fixed>
-                <View style={styles.anotherColHeaderLeft}>
-                    <Text style={styles.bold}>Dirección: Av. Carlos Julio Arosemena Km. 1 1/2</Text>
-                    <Text style={styles.bold}>Apartado Postal: 09014671</Text>
-                    <Text style={styles.bold}>Teléfonos: 3804600 Ext. 2657</Text>
-                </View>
-                <View style={styles.anotherColHeader}>
-                    <Text style={styles.bold}>
-                        Guayaquil - Ecuador
-                    </Text>
-                </View>
-                <View style={styles.anotherColHeaderLeft}>
-                    <Text style={styles.bold}>Website: www.ucsg.edu.ec</Text>
-                    <Text style={styles.bold}>Email: webmaster@cu.ucsg.edu.ec</Text>
+                <View style={styles.containerHeaderFooter} fixed>
+                    <View style={styles.anotherColHeaderLeft}>
+                        <Text style={styles.bold}>Dirección: Av. Carlos Julio Arosemena Km. 1 1/2</Text>
+                        <Text style={styles.bold}>Apartado Postal: 09014671</Text>
+                        <Text style={styles.bold}>Teléfonos: 3804600 Ext. 2657</Text>
+                    </View>
+                    <View style={styles.anotherColHeader}>
+                        <Text style={styles.bold}>
+                            Guayaquil - Ecuador
+                        </Text>
+                    </View>
+                    <View style={styles.anotherColHeaderLeft}>
+                        <Text style={styles.bold}>Website: www.ucsg.edu.ec</Text>
+                        <Text style={styles.bold}>Email: webmaster@cu.ucsg.edu.ec</Text>
+                    </View>
                 </View>
             </View>
             <Text style={styles.pageNumber} render={({ pageNumber, totalPages }) => (
