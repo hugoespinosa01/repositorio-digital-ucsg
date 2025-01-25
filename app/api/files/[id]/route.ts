@@ -108,7 +108,12 @@ export async function GET(request: Request, { params }: Params) {
             where: {
                 IdDocumentoKardex: kardex?.Id,
                 Estado: 1
-            }
+            },
+            // orderBy: {
+            //     TipoDocumentoKardex: {
+
+            //     }
+            // }
         });
 
         if (!kardexDetalle) {

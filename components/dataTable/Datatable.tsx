@@ -73,7 +73,7 @@ export default function Datatable<TData extends any, TValue>({
   const updateData = async (rowIndex: number, columnId: string, value: string) => {
     try {
       
-      const response = await fetch(`/api/files/${(data[rowIndex] as KardexDetalle).IdDocumentoKardex}`, {
+      const response = await fetch(`/api/materias/${(data[rowIndex] as KardexDetalle).IdDocumentoKardex}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

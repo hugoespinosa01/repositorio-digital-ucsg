@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 // Create styles
 const styles = StyleSheet.create({
     body: {
-        paddingBottom: 50,
+        paddingBottom: 235,
         paddingHorizontal: 40,
         fontSize: 9,
     },
@@ -33,19 +33,20 @@ const styles = StyleSheet.create({
         justifyContent: 'space-around',
         marginTop: 60,
         // position: 'absolute',
-        // bottom: 40,
-        // left: 40,
-        // right: 40,
+        // bottom: 120,
+        // left: 30,
+        // right: 30,
     },
     containerHeaderFooter: {
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        position: 'absolute',
-        bottom: 20,
-        left: 40,
-        right: 40,
+        marginTop: 60,
+        // position: 'absolute',
+        // bottom: 20,
+        // left: 30,
+        // right: 30,
         borderTop: '1px solid #000',
         fontSize: 7,
     },
@@ -56,6 +57,7 @@ const styles = StyleSheet.create({
     colHeaderImage: {
         alignItems: 'flex-start',
         justifyContent: 'flex-start',
+        marginBottom: 7,
     },
     anotherColHeader: {
         alignItems: 'center',
@@ -87,7 +89,7 @@ const styles = StyleSheet.create({
         fontFamily: 'Helvetica-Bold',
         fontSize: 10,
         textAlign: 'center',
-        padding: 5,
+        padding: 7,
         borderTop: '0.07rem solid #000',
         borderBottom: '0.07rem solid #000',
     },
@@ -102,6 +104,24 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         marginBottom: 5,
         marginTop: 5,
+    },
+    keyFixed: {
+        flexDirection: 'row',
+        marginTop: 5,
+        // position: 'absolute',
+        // bottom: 185,
+        // left: 30,
+        // right: 30,
+        // marginBottom: 5,
+        // marginTop: 5,
+    },
+    textFooter: {
+        flexDirection: 'column',
+        // position: 'absolute',
+        // bottom: 200,
+        // left: 30,
+        // right: 30,
+        textAlign: 'left',
     },
     table: {
         width: '100%',
@@ -147,13 +167,21 @@ const styles = StyleSheet.create({
         textAlign: 'right',
     },
     pageNumber: {
-        position: 'absolute',
-        fontSize: 9,
-        bottom: 15,
-        left: 20,
-        right: 20,
+        marginTop: 5,
+        // position: 'absolute',
+        // fontSize: 9,
+        // bottom: 15,
+        // left: 20,
+        // right: 20,
         textAlign: 'center',
         color: 'grey',
+    },
+    footer: {
+        position: 'absolute',
+        bottom: 15,
+        left: 30,
+        right: 30,
+        fontSize: 9,
     },
     line: {
         height: '0.07rem',
@@ -224,7 +252,7 @@ const MyDocument = ({
                 </View>
             </View>
             <View style={styles.table}>
-                <View style={[styles.row, styles.bold, styles.header]}>
+                <View style={[styles.row, styles.bold, styles.header]} fixed>
                     <Text style={styles.col1}>CICLO</Text>
                     <Text style={styles.col2}>MATERIA</Text>
                     <Text style={styles.col3}>PERIODO</Text>
@@ -243,35 +271,54 @@ const MyDocument = ({
                     )
                 }
             </View>
-            <View fixed>
-                <View style={styles.notes}>
-                    <Text style={styles.bold}>CERTIFICAMOS QUE LAS MATERIAS Y NOTAS CORRESPONDEN A LOS REGISTROS ACADÉMICOS A NUESTRO CARGO DE ACUERDO AL
-                        REGLAMENTO ACADÉMICO VIGENTE DE LA UNIVERSIDAD.</Text>
 
-                    <View style={styles.key}>
-                        <Text style={styles.bold}>FECHA DE EMISIÓN DEL CERTIFICADO: </Text>
-                        <Text style={styles.bold}>{new Date().toLocaleDateString('es-ES', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                        }).toUpperCase()}</Text>
+
+            <View style={styles.notes}>
+                <View style={styles.key}>
+                    <Text style={styles.bold}>TOTAL DE MATERIAS APROBADAS: </Text>
+                    <Text>{DetalleMaterias.length}</Text>
+                </View>
+                <View style={styles.key}>
+                    <Text style={styles.bold}>PROMEDIO MATERIAS APROBADAS: </Text>
+                    <Text>{NotaGraduacionSeminario}</Text>
+                </View>
+                <View style={styles.key}>
+                    <Text style={styles.bold}>PROMEDIO DE SEMINARIO DE GRADUACIÓN: </Text>
+                    <Text>{NotaGraduacionSeminario?.toString() + " / 10.00"}</Text>
+                </View>
+                <View style={styles.key}>
+                    <Text style={styles.bold}>PROMEDIO DE GRADUACIÓN: </Text>
+                    <Text>{NotaGraduacionSeminario}</Text>
+                </View>
+            </View>
+
+            {/* Footer */}
+            <View style={styles.footer} fixed>
+                <View style={styles.textFooter} fixed>
+                    <Text style={styles.bold}>
+                        CERTIFICAMOS QUE LAS MATERIAS Y NOTAS CORRESPONDEN A LOS REGISTROS ACADÉMICOS A NUESTRO CARGO
+                    </Text>
+                    <Text style={styles.bold}>
+                        DE ACUERDO AL REGLAMENTO ACADÉMICO VIGENTE DE LA UNIVERSIDAD.
+                    </Text>
+                </View>
+                <View style={styles.keyFixed} fixed>
+                    <Text style={styles.bold}>FECHA DE EMISIÓN DEL CERTIFICADO: </Text>
+                    <Text style={styles.bold}>{new Date().toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                    }).toUpperCase()}</Text>
+                </View>
+                <View style={styles.containerHeaderSignature} fixed>
+                    <View style={styles.signature}>
+                        <View style={styles.line}></View>
+                        <Text>DIRECTOR/A DE CARRERA</Text>
                     </View>
 
-                    <View style={styles.key}>
-                        <Text style={styles.bold}>PROMEDIO DE SEMINARIO DE GRADUACION: </Text>
-                        <Text>{NotaGraduacionSeminario}</Text>
-                    </View>
-
-                    <View style={styles.containerHeaderSignature}>
-                        <View style={styles.signature}>
-                            <View style={styles.line}></View>
-                            <Text>DIRECTOR/A DE CARRERA</Text>
-                        </View>
-
-                        <View style={styles.signature}>
-                            <View style={styles.line}></View>
-                            <Text>COORDINADOR/A ACADÉMICO 2</Text>
-                        </View>
+                    <View style={styles.signature}>
+                        <View style={styles.line}></View>
+                        <Text>COORDINADOR/A ACADÉMICO 2</Text>
                     </View>
                 </View>
                 <View style={styles.containerHeaderFooter} fixed>
@@ -290,10 +337,11 @@ const MyDocument = ({
                         <Text style={styles.bold}>Email: webmaster@cu.ucsg.edu.ec</Text>
                     </View>
                 </View>
+                <Text style={styles.pageNumber} render={({ pageNumber, totalPages }) => (
+                    `${pageNumber} / ${totalPages}`
+                )} />
             </View>
-            <Text style={styles.pageNumber} render={({ pageNumber, totalPages }) => (
-                `${pageNumber} / ${totalPages}`
-            )} fixed />
+
         </Page>
     </Document>
 );

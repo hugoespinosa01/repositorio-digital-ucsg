@@ -3,6 +3,7 @@ import { KardexDetalle } from "@/types/kardexDetalle";
 import DataTableColumnnHeader from "@/components/dataTable/DataTableColumnHeader";
 import DataTableRowActions from "./DataTableRowActions";
 import { TableCell } from '@/components/dataTable/TableCell'
+import { DeleteCell } from "./DeleteCell";
 import { EditCell } from "./EditCell";
 
 interface Props {
@@ -56,6 +57,14 @@ export function GetColumns({ onEdit, onDelete }: Props): ColumnDef<KardexDetalle
     {
       id: 'edit',
       cell: EditCell
-    }
+    },
+    {
+      id: 'delete',
+      cell: DeleteCell
+    },
+    // {
+    //   id: 'actions',
+    //   cell: ({row}) => DataTableRowActions({row, onEdit, onDelete})
+    // }
   ];
 }
