@@ -16,31 +16,29 @@ interface ExpandKardexDetailProps {
 }
 
 export default function ExpandKardexDetail({ openModal, setOpenModal, data, onEdit, onDelete, setData }: ExpandKardexDetailProps) {
-    const columns = useMemo(() => GetColumns({onEdit, onDelete}), []);
+    const columns = useMemo(() => GetColumns({ onEdit, onDelete }), []);
 
     return (
         <div className='flex'>
             <Credenza open={openModal} onOpenChange={setOpenModal}>
-                <CredenzaContent className='max-w-fit'>
+                <CredenzaContent className='max-w-full'>
                     <CredenzaHeader>
                         <CredenzaTitle>
                             Detalle
                         </CredenzaTitle>
                     </CredenzaHeader>
                     <CredenzaDescription className="text-center sm:text-start">
-                            Detalle de materias aprobadas de acuerdo con los datos extraídos
+                        Detalle de materias aprobadas de acuerdo con los datos extraídos
                     </CredenzaDescription>
-                    <CredenzaBody className='flex justify-center items-center'>
-                        <div>
-                            <Datatable
-                                data={data}
-                                setData={setData}
-                                columns={columns}
-                                title='Detalle de materias aprobadas'
-                                description=''
-                                showIcon={false}
-                            />
-                        </div>
+                    <CredenzaBody className='flex justify-center items-center w-full'>
+                        <Datatable
+                            data={data}
+                            setData={setData}
+                            columns={columns}
+                            title='Detalle de materias aprobadas'
+                            description=''
+                            showIcon={false}
+                        />
                     </CredenzaBody>
                 </CredenzaContent>
             </Credenza>

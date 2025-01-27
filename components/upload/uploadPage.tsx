@@ -111,7 +111,9 @@ export default function UploadPage() {
                 <strong>Consideraciones:</strong><br />
                 • Solo se permiten archivos PDF.<br />
                 • El tamaño máximo del archivo debe ser de 10 MB.<br />
-                • No deben subirse documentos protegidos con contraseña.
+                • No deben subirse documentos protegidos con contraseña.<br />
+                • El documento debe ser legible.<br />
+                • Se permite subir un documento por estudiante.<br />
               </p>
             </div>
             {

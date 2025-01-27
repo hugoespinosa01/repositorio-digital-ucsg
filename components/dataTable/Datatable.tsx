@@ -26,7 +26,7 @@ import {
   useReactTable,
   TableMeta,
 } from "@tanstack/react-table";
-import { Expand, Frown, Sheet } from "lucide-react";
+import { Expand, Frown, Plus, PlusIcon, Sheet } from "lucide-react";
 import { KardexDetalle } from "@/types/kardexDetalle";
 import { useToast } from "../ui/use-toast";
 
@@ -73,7 +73,7 @@ export default function Datatable<TData extends any, TValue>({
   const updateData = async (rowIndex: number, columnId: string, value: string) => {
     try {
       
-      const response = await fetch(`/api/materias/${(data[rowIndex] as KardexDetalle).IdDocumentoKardex}`, {
+      const response = await fetch(`/api/materias/${(data[rowIndex] as KardexDetalle).Id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -82,7 +82,12 @@ export default function Datatable<TData extends any, TValue>({
       });
 
       if (!response.ok) {
-        throw new Error(`Error al actualizar la fila: ${response.statusText}`);
+        const dataError = await response.json();
+        toast({
+          title: "Error",
+          description: dataError.message,
+          variant: "destructive",
+        });
       }
 
       toast({
@@ -90,6 +95,13 @@ export default function Datatable<TData extends any, TValue>({
         description: "La información ha sido actualizada exitosamente",
         variant: "default",
       })
+
+      // Actualizar la fila en el estado
+      setData((old: KardexDetalle[]) =>
+        old.map((row, index) =>
+          index === rowIndex ? { ...row, [columnId]: value } : row
+        )
+      );
 
     } catch (err) {
       toast({
@@ -152,6 +164,12 @@ export default function Datatable<TData extends any, TValue>({
             >
               <Expand className="w-4 h-4" />
             </Button>}
+            <Button
+              size={'sm'}
+            >
+              <PlusIcon className="w-4 h-4" />
+              Nuevo
+            </Button>
           </div>
         </CardTitle>
         <CardDescription>{description}</CardDescription>

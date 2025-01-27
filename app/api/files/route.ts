@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
             extractedData = await extractData(pdfData, 'computacion-1-model') as unknown as ExtractedData;
         } else if (classifiedDoc == 'kardex-civil') {
             // Extraigo los datos del documento (usar modelo modelo_computacion_v1)
-            extractedData = await extractData(pdfData, 'prueba_modelo_civil_v2') as unknown as ExtractedData;
+            extractedData = await extractData(pdfData, 'modelo_civil_v11') as unknown as ExtractedData;
         }
 
         if (!extractedData) {
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
         //Extraigo datos del documento (producto de Azure AI Intelligence)
         const datosExtraidos = {
             alumno: formatData(fields.Alumno.value),
-            noIdentificacion: fields.NoIdentificacion.value.replace('-', '') ?? '',
+            noIdentificacion: fields.NoIdentificacion.value.replace(/[^0-9]/g, '') ?? '',
             carrera: carreraArray[0].nombre ?? '',
             materiasAprobadas: [] as Materia[]
         }

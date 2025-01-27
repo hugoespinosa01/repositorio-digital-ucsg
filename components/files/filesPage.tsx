@@ -46,7 +46,6 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
   const { permissions } = useAuthRoles(true);
 
   useEffect(() => {
-
     if (fileId) {
       fetchFile(fileId);
     }
