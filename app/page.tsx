@@ -37,7 +37,7 @@ export default function Home() {
   const handleLogin = async () => {
     setLoading(true);
     await signIn('keycloak', {
-      callbackUrl: searchParams?.get('callbackUrl') || '/',
+      callbackUrl: searchParams?.get('callbackUrl') || '/documents?page=1',
     });
     setLoading(false);
   }

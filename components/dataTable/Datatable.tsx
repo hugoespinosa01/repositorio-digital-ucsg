@@ -29,6 +29,7 @@ import {
 import { Expand, Frown, Plus, PlusIcon, Sheet } from "lucide-react";
 import { KardexDetalle } from "@/types/kardexDetalle";
 import { useToast } from "../ui/use-toast";
+import { useEffect } from "react";
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData> {
@@ -55,7 +56,7 @@ interface DatatableProps<TData, TValue> {
   showIcon?: boolean;
 }
 
-export default function Datatable<TData extends any, TValue>({
+export default function Datatable<TData extends KardexDetalle, TValue>({
   title,
   description,
   columns,
@@ -68,17 +69,25 @@ export default function Datatable<TData extends any, TValue>({
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [editedRows, setEditedRows] = React.useState({});
   const [originalData, setOriginalData] = React.useState<TData[]>([...data]);
+  const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: PAGE_SIZE }); // Estado para paginación
+
+  // Primero, necesitamos mantener un estado para los cambios pendientes
+  const [pendingChanges, setPendingChanges] = React.useState<Record<number, Partial<KardexDetalle>>>({});
+
   const { toast } = useToast();
 
-  const updateData = async (rowIndex: number, columnId: string, value: string) => {
+  const updateDataInDatabase = async (rowIndex: number, changes: Partial<KardexDetalle>) => {
     try {
-      
-      const response = await fetch(`/api/materias/${(data[rowIndex] as KardexDetalle).Id}`, {
+
+      // Obtener el ID del registro a actualizar
+      const materiaId = (data[rowIndex] as KardexDetalle).Id;
+
+      const response = await fetch(`/api/materias/${materiaId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ [columnId]: value }),
+        body: JSON.stringify(changes),
       });
 
       if (!response.ok) {
@@ -88,7 +97,25 @@ export default function Datatable<TData extends any, TValue>({
           description: dataError.message,
           variant: "destructive",
         });
+        throw new Error(dataError.message);
       }
+
+      // Si la actualización fue exitosa
+      const updatedData = await response.json();
+
+      // Actualizar el estado local con la respuesta del servidor
+      setData((old: KardexDetalle[]) =>
+        old.map((row) =>
+          row.Id === materiaId ? { ...row, ...updatedData } : row
+        )
+      );
+
+      // Actualizar datos originales
+      setOriginalData((old: TData[]) =>
+        old.map((row) =>
+          row.Id === materiaId ? { ...row, ...updatedData } : row
+        )
+      );
 
       toast({
         title: "Confirmación",
@@ -96,12 +123,7 @@ export default function Datatable<TData extends any, TValue>({
         variant: "default",
       })
 
-      // Actualizar la fila en el estado
-      setData((old: KardexDetalle[]) =>
-        old.map((row, index) =>
-          index === rowIndex ? { ...row, [columnId]: value } : row
-        )
-      );
+      return true; // Indicar que la actualización fue exitosa
 
     } catch (err) {
       toast({
@@ -109,8 +131,57 @@ export default function Datatable<TData extends any, TValue>({
         description: "Hubo un error al intentar actualizar la información",
         variant: "destructive",
       });
-    } 
+      // Propagar el error para manejarlo en el componente padre
+      throw err;
+    }
+  };
 
+  // Función para revertir cambios
+  const revertChanges = (rowIndex: number) => {
+
+
+    // Restaurar los datos originales para esta fila
+    setData(old =>
+      old.map((row, index) =>
+        index === rowIndex ? { ...originalData[rowIndex] } : row
+      )
+    );
+
+    // Limpiar cambios pendientes
+    setPendingChanges(prev => {
+      const newChanges = { ...prev };
+      delete newChanges[rowIndex];
+      return newChanges;
+    });
+
+    // Preservar la página actual (aunque no debería cambiar con esta solución)
+    setPagination((prev) => ({ ...prev }));
+  };
+
+
+  // Función auxiliar para manejar el guardado de cambios
+  const handleSaveChanges = async (rowIndex: number) => {
+    try {
+      if (pendingChanges[rowIndex]) {
+        await updateDataInDatabase(rowIndex, pendingChanges[rowIndex]);
+
+        // Limpiar los cambios pendientes después de una actualización exitosa
+        setPendingChanges(prev => {
+          const newChanges = { ...prev };
+          delete newChanges[rowIndex];
+          return newChanges;
+        });
+
+        // Desactivar modo de edición
+        setEditedRows(prev => ({
+          ...prev,
+          [rowIndex]: false
+        }));
+      }
+    } catch (error) {
+      // Revertir cambios en caso de error
+      revertChanges(rowIndex);
+    }
   };
 
   const table = useReactTable({
@@ -124,28 +195,29 @@ export default function Datatable<TData extends any, TValue>({
       sorting,
     },
     initialState: {
-      pagination: {
-        pageSize: PAGE_SIZE,
-      },
+      pagination: pagination,
     },
     meta: {
       editedRows,
       setEditedRows,
       revertData: (rowIndex: number, revert: boolean) => {
         if (revert) {
-          setData((old: KardexDetalle[]) =>
-            old.map((row, index) =>
-              index === rowIndex ? originalData[rowIndex] as KardexDetalle : row
-            ))
+          revertChanges(rowIndex);
         } else {
-          setOriginalData((old: TData[]) =>
-            old.map((row, index) => (index === rowIndex ? data[rowIndex] : row))
-          );
+          handleSaveChanges(rowIndex);
         }
       },
       updateData: (rowIndex: number, columnId: string, value: string) => {
-        updateData(rowIndex, columnId, value);
-      }
+
+        // Actualizar vista local
+        setData(old =>
+          old.map((row, index) =>
+            index === rowIndex
+              ? { ...row, [columnId]: value }
+              : row
+          )
+        );
+      },
     }
   });
 
@@ -153,7 +225,7 @@ export default function Datatable<TData extends any, TValue>({
   const totalPages = data?.length / PAGE_SIZE;
 
   return (
-    <Card >
+    <Card>
       <CardHeader>
         <CardTitle>
           <div className="flex justify-between items-end">
@@ -166,9 +238,10 @@ export default function Datatable<TData extends any, TValue>({
             </Button>}
             <Button
               size={'sm'}
+              className="gap-2"
             >
-              <PlusIcon className="w-4 h-4" />
-              Nuevo
+              <PlusIcon size={15} />
+              Nueva materia
             </Button>
           </div>
         </CardTitle>
@@ -179,7 +252,8 @@ export default function Datatable<TData extends any, TValue>({
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
+                <TableRow
+                  key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
                     return (
                       <TableHead key={header.id}>

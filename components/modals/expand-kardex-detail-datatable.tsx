@@ -28,7 +28,7 @@ export default function ExpandKardexDetail({ openModal, setOpenModal, data, onEd
                         </CredenzaTitle>
                     </CredenzaHeader>
                     <CredenzaDescription className="text-center sm:text-start">
-                        Detalle de materias aprobadas de acuerdo con los datos extraídos
+                        Detalle de materias aprobadas de acuerdo con los datos extraídos de la cartilla de notas.
                     </CredenzaDescription>
                     <CredenzaBody className='flex justify-center items-center w-full'>
                         <Datatable

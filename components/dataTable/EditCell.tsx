@@ -1,9 +1,8 @@
 import { Row } from "@tanstack/react-table";
 import { KardexDetalle } from "@/types/kardexDetalle";
-import { Column, Table } from "@tanstack/react-table";
+import { Table } from "@tanstack/react-table";
 import { Button } from "../ui/button";
-import { Check, CircleCheck, CircleX, Edit, X } from "lucide-react";
-import { Fragment } from "react";
+import { Check, Edit, X } from "lucide-react";
 
 interface Props {
     row: Row<KardexDetalle>;
@@ -15,6 +14,7 @@ export const EditCell = ({ row, table }: Props) => {
 
     const setEditedRows = (e: React.MouseEvent<HTMLButtonElement>) => {
         const elName = e.currentTarget.name;
+        
         meta?.setEditedRows((old) => ({
             ...old,
             [row.id]: !old[row.id],
@@ -58,7 +58,7 @@ export const EditCell = ({ row, table }: Props) => {
             name="edit"
             size={'sm'}
         >
-            <Edit size={15} />
+            <Edit size={15} color="#325286" />
         </Button>
     )
 }

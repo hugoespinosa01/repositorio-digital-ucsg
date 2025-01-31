@@ -6,5 +6,5 @@ export interface KardexDetalle {
     Calificacion : number;
     NoMatricula: number;
     IdDocumentoKardex: number;
-    Estado: string;
+    Estado: number;
 }

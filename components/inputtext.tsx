@@ -77,7 +77,7 @@ export default function InputDemo({ value, label, noIcon, vals, id }: InputDemoP
             <div className="flex rounded-lg shadow-sm shadow-black/5">
                 <Input
                     id="input-20"
-                    className="-me-px w-full rounded-e-none shadow-none focus-visible:z-10"
+                    className="-me-px w-full rounded-e-none shadow-none focus-visible:z-0"
                     type="text"
                     readOnly={!isEditing}
                     value={fieldValue || ""}

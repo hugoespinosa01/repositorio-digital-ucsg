@@ -3,8 +3,6 @@ import { jwtDecode } from 'jwt-decode';
 import type { NextAuthOptions } from 'next-auth';
 import { JWT } from 'next-auth/jwt';
 import KeycloakProvider from 'next-auth/providers/keycloak';
-import { signOut } from 'next-auth/react';
-import { redirect } from 'next/navigation';
 
 async function refreshAccessToken(token: JWT) {
 
@@ -85,7 +83,8 @@ const auth: NextAuthOptions = {
         },
     },
     pages: {
-        error: '/',
+        verifyRequest: '/unAuthorized',
+        error: '/unAuthorized',
     }
 };
 

@@ -17,6 +17,7 @@ export function GetColumns({ onEdit, onDelete }: Props): ColumnDef<KardexDetalle
     {
       accessorKey: "Ciclo",
       header: "Ciclo",
+      size: 30,
       cell: ({getValue, row, column, table})  => TableCell({getValue, row, column, table}),
       meta: {
         type: 'text'
@@ -25,6 +26,7 @@ export function GetColumns({ onEdit, onDelete }: Props): ColumnDef<KardexDetalle
     {
       accessorKey: "Materia",
       header: "Materia",
+      size: 60,
       cell: TableCell,
       meta: {
         type: 'text'
@@ -40,6 +42,7 @@ export function GetColumns({ onEdit, onDelete }: Props): ColumnDef<KardexDetalle
     },
     {
       accessorKey: "Calificacion",
+      size: 20,
       header: ({ column }) => <DataTableColumnnHeader column={column} title="Calificacion" />,
       cell:TableCell,
       meta: {
@@ -48,6 +51,7 @@ export function GetColumns({ onEdit, onDelete }: Props): ColumnDef<KardexDetalle
     },
     {
       accessorKey: "NoMatricula",
+      size: 20,
       header: ({ column }) => <DataTableColumnnHeader column={column} title="No Matricula" />,
       cell: TableCell,
       meta: {
@@ -56,10 +60,12 @@ export function GetColumns({ onEdit, onDelete }: Props): ColumnDef<KardexDetalle
     },
     {
       id: 'edit',
+      size: 10,
       cell: EditCell
     },
     {
       id: 'delete',
+      size: 10,
       cell: DeleteCell
     },
     // {

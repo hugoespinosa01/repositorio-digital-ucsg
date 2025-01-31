@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import FileUpload from '@/components/custom-fileuploader';
 import GetBackButton from '../getback-button';
 import { Loader2 } from 'lucide-react';
+import useAuthRoles from '@/hooks/useAuthRoles';
+
 
 const MAX_FILE_SIZE = 1024 * 1024 * 10; // 10MB
 
@@ -18,6 +20,14 @@ export default function UploadPage() {
   const [isSubmittingVerDocumento, setIsSubmittingVerDocumento] = useState<boolean>(false);
   const [fileId, setFileId] = useState<string | null>(null);
   const router = useRouter();
+
+  const { permissions } = useAuthRoles(true);
+
+  const hasPermission = (resource: string, action: string) => {
+    return permissions.some(
+      (perm) => perm.rsname === resource && perm.scopes.includes(`scope:${action}`)
+    );
+  };
 
   const { handleSubmit } = useForm();
   const { toast } = useToast();
@@ -127,6 +137,7 @@ export default function UploadPage() {
                   Cargando...
                 </Button>
               ) :
+                hasPermission("res:documents", "create") &&
                 <Button type="submit" size={"sm"} className='w-full sm:w-auto min-w-[120px]'>
                   Cargar
                 </Button>

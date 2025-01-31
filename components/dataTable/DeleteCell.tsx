@@ -5,6 +5,8 @@ import { Button } from "../ui/button";
 import { Check, CircleCheck, CircleX, Edit, Tangent, Trash, X } from "lucide-react";
 import { Fragment } from "react";
 import { useToast } from "../ui/use-toast";
+import ConfirmDeleteMateria from "../modals/confime-delete-materia";
+import React from 'react';
 
 
 interface Props {
@@ -15,41 +17,25 @@ interface Props {
 export const DeleteCell = ({ row, table }: Props) => {
     const meta = table.options.meta
     const { toast } = useToast();
+    const [openModal, setOpenModal] = React.useState(false);
 
-    const acceptDelete = async () => {
-        try {
-            const res = await fetch(`/api/materias/${row.original.Id}`, {
-                method: 'DELETE'
-            });
-            if (!res.ok) {
-                const data = await res.json();
-                console.error('Error deleting row');
-                toast({
-                    title: "Error",
-                    description: data.message,
-                    variant: "destructive",
-                });
-            }
-            toast({
-                title: "Confirmación",
-                description: "La información ha sido eliminada exitosamente",
-                variant: "default",
-            });
+    return !meta?.editedRows[row.id] && (
+        <>
+            <Button
+                onClick={() => setOpenModal(true)}
+                variant={'ghost'}
+                name="edit"
+                size={'sm'}
+            >
+                <Trash size={15} color="#c84141" />
+            </Button>
 
-
-        } catch (err) {
-            console.error('Error deleting row');
-        }
-    }
-
-    return (
-        <Button
-            onClick={acceptDelete}
-            variant={'ghost'}
-            name="edit"
-            size={'sm'}
-        >
-            <Trash size={15} />
-        </Button>
+            <ConfirmDeleteMateria
+                openModal={openModal}
+                setOpenModal={setOpenModal}
+                materiaId={row.original.Id}
+                persistSamePage={true}
+            />
+        </>
     )
 }

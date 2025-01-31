@@ -10,7 +10,7 @@ function PDFViewerComponent({ pdfUrl }: { pdfUrl: string }) {
         queryParams="hl=Nl"
         url={pdfUrl}
         viewer='pdf'
-        style={{ width: '100%', height: '95vh' }}
+        style={{ width: '100%', height: '75vh' }}
       ></DocumentViewer>
     </div>
   )

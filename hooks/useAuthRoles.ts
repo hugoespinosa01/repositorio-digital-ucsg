@@ -34,7 +34,7 @@ function useAuthRoles(autoFetch = false) {
             setPermissions(data.data.permissions || []); // Asegúrate de manejar casos donde `data.data` sea `undefined`
         } catch (err: any) {
             setError(err.message || 'Error desconocido');
-            router.push('/'); // Redirige a la página de inicio en caso de error
+            router.push('/unAuthorized'); // Redirige a la página de inicio en caso de error
         } finally {
             setLoading(false); // Indica que la solicitud ha terminado
         }

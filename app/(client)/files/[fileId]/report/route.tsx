@@ -280,7 +280,7 @@ const MyDocument = ({
                 </View>
                 <View style={styles.key}>
                     <Text style={styles.bold}>PROMEDIO MATERIAS APROBADAS: </Text>
-                    <Text>{NotaGraduacionSeminario}</Text>
+                    <Text>{NotaGraduacionSeminario?.toString() + " / 10.00"}</Text>
                 </View>
                 <View style={styles.key}>
                     <Text style={styles.bold}>PROMEDIO DE SEMINARIO DE GRADUACIÓN: </Text>
@@ -288,7 +288,7 @@ const MyDocument = ({
                 </View>
                 <View style={styles.key}>
                     <Text style={styles.bold}>PROMEDIO DE GRADUACIÓN: </Text>
-                    <Text>{NotaGraduacionSeminario}</Text>
+                    <Text>{NotaGraduacionSeminario?.toString() + " / 10.00"}</Text>
                 </View>
             </View>
 

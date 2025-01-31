@@ -9,7 +9,7 @@ import Datatable from '../dataTable/Datatable';
 import { GetColumns } from '../dataTable/Columns';
 import { useRouter } from 'next/navigation';
 import { Button } from '../ui/button';
-import { DownloadIcon, FileDown, Trash, TrashIcon } from 'lucide-react';
+import { DownloadIcon, FileDown, Table, Trash, TrashIcon } from 'lucide-react';
 import PDFViewerComponent from '../pdf-viewer';
 import InputDemo from '../inputtext';
 import InputNumber from '../inputnumber';
@@ -20,6 +20,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useSession } from 'next-auth/react';
 import useAuthRoles from '@/hooks/useAuthRoles';
 import LoadingFilePage from './loading';
+import MateriasDataTable from '../advanced-datatable';
 
 interface FileData {
   Id: number;
@@ -139,127 +140,165 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
   }
 
   return (
-    <Card className='p-5 mt-5'>
-      <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between'>
-
+    <Card className="p-2 sm:p-5 mt-5">
+      <CardHeader className="gap-y-2 flex flex-col lg:flex-row lg:items-center lg:justify-between">
         <CardTitle>
-          <p className="text-2xl font-bold mb-4">Detalle del archivo {fileData?.NombreArchivo}</p>
+          <p className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4">
+            Detalle del archivo {fileData?.NombreArchivo}
+          </p>
           <GetBackButton />
         </CardTitle>
 
-        {
-          hasPermission('res:documents', 'delete') && (
-            <Button
-              variant={'destructive'}
-              onClick={handleDelete}
-              size={'sm'}
-            >
-              <Trash className='mr-2' size={15} />
-              Eliminar
-            </Button>
-          )
-        }
-
+        {hasPermission("res:documents", "delete") && (
+          <Button
+            variant={"destructive"}
+            onClick={handleDelete}
+            size={"sm"}
+            className="w-full sm:w-auto mt-2 lg:mt-0"
+          >
+            <Trash className="mr-2" size={15} />
+            Eliminar
+          </Button>
+        )}
       </CardHeader>
 
       <CardContent>
-        {(loading) ? (
+        {loading ? (
           <div className="container mx-auto p-4">
             <LoadingFilePage />
           </div>
-        ) :
-          (
-            <div className="container mx-auto p-4">
-              <div className="grid grid-cols-2 md:grid-cols-2 gap-6">
-                <div className="container mx-auto p-4 sm:block">
-                  <PDFViewerComponent
-                    pdfUrl={fileUrl}
-                  />
+        ) : (
+          <div className="container mx-auto p-2 sm:p-4">
+            {/* Contenedor flexible para manejar la disposición */}
+            <div className="flex flex-wrap lg:flex-nowrap gap-4 lg:gap-6">
+              {/* PDF Viewer - Proporción fija */}
+              <div className="w-full lg:w-[45%] lg:h-[500px]">
+                <PDFViewerComponent pdfUrl={fileUrl} />
+              </div>
+
+              {/* Datos del estudiante - Proporción fija */}
+              <div className="w-full lg:w-[55%]">
+                <h2 className="text-xl sm:text-2xl font-bold mb-4">
+                  Información del estudiante
+                </h2>
+
+                {/* Botones */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <Button
+                    variant={"default"}
+                    size={"sm"}
+                    onClick={handleDownloadFile}
+                    className="w-full sm:w-auto"
+                  >
+                    <DownloadIcon className="h-4 w-4 mr-2" />
+                    Descargar archivo
+                  </Button>
+                  <Button
+                    variant={"default"}
+                    onClick={handleDownloadReport}
+                    size={"sm"}
+                    className="w-full sm:w-auto"
+                  >
+                    <FileDown className="h-4 w-4 mr-2" />
+                    Descargar reporte
+                  </Button>
                 </div>
 
-                <div className='sm:block'>
-                  <h2 className="text-2xl font-bold mb-4 col-span-2 md:col-span-1">Información del estudiante</h2>
-                  <div className="p-0 justify-between">
-                    <Button
-                      variant={'default'}
-                      className='mr-4'
-                      size={'sm'}
-                      onClick={handleDownloadFile}
-                    >
-                      <DownloadIcon className='h-4 w-4 mr-2' />
-                      Descargar archivo
-                    </Button>
-                    <Button
-                      variant={'default'}
-                      onClick={handleDownloadReport}
-                      size={'sm'}
-                    >
-                      <FileDown className='h-4 w-4 mr-2' />
-                      Descargar reporte
-                    </Button>
-                  </div>
-
-                  <div className="grid grid-cols-1 mt-5 mb-2 space-x-3">
+                {/* Campos de información */}
+                <div className="space-y-4 sm:space-y-2">
+                  {/* Nombre del estudiante */}
+                  <div className="w-full">
                     <InputDemo
-                      label='Estudiante:'
-                      id='Alumno'
+                      label="Estudiante:"
+                      id="Alumno"
                       value={fileData?.Alumno}
                       vals={vals}
                     />
                   </div>
 
-
-                  <div className="flex mb-2 space-x-3">
-                    <div className="w-2/5">
+                  {/* ID y Carrera */}
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="w-full sm:w-1/2">
                       <InputDemo
-                        label='Número de identificación:'
-                        id='NoIdentificacion'
+                        label="Número de identificación:"
+                        id="NoIdentificacion"
                         value={fileData?.NoIdentificacion}
                         vals={vals}
                       />
                     </div>
-                    <div className="w-3/5"><InputDemo
-                      label='Carrera:'
-                      value={fileData?.Carrera}
-                      id='Carrera'
-                      vals={vals}
-                    /></div>
-
+                    <div className="w-full sm:w-1/2">
+                      <InputDemo
+                        label="Carrera:"
+                        value={fileData?.Carrera}
+                        id="Carrera"
+                        vals={vals}
+                      />
+                    </div>
                   </div>
 
-                  <div className="flex space-x-3">
-                    <div className='w-2/5'>
+                  {/* Nota y Referencia */}
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="lg:w-[40%] sm:w-1/2">
                       <InputNumber
-                        label='Nota de seminario / graduación:'
+                        label="Nota de seminario / graduación:"
                         value={fileData?.NotaGraduacionSeminario}
                         vals={vals}
-                        id='NotaGraduacionSeminario'
+                        id="NotaGraduacionSeminario"
                       />
                     </div>
-                    <div className='w-3/5'>
+                    <div className="lg:w-[60%] sm:w-1/2">
+                      <InputNumber
+                        label="Promedio de materias aprobadas:"
+                        value={fileData?.NotaGraduacionSeminario}
+                        vals={vals}
+                        id="NotaGraduacionSeminario"
+                      />
+                    </div>
+                  </div>
+
+                  {/*Promedios */}
+                  <div className="flex flex-col sm:flex-row gap-4">
+
+                    <div className="lg:w-[40%] sm:w-1/2">
                       <InputDemo
-                        label='Referencia archivo:'
+                        label="Promedio de graduación:"
+                        value={fileData?.NotaGraduacionSeminario}
+                        id="NotaPromGraduacion"
+                      />
+                    </div>
+                    <div className="lg:w-[60%] sm:w-1/2">
+                      <InputDemo
+                        label="Referencia archivo:"
                         value={fileData?.RefArchivo}
                         noIcon={true}
-                        id='RefArchivo'
+                        id="RefArchivo"
                       />
                     </div>
                   </div>
 
-                  {/* Tabla de materias aprobadas */}
-                  <div className='w-full mt-5'>
-                    <Datatable
-                      title='Detalle de materias aprobadas'
-                      description=''
-                      columns={columns}
-                      data={detalleMaterias || []}
-                      setData={setDetalleMaterias}
-                      onClickExpand={onClickExpand}
-                      showIcon={true}
-                    />
+                  {/* Tabla y Botón */}
+                  <div className="w-full mt-5">
+                    {/* Botón visible solo en móvil */}
+                    <div className="block lg:hidden mt-5">
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => setOpenModal(true)}
+                      >
+                        <Table className="mr-2 h-4 w-4" />
+                        Ver materias aprobadas
+                      </Button>
+                    </div>
+
+                    {/* Datatable visible solo en desktop */}
+                    <div className="hidden mt-5 lg:block overflow-x-auto">
+                      <MateriasDataTable
+                        initialData={detalleMaterias}
+                      />
+                    </div>
                   </div>
 
-                  {/* Modal para expandir detalle de materias aprobadas */}
+                  {/* Modales */}
                   <ExpandKardexDetail
                     data={detalleMaterias || []}
                     setData={setDetalleMaterias}
@@ -269,7 +308,6 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
                     onDelete={onDelete}
                   />
 
-                  {/* Modal para confirmar eliminación de archivo */}
                   <ConfirmDeleteFile
                     pageSize={6}
                     currentPage={1}
@@ -277,12 +315,12 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
                     setOpenModal={setOpenModalDelete}
                     fileId={Number(fileId)}
                   />
-
                 </div>
               </div>
             </div>
-          )}
+          </div>
+        )}
       </CardContent>
-    </Card >
+    </Card>
   );
 }
