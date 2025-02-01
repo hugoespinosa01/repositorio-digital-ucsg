@@ -151,7 +151,7 @@ export const MateriasDataTable = ({ initialData }: MateriasDataTableProps) => {
             Materia: '',
             NoMatricula: 0,
             Calificacion: 0,
-            Estado: '',
+            Estado: 0,
             IdDocumentoKardex: 0
         };
         setData(prev => [newRow, ...prev]); // Añade al inicio del array

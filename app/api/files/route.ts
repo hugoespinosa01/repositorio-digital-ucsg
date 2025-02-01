@@ -242,7 +242,6 @@ const parseData = (tables: any) => {
     const rows: KardexDetalle[] = [];
     let cicloGlobal = ""; // Este valor será propagado entre tablas
 
-
     // Iterar a través de todas las tablas en el OCR
     tables.forEach((table: any) => {
 
