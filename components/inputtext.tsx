@@ -69,6 +69,7 @@ export default function InputDemo({ value, label, noIcon, vals, id }: InputDemoP
     return (
         <div className="space-y-2">
             <EditKardexFieldModal
+                setFieldValue={setFieldValue}
                 openModal={openModal}
                 setOpenModal={setOpenModal}
                 handleAccept={handleAccept}

@@ -7,4 +7,5 @@ export interface KardexDetalle {
     NoMatricula: number;
     IdDocumentoKardex: number;
     Estado: number;
+    isNewRow?: boolean;
 }

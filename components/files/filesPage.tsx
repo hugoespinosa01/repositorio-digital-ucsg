@@ -293,7 +293,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
                     {/* Datatable visible solo en desktop */}
                     <div className="hidden mt-5 lg:block overflow-x-auto">
                       <MateriasDataTable
-                        initialData={detalleMaterias}
+                        fileId={fileId}
                       />
                     </div>
                   </div>

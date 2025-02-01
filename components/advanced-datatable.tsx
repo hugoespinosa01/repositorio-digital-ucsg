@@ -22,19 +22,29 @@ import {
     Trash2,
     ChevronsLeft,
     ChevronsRight,
+    Loader2,
+    Edit,
 } from 'lucide-react';
 
 import { KardexDetalle } from '@/types/kardexDetalle';
 import { useToast } from './ui/use-toast';
 import { useEffect } from 'react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+
 
 interface MateriasDataTableProps {
-    initialData: KardexDetalle[];
+    fileId: string | null | undefined;
 }
 
-export const MateriasDataTable = ({ initialData }: MateriasDataTableProps) => {
+// Definir el tipo
+type SortConfig = {
+    key: keyof KardexDetalle;
+    direction: 'asc' | 'desc' | null;
+};
+
+export const MateriasDataTable = ({ fileId }: MateriasDataTableProps) => {
     const [data, setData] = useState<KardexDetalle[]>([]);
-    const [sortConfig, setSortConfig] = useState<{ key: keyof KardexDetalle; direction: 'asc' | 'desc' | null }>({
+    const [sortConfig, setSortConfig] = useState<SortConfig>({
         key: 'Ciclo',
         direction: null,
     });
@@ -53,7 +63,7 @@ export const MateriasDataTable = ({ initialData }: MateriasDataTableProps) => {
     //APIs
     const getNotas = async () => {
         try {
-            const response = await fetch('/api/materias');
+            const response = await fetch(`/api/materias/${fileId}`);
             if (!response.ok) {
                 throw new Error('Error obteniendo las notas');
             }
@@ -65,7 +75,7 @@ export const MateriasDataTable = ({ initialData }: MateriasDataTableProps) => {
 
     const addNota = async (nota: KardexDetalle) => {
         try {
-            const response = await fetch('/api/materias', {
+            const response = await fetch(`/api/materias/${fileId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -150,7 +160,7 @@ export const MateriasDataTable = ({ initialData }: MateriasDataTableProps) => {
         setLoading(true);
         try {
             const notas = await getNotas(); // Llama la función que pide las notas al servidor
-            setData(notas);
+            setData(notas.data);
         } catch (error) {
             toast({ title: 'Error', description: 'No se pudieron cargar las notas' });
         } finally {
@@ -162,12 +172,27 @@ export const MateriasDataTable = ({ initialData }: MateriasDataTableProps) => {
     // Sort data
     const sortData = useCallback((data: KardexDetalle[]) => {
         if (!sortConfig.direction) return data;
+
         return [...data].sort((a, b) => {
-            if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
-            if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
+            // Si la key es isNewRow, la ignoramos en el ordenamiento
+            if (sortConfig.key === 'isNewRow') {
+                return 0;
+            }
+
+            // Accedemos de manera segura a la propiedad
+            const aValue = a[sortConfig.key as keyof Omit<KardexDetalle, 'isNewRow'>];
+            const bValue = b[sortConfig.key as keyof Omit<KardexDetalle, 'isNewRow'>];
+
+            if (aValue < bValue) {
+                return sortConfig.direction === 'asc' ? -1 : 1;
+            }
+            if (aValue > bValue) {
+                return sortConfig.direction === 'asc' ? 1 : -1;
+            }
             return 0;
         });
     }, [sortConfig]);
+
 
     // Filter data
     const filterData = useCallback((data: KardexDetalle[]) => {
@@ -186,13 +211,32 @@ export const MateriasDataTable = ({ initialData }: MateriasDataTableProps) => {
         return groups;
     }, []);
 
-    // Process data with all transformations
+    // Función para procesar y agrupar los datos por ciclo
     const processData = useCallback(() => {
-        let processed = [...data];
-        processed = sortData(processed);
-        processed = filterData(processed);
-        return processed;
-    }, [data, sortData, filterData]);
+        // Primero, filtramos por materia si hay filtro
+        let filteredData = data;
+        if (filterMateria) {
+            filteredData = filterData(data);
+        }
+
+        // Ordenamos los datos si hay configuración de ordenamiento
+        if (sortConfig.direction) {
+            sortData(filteredData);
+        }
+
+        // Agrupamos por ciclo
+        const groupedData = filteredData.reduce((acc, item) => {
+            const ciclo = item.Ciclo.trim(); // Asegurarnos de contar el ciclo como clave
+            if (!acc[ciclo]) {
+                acc[ciclo] = [];
+            }
+            acc[ciclo].push(item);
+            return acc;
+        }, {} as { [key: string]: KardexDetalle[] });
+
+        // Convertimos el objeto agrupado de vuelta a un array
+        return Object.values(groupedData).flat();
+    }, [data, filterMateria, sortConfig]);
 
     // Handle column sort
     const handleSort = (key: keyof KardexDetalle) => {
@@ -211,58 +255,78 @@ export const MateriasDataTable = ({ initialData }: MateriasDataTableProps) => {
     };
 
     const cancelEditing = () => {
+        if (editedData?.isNewRow) {
+            // Si es una fila nueva, eliminarla visualmente de la tabla
+            setData(prev => prev.filter(row => row.Id !== editedData.Id));
+        }
+
+        // Limpiar los estados
         setEditingRow(null);
         setEditedData(null);
     };
 
-    // Modifica la función saveEditing
+
     const saveEditing = async () => {
         if (editedData) {
             try {
-                await handleUpdateNota(editedData.Id, editedData);
-                // Restaurar valores iniciales
+                if (editedData.isNewRow) {
+                    // Caso 1: Crear (POST) si la fila es nueva
+                    await handleAddNota(editedData);
+                    toast({
+                        title: "Materia creada",
+                        description: "Se agregó la nueva materia correctamente.",
+                    });
+                } else {
+                    // Caso 2: Actualizar (PUT) si ya existe en la base
+                    await handleUpdateNota(editedData.Id, editedData);
+                    toast({
+                        title: "Materia actualizada",
+                        description: "Los cambios fueron guardados.",
+                    });
+                }
+
+                // Actualizamos el estado de la tabla desde la API
+                await fetchAndSetData();
+
+                // Limpiar estado al terminar
                 setEditingRow(null);
                 setEditedData(null);
+
             } catch (error: any) {
-                console.error(error.message);
+                toast({
+                    title: "Error",
+                    description: error.message,
+                    variant: "destructive",
+                });
             }
         }
     };
 
-    // 1. Primero, define el tipo de la función addNewRow
-    const addNewRow = async (newRow: KardexDetalle) => {
-        try {
-            await handleAddNota(newRow);
-            setCurrentPage(1);
-        } catch (error) {
-            toast({
-                title: "Error",
-                description: "No se pudo agregar la nueva nota",
-                variant: "destructive",
-            });
-        }
-    };
-
-    // 2. Crea una función separada para manejar el click del botón
-    const handleAddClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
-        event.preventDefault();
-
-        // Aquí creas el nuevo objeto KardexDetalle con los datos necesarios
+    // Modifica addNewRow para que solo agregue la fila visual
+    const addNewRow = () => {
         const newRow: KardexDetalle = {
-            Id: 0, // O genera un ID temporal
-            Ciclo: "", // O el valor que corresponda
+            Id: Date.now(), // ID temporal único
+            Ciclo: "",
             Materia: "",
             Periodo: "",
             Calificacion: 0,
             NoMatricula: 0,
             IdDocumentoKardex: 0,
             Estado: 1,
+            isNewRow: true,
         };
 
-        await addNewRow(newRow);
+        setData(prev => [newRow, ...prev]); // Añade al inicio del array
+        setEditingRow(newRow.Id); // Inmediatamente ponla en modo edición
+        setEditedData(newRow); // Guarda los datos en edición
+        setCurrentPage(1); // Regresa a la primera página
     };
 
-
+    // Modifica handleAddClick para que solo llame a addNewRow
+    const handleAddClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+        addNewRow();
+    };
 
     // Conectar deleteRow con la API
     const deleteRow = async (id: number) => {
@@ -278,9 +342,6 @@ export const MateriasDataTable = ({ initialData }: MateriasDataTableProps) => {
         const startIndex = (currentPage - 1) * rowsPerPage;
         return processedData.slice(startIndex, startIndex + rowsPerPage);
     }, [currentPage]);
-
-
-
 
 
     const processedData = processData();
@@ -309,6 +370,14 @@ export const MateriasDataTable = ({ initialData }: MateriasDataTableProps) => {
         }
         return range;
     }, [currentPage, totalPages]);
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <Loader2 className="animate-spin w-10 h-10 text-primary" />
+            </div>
+        )
+    }
 
     return (
         <div className="p-4 space-y-4 bg-background rounded-lg shadow-md">
@@ -374,12 +443,16 @@ export const MateriasDataTable = ({ initialData }: MateriasDataTableProps) => {
                                     </TableCell>
                                     <TableCell>
                                         <Input
+                                            max={3}
+                                            min={0}
                                             value={editedData?.NoMatricula || 0}
                                             onChange={(e) => setEditedData(prev => prev ? { ...prev, NoMatricula: Number(e.target.value) } : null)}
                                         />
                                     </TableCell>
                                     <TableCell>
                                         <Input
+                                            max={10}
+                                            min={0}
                                             type="number"
                                             value={editedData?.Calificacion || 0}
                                             onChange={(e) => setEditedData(prev => prev ? { ...prev, Calificacion: Number(e.target.value) } : null)}
@@ -413,20 +486,39 @@ export const MateriasDataTable = ({ initialData }: MateriasDataTableProps) => {
                                     <TableCell>{row.Calificacion}</TableCell>
                                     <TableCell>
                                         <div className="flex gap-2">
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() => startEditing(row)}
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() => deleteRow(row.Id)}
-                                            >
-                                                <Trash2 className="h-4 w-4 text-red-500" />
-                                            </Button>
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            onClick={() => startEditing(row)}
+                                                        >
+                                                            <Edit className="h-4 w-4" color="#325286" />
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        Editar materia
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            onClick={() => deleteRow(row.Id)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        Eliminar materia
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+
                                         </div>
                                     </TableCell>
                                 </>

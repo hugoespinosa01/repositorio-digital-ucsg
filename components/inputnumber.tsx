@@ -34,6 +34,11 @@ export default function InputNumber({ value, label, noIcon, vals, id }: InputNum
     }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (Number(e.target.value) > 10 ) {
+            setFieldValue(10);
+            return;
+        }
+
         setFieldValue(e.target.value);
     }
 
@@ -72,6 +77,7 @@ export default function InputNumber({ value, label, noIcon, vals, id }: InputNum
                 openModal={openModal}
                 setOpenModal={setOpenModal}
                 handleAccept={handleAccept}
+                setFieldValue={setFieldValue}
             />
             <Label htmlFor="input-20">{label}</Label>
             <div className="flex rounded-lg shadow-sm shadow-black/5">

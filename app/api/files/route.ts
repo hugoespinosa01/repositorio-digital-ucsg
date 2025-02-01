@@ -290,7 +290,7 @@ const parseData = (tables: any) => {
                 if (materia && noMatricula) {
                     const kardexDetalle: KardexDetalle = {
                         Id: rowIndex + 1,
-                        Ciclo: cicloPropagado || "N/A", // Usamos el ciclo propagado o un valor predeterminado
+                        Ciclo: cicloPropagado || "", // Usamos el ciclo propagado o un valor predeterminado
                         Materia: materia,
                         Periodo: extractPeriodo(row), // Si aplica, extraer período
                         Calificacion: Number(calificacion),
