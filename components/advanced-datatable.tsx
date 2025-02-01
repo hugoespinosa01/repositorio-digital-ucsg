@@ -22,25 +22,18 @@ import {
     Trash2,
     ChevronsLeft,
     ChevronsRight,
-    Loader2
 } from 'lucide-react';
 
 import { KardexDetalle } from '@/types/kardexDetalle';
-
-// const initialData: KardexDetalle[] = [
-//     { id: '1', Ciclo: 'Primero', Periodo: '2024-1', Materia: 'Matemáticas', NoMatricula: 'A001', Calificacion: 85 },
-//     { id: '2', Ciclo: 'Primero', Periodo: '2024-1', Materia: 'Física', NoMatricula: 'A002', Calificacion: 78 },
-//     { id: '3', Ciclo: 'Segundo', Periodo: '2024-1', Materia: 'Química', NoMatricula: 'B001', Calificacion: 92 },
-//     { id: '4', Ciclo: 'Segundo', Periodo: '2024-1', Materia: 'Biología', NoMatricula: 'B002', Calificacion: 88 },
-//     { id: '5', Ciclo: 'Tercero', Periodo: '2024-1', Materia: 'Historia', NoMatricula: 'C001', Calificacion: 95 },
-// ];
+import { useToast } from './ui/use-toast';
+import { useEffect } from 'react';
 
 interface MateriasDataTableProps {
     initialData: KardexDetalle[];
 }
 
 export const MateriasDataTable = ({ initialData }: MateriasDataTableProps) => {
-    const [data, setData] = useState<KardexDetalle[]>(initialData);
+    const [data, setData] = useState<KardexDetalle[]>([]);
     const [sortConfig, setSortConfig] = useState<{ key: keyof KardexDetalle; direction: 'asc' | 'desc' | null }>({
         key: 'Ciclo',
         direction: null,
@@ -49,9 +42,121 @@ export const MateriasDataTable = ({ initialData }: MateriasDataTableProps) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [editingRow, setEditingRow] = useState<number | null>(null);
     const [editedData, setEditedData] = useState<KardexDetalle | null>(null);
-    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
     const rowsPerPage = 5;
+    const { toast } = useToast();
 
+    useEffect(() => {
+        fetchAndSetData(); // Carga los datos al montar el componente
+    }, []);
+
+    //APIs
+    const getNotas = async () => {
+        try {
+            const response = await fetch('/api/materias');
+            if (!response.ok) {
+                throw new Error('Error obteniendo las notas');
+            }
+            return await response.json();
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    const addNota = async (nota: KardexDetalle) => {
+        try {
+            const response = await fetch('/api/materias', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(nota)
+            });
+            if (!response.ok) {
+                throw new Error('Error al agregar la nota');
+            }
+            return await response.json();
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    const updateNota = async (id: number, updatedNota: KardexDetalle) => {
+        try {
+            const response = await fetch(`/api/materias/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedNota)
+            });
+            if (!response.ok) {
+                throw new Error('Error actualizando la nota');
+            }
+            return await response.json();
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    const deleteNota = async (id: number) => {
+        try {
+            const response = await fetch(`/api/materias/${id}`, {
+                method: 'DELETE'
+            });
+            if (!response.ok) {
+                throw new Error('Error eliminando la nota');
+            }
+            return await response.json();
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    const handleAddNota = async (newNota: KardexDetalle) => {
+        try {
+            await addNota(newNota);
+            toast({ title: 'Nota agregada', description: 'La nota fue creada correctamente' });
+            // Actualizar la tabla después de agregar
+            fetchAndSetData();
+        } catch (error: any) {
+            toast({ title: 'Error', description: error.message });
+        }
+    };
+
+    const handleUpdateNota = async (id: number, editedNota: KardexDetalle) => {
+        try {
+            await updateNota(id, editedNota);
+            toast({ title: 'Nota actualizada', description: 'Los cambios fueron guardados' });
+            // Actualizar la tabla después de editar
+            fetchAndSetData();
+        } catch (error: any) {
+            toast({ title: 'Error', description: error.message });
+        }
+    };
+
+    const handleDeleteNota = async (id: number) => {
+        try {
+            await deleteNota(id);
+            toast({ title: 'Nota eliminada', description: 'La nota fue eliminada correctamente' });
+            // Actualizar la tabla después de eliminar
+            fetchAndSetData();
+        } catch (error: any) {
+            toast({ title: 'Error', description: error.message });
+        }
+    };
+
+    const fetchAndSetData = async () => {
+        setLoading(true);
+        try {
+            const notas = await getNotas(); // Llama la función que pide las notas al servidor
+            setData(notas);
+        } catch (error) {
+            toast({ title: 'Error', description: 'No se pudieron cargar las notas' });
+        } finally {
+            setLoading(false);
+        }
+    };
 
 
     // Sort data
@@ -111,53 +216,61 @@ export const MateriasDataTable = ({ initialData }: MateriasDataTableProps) => {
     };
 
     // Modifica la función saveEditing
-    const saveEditing = () => {
+    const saveEditing = async () => {
         if (editedData) {
-            setData(current => {
-                // Primero removemos la fila editada
-                const filteredData = current.filter(item => item.Id !== editedData.Id);
-
-                // Si el Ciclo está vacío, lo colocamos al inicio
-                if (!editedData.Ciclo.trim()) {
-                    return [editedData, ...filteredData];
-                }
-
-                // Encontramos el índice donde debería ir según su Ciclo
-                const insertIndex = filteredData.findIndex(item => item.Ciclo >= editedData.Ciclo);
-
-                if (insertIndex === -1) {
-                    // Si no encontramos un Ciclo mayor o igual, va al final
-                    return [...filteredData, editedData];
-                } else {
-                    // Insertamos en la posición correcta
-                    return [
-                        ...filteredData.slice(0, insertIndex),
-                        editedData,
-                        ...filteredData.slice(insertIndex)
-                    ];
-                }
-            });
-            setEditingRow(null);
-            setEditedData(null);
+            try {
+                await handleUpdateNota(editedData.Id, editedData);
+                // Restaurar valores iniciales
+                setEditingRow(null);
+                setEditedData(null);
+            } catch (error: any) {
+                console.error(error.message);
+            }
         }
     };
 
-    // Modifica la función addNewRow
-    const addNewRow = () => {
+    // 1. Primero, define el tipo de la función addNewRow
+    const addNewRow = async (newRow: KardexDetalle) => {
+        try {
+            await handleAddNota(newRow);
+            setCurrentPage(1);
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "No se pudo agregar la nueva nota",
+                variant: "destructive",
+            });
+        }
+    };
+
+    // 2. Crea una función separada para manejar el click del botón
+    const handleAddClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+
+        // Aquí creas el nuevo objeto KardexDetalle con los datos necesarios
         const newRow: KardexDetalle = {
-            Id: 0,
-            Ciclo: '',
-            Periodo: '',
-            Materia: '',
-            NoMatricula: 0,
+            Id: 0, // O genera un ID temporal
+            Ciclo: "", // O el valor que corresponda
+            Materia: "",
+            Periodo: "",
             Calificacion: 0,
-            Estado: 0,
-            IdDocumentoKardex: 0
+            NoMatricula: 0,
+            IdDocumentoKardex: 0,
+            Estado: 1,
         };
-        setData(prev => [newRow, ...prev]); // Añade al inicio del array
-        setEditingRow(newRow.Id);
-        setEditedData(newRow);
-        setCurrentPage(1); // Regresa a la primera página
+
+        await addNewRow(newRow);
+    };
+
+
+
+    // Conectar deleteRow con la API
+    const deleteRow = async (id: number) => {
+        try {
+            await handleDeleteNota(id); // Elimina la nota con el ID
+        } catch (error: any) {
+            console.error(error.message);
+        }
     };
 
     // Get paginated data
@@ -166,10 +279,7 @@ export const MateriasDataTable = ({ initialData }: MateriasDataTableProps) => {
         return processedData.slice(startIndex, startIndex + rowsPerPage);
     }, [currentPage]);
 
-    // Delete row
-    const deleteRow = (id: number) => {
-        setData(current => current.filter(item => item.Id !== id));
-    };
+
 
 
 
@@ -211,7 +321,7 @@ export const MateriasDataTable = ({ initialData }: MateriasDataTableProps) => {
                     size={10}
                     onChange={(e) => setFilterMateria(e.target.value)}
                 />
-                <Button onClick={addNewRow} size={'sm'} className="gap-2">
+                <Button onClick={handleAddClick} size={'sm'} className="gap-2">
                     <Plus className="h-4 w-4" />
                     Agregar Materia
                 </Button>
@@ -330,7 +440,7 @@ export const MateriasDataTable = ({ initialData }: MateriasDataTableProps) => {
                 <Button
                     variant="outline"
                     onClick={() => setCurrentPage(1)}
-                    disabled={currentPage === 1 }
+                    disabled={currentPage === 1}
                 >
                     <ChevronsLeft className="h-4 w-4" />
                 </Button>
@@ -338,7 +448,7 @@ export const MateriasDataTable = ({ initialData }: MateriasDataTableProps) => {
                 <Button
                     variant="outline"
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1 }
+                    disabled={currentPage === 1}
                 >
                     <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -356,7 +466,7 @@ export const MateriasDataTable = ({ initialData }: MateriasDataTableProps) => {
                 <Button
                     variant="outline"
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages }
+                    disabled={currentPage === totalPages}
                 >
                     <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -364,7 +474,7 @@ export const MateriasDataTable = ({ initialData }: MateriasDataTableProps) => {
                 <Button
                     variant="outline"
                     onClick={() => setCurrentPage(totalPages)}
-                    disabled={currentPage === totalPages }
+                    disabled={currentPage === totalPages}
                 >
                     <ChevronsRight className="h-4 w-4" />
                 </Button>
