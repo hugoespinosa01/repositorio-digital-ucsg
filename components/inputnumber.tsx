@@ -21,6 +21,7 @@ export default function InputNumber({ value, label, noIcon, vals, id }: InputNum
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [fieldValue, setFieldValue] = useState<string | undefined | number>(value);
     const [openModal, setOpenModal] = useState<boolean>(false);
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const { toast } = useToast();
 
 
@@ -34,7 +35,7 @@ export default function InputNumber({ value, label, noIcon, vals, id }: InputNum
     }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (Number(e.target.value) > 10 ) {
+        if (Number(e.target.value) > 10) {
             setFieldValue(10);
             return;
         }
@@ -43,30 +44,40 @@ export default function InputNumber({ value, label, noIcon, vals, id }: InputNum
     }
 
     const handleAccept = async () => {
-        setIsEditing(false);
+        try {
+            setIsEditing(false);
+            setIsSubmitting(true);
+            const response = await fetch(`/api/files/${vals?.fileId}`, {
+                method: 'PUT',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    [id]: Number(fieldValue)
+                })
+            });
 
-        const response = await fetch(`/api/files/${vals?.fileId}`, {
-            method: 'PUT',
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                [id]: Number(fieldValue)
-            })
-        });
+            if (!response.ok) {
+                throw new Error(`Error al obtener el archivo: ${response.statusText}`);
+            }
 
-        if (!response.ok) {
-            throw new Error(`Error al obtener el archivo: ${response.statusText}`);
+            const res = await response.json();
+            console.log(res);
+
+            toast({
+                title: "Campo actualizado",
+                description: "El campo ha sido actualizado exitosamente",
+                variant: "default",
+            });
+        } catch (err) {
+            toast({
+                title: "Error",
+                description: "Ocurrió un error al actualizar el campo",
+            });
+        } finally {
+            setOpenModal(false);
+            setIsSubmitting(false);
         }
-
-        const res = await response.json();
-        console.log(res);
-
-        toast({
-            title: "Campo actualizado",
-            description: "El campo ha sido actualizado exitosamente",
-            variant: "default",
-        });
 
         setOpenModal(false);
     }
@@ -102,7 +113,6 @@ export default function InputNumber({ value, label, noIcon, vals, id }: InputNum
                                         aria-label="Edit"
                                         onClick={handleClick}
                                     >
-
 
                                         {
                                             isEditing ? (

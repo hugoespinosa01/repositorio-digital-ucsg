@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { Dispatch, useContext } from 'react'
 import { Button } from '../ui/button';
 import { Credenza, CredenzaBody, CredenzaContent, CredenzaFooter, CredenzaHeader, CredenzaTitle, CredenzaClose } from '../custom-modal';
 import { useToast } from '@/components/ui/use-toast';
@@ -7,38 +7,52 @@ import { useRouter } from 'next/navigation';
 import { FolderContext } from '@/context/folder-context';
 import { KardexDetalle } from '@/types/kardexDetalle';
 
-export default function ConfirmDeleteMateria({
+export default function ConfirmEditMateria({
     openModal,
     setOpenModal,
-    materiaId,
-    deleteRow,
-    deletedData
+    handleUpdateNota,
+    editedData,
+    setEditedData,
+    setEditingRow,
+    fetchAndSetData
+
 }: {
     openModal: boolean,
     setOpenModal: (open: boolean) => void,
-    materiaId: number | undefined,
-    deleteRow: (id: number) => void,
-    deletedData: KardexDetalle | null
+    handleUpdateNota: (materiaId: number, editedData: KardexDetalle) => void,
+    editedData: KardexDetalle | null,
+    setEditedData: Dispatch<React.SetStateAction<KardexDetalle | null>>,
+    setEditingRow: Dispatch<React.SetStateAction<number | null>>,
+    fetchAndSetData: () => void
 }) {
 
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-    const deletingMateria = async () => {
+    const saveEditing = async () => {
         try {
-            if (deletedData) {
-                setIsSubmitting(true);
-                await deleteRow(deletedData.Id);
-            }
+            setIsSubmitting(true);
+            if (editedData) {
+                await handleUpdateNota(editedData.Id, editedData);
+                fetchAndSetData();
+                toast({
+                    title: "Materia actualizada",
+                    description: "Los cambios fueron guardados.",
+                });
 
+            }
         } catch (err) {
+            console.error('Error updating row');
             toast({
-                title: 'Error',
-                description: 'Ocurrió un error al eliminar la materia',
+                title: "Error",
+                description: "Ocurrió un error al actualizar la materia.",
+                variant: "destructive",
             });
         } finally {
-            setIsSubmitting(false);
             setOpenModal(false);
+            setIsSubmitting(false);
+            setEditedData(null);
+            setEditingRow(null);
         }
     }
 
@@ -52,7 +66,7 @@ export default function ConfirmDeleteMateria({
                         </CredenzaTitle>
                     </CredenzaHeader>
                     <CredenzaBody>
-                        ¿Estás seguro de que deseas eliminar la siguiente información?
+                        ¿Estás seguro de que deseas editar la siguiente información?
                     </CredenzaBody>
                     <CredenzaFooter>
                         {
@@ -63,7 +77,7 @@ export default function ConfirmDeleteMateria({
                                 </Button>) : (
                                 <Button
                                     variant="default"
-                                    onClick={deletingMateria}
+                                    onClick={saveEditing}
                                 >
                                     Aceptar
                                 </Button>

@@ -135,6 +135,20 @@ export async function PUT(request: Request, { params }: Params) {
 
         ruta += `/${body.Nombre}`;
 
+        //Guardo el nombre antiguo de la carpeta primero
+        const carpeta = await prisma.carpeta.findFirst({
+            where: {
+                Id: Number(params.id),
+                Estado: 1
+            }
+        });
+
+        if (!carpeta) {
+            return NextResponse.json({ error: 'Carpeta no encontrada' }, { status: 404 });
+        }
+
+        let oldNombreCarpetaPadre = carpeta?.Nombre;
+
         const updatedCarpeta = await prisma.carpeta.update({
             where: {
                 Id: Number(params.id)
@@ -145,6 +159,41 @@ export async function PUT(request: Request, { params }: Params) {
                 Ruta: ruta,
             }
         });
+
+        //Buscar por carpetas hijas para actualizarlas
+        const childrenFolders = await prisma.carpeta.findMany({
+            where: {
+                IdCarpetaPadre: Number(params.id),
+                Estado: 1
+            }
+        })
+
+        if (!childrenFolders) {
+            return NextResponse.json({ error: 'Error al buscar carpetas hijas' }, { status: 500 });
+        }
+
+        //Actualizar ruta de carpetas hijas
+        if (childrenFolders.length > 0) {
+            for (const childFolder of childrenFolders) {
+                if (childFolder.Ruta) {
+                    let childRuta = childFolder.Ruta;
+                    
+                    if (oldNombreCarpetaPadre) {
+                        childRuta = childRuta.replace(oldNombreCarpetaPadre, body.Nombre);
+                    }
+
+                    await prisma.carpeta.update({
+                        where: {
+                            Id: childFolder.Id
+                        },
+                        data: {
+                            Ruta: childRuta,
+                            FechaActualizacion: new Date()
+                        }
+                    });
+                }
+            }
+        }
 
         const response = {
             message: 'Carpeta actualizada',

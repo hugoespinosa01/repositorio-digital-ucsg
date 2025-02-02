@@ -98,8 +98,6 @@ export async function GET(request: Request, { params }: Params) {
             }
         });
 
-        
-
         if (!kardex) {
             throw new Error('Documento kardex no encontrado');
         }
@@ -132,7 +130,9 @@ export async function GET(request: Request, { params }: Params) {
                 Carrera: kardex?.Carrera,
                 NoIdentificacion: kardex?.NoIdentificacion,
                 DetalleMaterias: kardexDetalle,
-                NotaGraduacionSeminario: kardex?.NotaGraduacionSeminario
+                NotaGraduacionSeminario: kardex?.NotaGraduacionSeminario,
+                PromMateriasAprobadas: kardex?.PromMateriasAprobadas,
+                PromGraduacion: kardex?.PromGraduacion,
             }
         }
 
@@ -166,35 +166,19 @@ export async function PUT(request: Request, { params }: Params) {
             return NextResponse.json({ error: 'Documento no encontrado' }, { status: 404 });
         }
 
-        if (body.Alumno || body.Carrera || body.NoIdentificacion || body.NotaGraduacionSeminario) {
-            const updatingTipoKardex = await prisma.tipoDocumentoKardex.updateMany({
-                where: {
-                    IdDocumento: Number(documentId),
-                    Estado: 1
-                },
-                data: body
-            });
+        const updatingTipoKardex = await prisma.tipoDocumentoKardex.updateMany({
+            where: {
+                IdDocumento: Number(documentId),
+                Estado: 1
+            },
+            data: body
+        });
 
-            if (!updatingTipoKardex) {
-                return NextResponse.json({ error: 'Error actualizando tipo de documento' }, { status: 500 });
-            }
-
+        if (!updatingTipoKardex) {
+            return NextResponse.json({ error: 'Error actualizando tipo de documento' }, { status: 500 });
         }
 
-        if (body.DetalleMaterias) {
-            const updatingDetalleKardex = await prisma.documentoDetalleKardex.updateMany({
-                where: {
-                    IdDocumentoKardex: Number(tipoDocumentoKardex.Id),
-                },
-                data: body
-            });
 
-            if (!updatingDetalleKardex) {
-                return NextResponse.json({ error: 'Error actualizando detalles de documento' }, { status: 500 });
-            }
-        }
-
-        
         const result = {
             message: 'Documento actualizado con éxito',
             status: 200,

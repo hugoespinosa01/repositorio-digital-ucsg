@@ -33,6 +33,8 @@ interface FileData {
   NotaGraduacionSeminario: number;
   NoIdentificacion: string;
   DetalleMaterias: [];
+  PromMateriasAprobadas: number;
+  PromGraduacion: number;
 }
 
 export default function FilesPage({ fileId }: { fileId?: string | null }) {
@@ -42,8 +44,6 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [openModalDelete, setOpenModalDelete] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
-  const router = useRouter();
-  const { toast } = useToast();
   const { permissions } = useAuthRoles(true);
 
   useEffect(() => {
@@ -58,6 +58,11 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
       (perm: any) => perm.rsname === resource && perm.scopes.includes(`scope:${action}`)
     );
   };
+
+  const canListMaterias = hasPermission("res:materias", "list");
+  const canCreateMateria = hasPermission("res:materias", "create");
+  const canUpdateMateria = hasPermission("res:materias", "update");
+  const canDeleteMateria = hasPermission("res:materias", "delete");
 
   const fetchFile = async (fileId: string) => {
     setLoading(true);
@@ -249,9 +254,9 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
                     <div className="lg:w-[60%] sm:w-1/2">
                       <InputNumber
                         label="Promedio de materias aprobadas:"
-                        value={fileData?.NotaGraduacionSeminario}
+                        value={fileData?.PromMateriasAprobadas}
                         vals={vals}
-                        id="NotaGraduacionSeminario"
+                        id="PromMateriasAprobadas"
                       />
                     </div>
                   </div>
@@ -260,10 +265,11 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
                   <div className="flex flex-col sm:flex-row gap-4">
 
                     <div className="lg:w-[40%] sm:w-1/2">
-                      <InputDemo
+                      <InputNumber
                         label="Promedio de graduación:"
-                        value={fileData?.NotaGraduacionSeminario}
-                        id="NotaPromGraduacion"
+                        value={fileData?.PromGraduacion}
+                        vals={vals}
+                        id="PromGraduacion"
                       />
                     </div>
                     <div className="lg:w-[60%] sm:w-1/2">
@@ -279,27 +285,41 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
                   {/* Tabla y Botón */}
                   <div className="w-full mt-5">
                     {/* Botón visible solo en móvil */}
-                    <div className="block lg:hidden mt-5">
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => setOpenModal(true)}
-                      >
-                        <Table className="mr-2 h-4 w-4" />
-                        Ver materias aprobadas
-                      </Button>
-                    </div>
 
-                    {/* Datatable visible solo en desktop */}
-                    <div className="hidden mt-5 lg:block overflow-x-auto">
-                      <MateriasDataTable
-                        fileId={fileId}
-                      />
-                    </div>
+                    {
+                      canListMaterias && (
+                        <>
+                          <div className="block lg:hidden mt-5">
+                            <Button
+                              variant="outline"
+                              className="w-full"
+                              onClick={() => setOpenModal(true)}
+                            >
+                              <Table className="mr-2 h-4 w-4" />
+                              Ver materias aprobadas
+                            </Button>
+                          </div>
+                          {/* Datatable visible solo en desktop */}
+                          <div className="hidden mt-5 lg:block overflow-x-auto">
+                            <MateriasDataTable
+                              setOpenModal={setOpenModal}
+                              fileId={fileId}
+                              canCreateMateria={canCreateMateria}
+                              canUpdateMateria={canUpdateMateria}
+                              canDeleteMateria={canDeleteMateria}
+                            />
+                          </div>
+                        </>
+                      )
+                    }
                   </div>
 
                   {/* Modales */}
                   <ExpandKardexDetail
+                    fileId={fileId}
+                    canCreateMateria={canCreateMateria}
+                    canUpdateMateria={canUpdateMateria}
+                    canDeleteMateria={canDeleteMateria}
                     data={detalleMaterias || []}
                     setData={setDetalleMaterias}
                     openModal={openModal}

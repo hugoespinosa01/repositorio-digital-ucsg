@@ -1,12 +1,15 @@
 import React, { Dispatch } from 'react'
-import { Button } from '../ui/button';
 import { Credenza, CredenzaBody, CredenzaContent, CredenzaFooter, CredenzaDescription, CredenzaHeader, CredenzaTitle, CredenzaClose } from '../custom-modal';
-import Datatable from '../dataTable/Datatable';
 import { GetColumns } from '../dataTable/Columns';
 import { useMemo } from 'react';
 import { KardexDetalle } from '@/types/kardexDetalle';
+import MateriasDataTable from '../advanced-datatable';
 
 interface ExpandKardexDetailProps {
+    fileId: string | null | undefined;
+    canCreateMateria: boolean;
+    canUpdateMateria: boolean;
+    canDeleteMateria: boolean;
     openModal: boolean;
     setOpenModal: (open: boolean) => void;
     data: any;
@@ -15,13 +18,13 @@ interface ExpandKardexDetailProps {
     setData: Dispatch<React.SetStateAction<KardexDetalle[]>>;
 }
 
-export default function ExpandKardexDetail({ openModal, setOpenModal, data, onEdit, onDelete, setData }: ExpandKardexDetailProps) {
+export default function ExpandKardexDetail({ openModal, setOpenModal, data, onEdit, onDelete, setData, fileId, canCreateMateria, canDeleteMateria, canUpdateMateria }: ExpandKardexDetailProps) {
     const columns = useMemo(() => GetColumns({ onEdit, onDelete }), []);
 
     return (
         <div className='flex'>
             <Credenza open={openModal} onOpenChange={setOpenModal}>
-                <CredenzaContent className='max-w-full'>
+                <CredenzaContent className='max-w-fit'>
                     <CredenzaHeader>
                         <CredenzaTitle>
                             Detalle
@@ -31,13 +34,12 @@ export default function ExpandKardexDetail({ openModal, setOpenModal, data, onEd
                         Detalle de materias aprobadas de acuerdo con los datos extraídos de la cartilla de notas.
                     </CredenzaDescription>
                     <CredenzaBody className='flex justify-center items-center w-full'>
-                        <Datatable
-                            data={data}
-                            setData={setData}
-                            columns={columns}
-                            title='Detalle de materias aprobadas'
-                            description=''
-                            showIcon={false}
+                        <MateriasDataTable
+                            hideExpandButton={true}
+                            fileId={fileId}
+                            canCreateMateria={canCreateMateria}
+                            canUpdateMateria={canUpdateMateria}
+                            canDeleteMateria={canDeleteMateria}
                         />
                     </CredenzaBody>
                 </CredenzaContent>

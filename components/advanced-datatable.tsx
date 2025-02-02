@@ -24,16 +24,25 @@ import {
     ChevronsRight,
     Loader2,
     Edit,
+    Expand,
 } from 'lucide-react';
 
 import { KardexDetalle } from '@/types/kardexDetalle';
 import { useToast } from './ui/use-toast';
 import { useEffect } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import ConfirmDeleteMateria from './modals/confime-delete-materia';
+import ConfirmEditMateria from './modals/confime-edit-materia';
+import { Dispatch } from 'react';
 
 
 interface MateriasDataTableProps {
     fileId: string | null | undefined;
+    canCreateMateria: boolean;
+    canUpdateMateria: boolean;
+    canDeleteMateria: boolean;
+    setOpenModal?: Dispatch<React.SetStateAction<boolean>>;
+    hideExpandButton?: boolean
 }
 
 // Definir el tipo
@@ -42,7 +51,7 @@ type SortConfig = {
     direction: 'asc' | 'desc' | null;
 };
 
-export const MateriasDataTable = ({ fileId }: MateriasDataTableProps) => {
+export const MateriasDataTable = ({ fileId, canCreateMateria, canUpdateMateria, canDeleteMateria, setOpenModal, hideExpandButton }: MateriasDataTableProps) => {
     const [data, setData] = useState<KardexDetalle[]>([]);
     const [sortConfig, setSortConfig] = useState<SortConfig>({
         key: 'Ciclo',
@@ -53,6 +62,9 @@ export const MateriasDataTable = ({ fileId }: MateriasDataTableProps) => {
     const [editingRow, setEditingRow] = useState<number | null>(null);
     const [editedData, setEditedData] = useState<KardexDetalle | null>(null);
     const [loading, setLoading] = useState(true);
+    const [openEditModal, setOpenEditModal] = useState(false);
+    const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
+    const [deletedData, setDeletedData] = useState<KardexDetalle | null>(null);
     const rowsPerPage = 5;
     const { toast } = useToast();
 
@@ -171,7 +183,9 @@ export const MateriasDataTable = ({ fileId }: MateriasDataTableProps) => {
 
     // Sort data
     const sortData = useCallback((data: KardexDetalle[]) => {
-        if (!sortConfig.direction) return data;
+        if (!sortConfig.key || !sortConfig.direction) {
+            return data; // Si no hay configuración de ordenación, devuelve los datos tal como están
+        }
 
         return [...data].sort((a, b) => {
             // Si la key es isNewRow, la ignoramos en el ordenamiento
@@ -246,8 +260,6 @@ export const MateriasDataTable = ({ fileId }: MateriasDataTableProps) => {
         }));
     };
 
-
-
     // Handle row edit
     const startEditing = (row: KardexDetalle) => {
         setEditingRow(row.Id);
@@ -276,21 +288,16 @@ export const MateriasDataTable = ({ fileId }: MateriasDataTableProps) => {
                         title: "Materia creada",
                         description: "Se agregó la nueva materia correctamente.",
                     });
+                    // Actualizamos el estado de la tabla desde la API
+                    await fetchAndSetData();
+
+                    // Limpiar estado al terminar
+                    setEditingRow(null);
+                    setEditedData(null);
                 } else {
                     // Caso 2: Actualizar (PUT) si ya existe en la base
-                    await handleUpdateNota(editedData.Id, editedData);
-                    toast({
-                        title: "Materia actualizada",
-                        description: "Los cambios fueron guardados.",
-                    });
+                    setOpenEditModal(true);
                 }
-
-                // Actualizamos el estado de la tabla desde la API
-                await fetchAndSetData();
-
-                // Limpiar estado al terminar
-                setEditingRow(null);
-                setEditedData(null);
 
             } catch (error: any) {
                 toast({
@@ -383,6 +390,8 @@ export const MateriasDataTable = ({ fileId }: MateriasDataTableProps) => {
         <div className="p-4 space-y-4 bg-background rounded-lg shadow-md">
             {/* Table Header with Filter */}
             <div className="flex justify-between items-center">
+
+                {/* Input para buscar materias */}
                 <Input
                     placeholder="Filtrar por Materia..."
                     className="max-w-sm h-9"
@@ -390,10 +399,40 @@ export const MateriasDataTable = ({ fileId }: MateriasDataTableProps) => {
                     size={10}
                     onChange={(e) => setFilterMateria(e.target.value)}
                 />
-                <Button onClick={handleAddClick} size={'sm'} className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Agregar Materia
-                </Button>
+
+                {/* Botón para crear materias */}
+                {
+                    canCreateMateria && (
+                        <Button onClick={handleAddClick} size={'sm'} className="gap-2">
+                            <Plus className="h-4 w-4" />
+                            Agregar Materia
+                        </Button>
+                    )
+                }
+                {/* Expandir tabla */}
+                {
+                    !hideExpandButton && (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <button
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            setOpenModal && setOpenModal(true)
+                                        }
+                                        }
+                                        className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                                    >
+                                        <Expand className="w-4 h-4 text-gray-600 hover:text-rose-900" />
+                                    </button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    Expandir contenido
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    )
+                }
             </div>
 
             {/* Table */}
@@ -486,38 +525,52 @@ export const MateriasDataTable = ({ fileId }: MateriasDataTableProps) => {
                                     <TableCell>{row.Calificacion}</TableCell>
                                     <TableCell>
                                         <div className="flex gap-2">
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="ghost"
-                                                            onClick={() => startEditing(row)}
-                                                        >
-                                                            <Edit className="h-4 w-4" color="#325286" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        Editar materia
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="ghost"
-                                                            onClick={() => deleteRow(row.Id)}
-                                                        >
-                                                            <Trash2 className="h-4 w-4 text-red-500" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        Eliminar materia
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
+                                            {
+                                                canUpdateMateria && (
+                                                    <TooltipProvider>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="ghost"
+                                                                    onClick={() => {
+                                                                        startEditing(row)
+                                                                    }}
+                                                                >
+                                                                    <Edit className="h-4 w-4" color="#325286" />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                Editar materia
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
+                                                )
+                                            }
+                                            {
+                                                canDeleteMateria && (
+                                                    <TooltipProvider>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="ghost"
+                                                                    onClick={() => {
+                                                                        setDeletedData(row);
+                                                                        setOpenDeleteModal(true);
+                                                                        //deleteRow(row.Id)
+                                                                    }}
+                                                                >
+                                                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                Eliminar materia
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
+                                                )
+                                            }
 
                                         </div>
                                     </TableCell>
@@ -571,6 +624,22 @@ export const MateriasDataTable = ({ fileId }: MateriasDataTableProps) => {
                     <ChevronsRight className="h-4 w-4" />
                 </Button>
             </div>
+            <ConfirmDeleteMateria
+                materiaId={Number(fileId)}
+                openModal={openDeleteModal}
+                setOpenModal={setOpenDeleteModal}
+                deleteRow={deleteRow}
+                deletedData={deletedData}
+            />
+            <ConfirmEditMateria
+                openModal={openEditModal}
+                setOpenModal={setOpenEditModal}
+                handleUpdateNota={handleUpdateNota}
+                editedData={editedData}
+                fetchAndSetData={fetchAndSetData}
+                setEditingRow={setEditingRow}
+                setEditedData={setEditedData}
+            />
         </div>
     );
 };

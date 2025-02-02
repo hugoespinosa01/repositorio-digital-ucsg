@@ -58,7 +58,7 @@ function AuthLandingPage() {
               className="w-full bg-rose-900 hover:bg-rose-800 text-white transition-colors duration-200"
               onClick={handleLogin}
             >
-              Iniciar sesión
+              Ingresar
             </Button>
           </div>
         </div>

@@ -78,6 +78,8 @@ BEGIN
         NoIdentificacion varchar(255),
         Estado int,
         NotaGraduacionSeminario decimal(18, 2),
+        PromMateriasAprobadas decimal(18, 2),
+        PromGraduacion decimal(18, 2),
     );
 END
 
