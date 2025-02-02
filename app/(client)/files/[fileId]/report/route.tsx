@@ -197,6 +197,8 @@ interface ReportType {
     NoIdentificacion: string | null;
     DetalleMaterias: any;
     NotaGraduacionSeminario: number | null;
+    PromGraduacion: number | null;
+    PromMateriasAprobadas: number | null;
 }
 
 Font.register({
@@ -213,7 +215,9 @@ const MyDocument = ({
     Carrera,
     NoIdentificacion,
     DetalleMaterias,
-    NotaGraduacionSeminario
+    NotaGraduacionSeminario,
+    PromGraduacion,
+    PromMateriasAprobadas,
 
 }: ReportType) => (
     <Document>
@@ -280,7 +284,7 @@ const MyDocument = ({
                 </View>
                 <View style={styles.key}>
                     <Text style={styles.bold}>PROMEDIO MATERIAS APROBADAS: </Text>
-                    <Text>{NotaGraduacionSeminario?.toString() + " / 10.00"}</Text>
+                    <Text>{PromMateriasAprobadas?.toString() + " / 10.00"}</Text>
                 </View>
                 <View style={styles.key}>
                     <Text style={styles.bold}>PROMEDIO DE SEMINARIO DE GRADUACIÓN: </Text>
@@ -288,7 +292,7 @@ const MyDocument = ({
                 </View>
                 <View style={styles.key}>
                     <Text style={styles.bold}>PROMEDIO DE GRADUACIÓN: </Text>
-                    <Text>{NotaGraduacionSeminario?.toString() + " / 10.00"}</Text>
+                    <Text>{PromGraduacion?.toString() + " / 10.00"}</Text>
                 </View>
             </View>
 
@@ -388,7 +392,9 @@ export async function GET(request: Request, { params }: { params: { fileId: stri
         Carrera: kardex?.Carrera,
         NoIdentificacion: kardex?.NoIdentificacion,
         DetalleMaterias: kardexDetalle,
-        NotaGraduacionSeminario: Number(kardex?.NotaGraduacionSeminario)
+        NotaGraduacionSeminario: Number(kardex?.NotaGraduacionSeminario),
+        PromGraduacion: Number(kardex?.PromGraduacion),
+        PromMateriasAprobadas: Number(kardex?.PromMateriasAprobadas),
     }
 
     const stream = await renderToStream(<MyDocument {...data} />);

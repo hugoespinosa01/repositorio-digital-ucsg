@@ -95,6 +95,8 @@ model TipoDocumentoKardex {
   Estado                  Int?
   Carrera                 String?                  @db.VarChar(100)
   NotaGraduacionSeminario Decimal?                 @db.Decimal(18, 2)
+  PromMateriasAprobadas   Decimal?                 @db.Decimal(18, 2)
+  PromGraduacion          Decimal?                 @db.Decimal(18, 2)
   DocumentoDetalleKardex  DocumentoDetalleKardex[]
   Documento               Documento                @relation(fields: [IdDocumento], references: [Id], onUpdate: NoAction, map: "IdDocumento_fk")
 }

@@ -10,6 +10,13 @@ import { loadToPinecone } from '@/lib/pinecone';
 import { checkCarrera } from '@/utils/checkCarrera';
 import { Materia } from '@/types/materia';
 import { KardexDetalle } from '@/types/kardexDetalle';
+import { OpenAIApi, Configuration } from 'openai-edge'
+
+const configuration = new Configuration({
+    apiKey: process.env.OPENAI_API_KEY,
+});
+
+const openai = new OpenAIApi(configuration);
 
 dotenv.config();
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
@@ -101,10 +108,11 @@ export async function POST(request: NextRequest) {
 
         let extractedDetails = await extractDetailData(pdfData, 'prebuilt-document');
 
-
         if (!extractedDetails) {
             throw new Error('Error extracting data');
         }
+
+        // let processedData = await processDataWithOpenAI(extractedDetails);
 
         const parsedDetails = parseData(extractedDetails);
 
@@ -238,9 +246,163 @@ export async function POST(request: NextRequest) {
     }
 }
 
+// const processDataWithOpenAI = async (rawData: any) => {
+//     // Configuración de lotes
+//     const BATCH_SIZE = 4000; // Ajusta según necesidad
+//     const MAX_RETRIES = 3;
+//     const DELAY_BETWEEN_BATCHES = 1000; // 1 segundo
+
+//     const splitIntoChunks = (data: any) => {
+//         if (!Array.isArray(data.tables)) return [data];
+
+//         const chunks = [];
+//         let currentChunk: any = { tables: [] };
+//         let currentSize = 0;
+
+//         for (const table of data.tables) {
+//             const tableSize = JSON.stringify(table).length;
+//             if (currentSize + tableSize > BATCH_SIZE) {
+//                 chunks.push(currentChunk);
+//                 currentChunk = { tables: [] };
+//                 currentSize = 0;
+//             }
+//             currentChunk.tables.push(table);
+//             currentSize += tableSize;
+//         }
+
+//         if (currentChunk.tables.length > 0) {
+//             chunks.push(currentChunk);
+//         }
+
+//         return chunks;
+//     };
+
+//     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+//     const processChunk = async (chunk: any, retryCount = 0): Promise<any[]> => {
+//         const prompt = `Genera ÚNICAMENTE un array JSON que siga este esquema. NO incluyas explicaciones ni texto adicional.
+//     REGLAS:
+//     - CICLOS: "PRIMER CURSO", "SEGUNDO CURSO", "TERCER CURSO", etc.
+//     - PERIODO: Años que empiecen con "19"
+//     - MATRÍCULA: Solo valores 1, 2, 3
+//     - CALIFICACIÓN: Número sobre 10 con punto decimal
+//     - Eliminar tildes
+//     - IdDocumentoKardex siempre 0
+//     - Estado siempre 1
+    
+//     ESQUEMA:
+//     [{
+//       "Id": number,
+//       "Ciclo": string,
+//       "Materia": string,
+//       "Periodo": string,
+//       "Calificacion": number,
+//       "NoMatricula": number,
+//       "IdDocumentoKardex": 0,
+//       "Estado": 1
+//     }]
+    
+//     DATOS:
+//     ${JSON.stringify(chunk)}
+    
+//     RESPONDE SOLO CON EL JSON.`;
+
+//         try {
+//             const response = await openai.createChatCompletion({
+//                 model: "gpt-4",
+//                 messages: [
+//                     {
+//                         role: "system",
+//                         content: "Eres un analizador de datos que SOLO responde con JSON válido, sin explicaciones. Procesas todos los datos proporcionados sin excepción."
+//                     },
+//                     {
+//                         role: "user",
+//                         content: prompt
+//                     }
+//                 ],
+//                 max_tokens: 4000,
+//                 temperature: 0,
+//             });
+
+//             const responseData = await response.json();
+//             const content = responseData.choices[0].message?.content || '[]';
+
+//             // Extraer y validar JSON
+//             let parsedData;
+//             try {
+//                 // Intentar encontrar y parsear el JSON
+//                 const jsonMatch = content.match(/$[\s\S]*$/);
+//                 if (!jsonMatch) throw new Error('No JSON found');
+//                 parsedData = JSON.parse(jsonMatch[0]);
+//             } catch (parseError) {
+//                 if (parseError instanceof Error) {
+//                     throw new Error(`JSON parsing failed: ${parseError.message}`);
+//                 } else {
+//                     throw new Error('JSON parsing failed');
+//                 }
+//             }
+
+//             return Array.isArray(parsedData) ? parsedData : [];
+
+//         } catch (error) {
+//             if (retryCount < MAX_RETRIES) {
+//                 await delay(DELAY_BETWEEN_BATCHES * (retryCount + 1));
+//                 return processChunk(chunk, retryCount + 1);
+//             }
+//             throw error;
+//         }}
+
+//         // Procesar todos los datos
+//         const chunks = splitIntoChunks(rawData);
+//         let allResults: any[] = [];
+//         let currentId = 1;
+
+//         for (const chunk of chunks) {
+//             const chunkResults = await processChunk(chunk);
+
+//             // Procesar y validar los resultados del chunk
+//             const processedResults = chunkResults.map((item: any) => ({
+//                 Id: currentId++,
+//                 Ciclo: item.Ciclo?.toUpperCase() || 'N/A',
+//                 Materia: item.Materia?.normalize('NFD')
+//                     .replace(/[\u0300-\u036f]/g, '')
+//                     .toUpperCase(),
+//                 Periodo: item.Periodo || 'N/A',
+//                 Calificacion: parseFloat(item.Calificacion) || 0,
+//                 NoMatricula: [1, 2, 3].includes(item.NoMatricula) ? item.NoMatricula : 1,
+//                 IdDocumentoKardex: 0,
+//                 Estado: 1
+//             }));
+
+//             allResults = [...allResults, ...processedResults];
+
+//             // Esperar entre chunks para evitar límites de rate
+//             if (chunks.length > 1) await delay(DELAY_BETWEEN_BATCHES);
+//         }
+
+//         return allResults;
+
+//         // Extraer solo el JSON de la respuesta
+//         // const jsonMatch = content.match(/$[\s\S]*$/);
+//         // if (!jsonMatch) {
+//         //     throw new Error('No se encontró un JSON válido en la respuesta');
+//         // }
+
+//         // // Parsear el JSON extraído
+//         // //const parsedData = JSON.parse(jsonMatch[0]);
+
+//         // // Validar la estructura del JSON
+//         // if (!Array.isArray(parsedData)) {
+//         //     throw new Error('La respuesta no es un array JSON válido');
+//         // }
+//         // return parsedData; // Parsear el resultado como JSON
+
+// };
+
 const parseData = (tables: any) => {
     const rows: KardexDetalle[] = [];
     let cicloGlobal = ""; // Este valor será propagado entre tablas
+    let ultimoPeriodo = ""; // Para almacenar el último periodo encontrado y propagarlo
+
 
     // Iterar a través de todas las tablas en el OCR
     tables.forEach((table: any) => {
@@ -280,6 +442,11 @@ const parseData = (tables: any) => {
                 const materia = row[mapping.materiaIndex!]?.trim() || "";
                 if (!materia || materia === "ASIGNATURAS") return; // Saltamos filas vacías o encabezados
 
+                // Buscar el periodo
+                const periodo = extractPeriodoFromRow(row) || ultimoPeriodo; // Si no se encuentra un nuevo periodo, usar el último válido
+                if (periodo) ultimoPeriodo = periodo; // Actualizamos el último periodo encontrado
+
+
                 // Determinamos qué matrícula está marcada
                 const noMatricula = determineMatricula(row, mapping.matriculasIndexes!);
 
@@ -292,10 +459,10 @@ const parseData = (tables: any) => {
                         Id: rowIndex + 1,
                         Ciclo: cicloPropagado || "", // Usamos el ciclo propagado o un valor predeterminado
                         Materia: materia,
-                        Periodo: extractPeriodo(row), // Si aplica, extraer período
+                        Periodo: periodo || "", // Si aplica, extraer período
                         Calificacion: Number(calificacion),
                         NoMatricula: noMatricula,
-                        IdDocumentoKardex: 0, // Cambiar después
+                        IdDocumentoKardex: 0, // Cambiar después al momento de guardar en base de datos
                         Estado: 1 //Predeterminado
                     };
                     rows.push(kardexDetalle);
@@ -388,13 +555,23 @@ const extractNivelOCicloFromRow = (row: any): string | null => {
     return match ? match[0].trim() : null; // Retorna el nivel encontrado o null
 };
 
-// Función para extraer el periodo del texto
-const extractPeriodo = (row: any): string => {
-    // Implementa la lógica para extraer el periodo
-    const periodoMatch = Object.values(row)
-        .join(" ")
-        .match(/\d{4}/);
-    return periodoMatch ? periodoMatch[0] : "";
+const extractPeriodoFromRow = (row: any): string | null => {
+    const contenidoFila = Object.values(row).join(" ").toUpperCase();
+
+    // Búsqueda por palabras clave específicas
+    const matchAnio = contenidoFila.match(/\b19\d{2}\b/); // Buscar números que empiecen con "19"
+    if (matchAnio) return matchAnio[0]; // Si encontramos un año, lo retornamos
+
+    // Búsqueda por palabras clave "AÑO", "FINAL", o "SEMESTRE"
+    const matchPalabrasClave = contenidoFila.match(/AÑO|FINAL|SEMESTRE/);
+    if (matchPalabrasClave) {
+        // En caso de detectar palabras clave, tratamos de encontrar un año cercano
+        const anioCercano = contenidoFila.match(/\b19\d{2}\b/);
+        if (anioCercano) return anioCercano[0]; // Retornar el año relacionado
+        return matchPalabrasClave[0]; // Retornamos la palabra clave en caso de no haber año
+    }
+
+    return null; // Si no se encuentra nada, retornamos null
 };
 
 const populateDetalleMaterias = async (datosExtraidos: any, fields: any) => {
