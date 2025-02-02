@@ -1,6 +1,7 @@
 import { getIdToken } from '@/utils/session-token-accessor';
 import { getServerSession } from 'next-auth';
 import auth from '@/lib/auth';
+import { redis } from '@/lib/redis';
 
 export async function GET() {
     const session = await getServerSession(auth);
@@ -14,6 +15,7 @@ export async function GET() {
 
         try {
             await fetch(url, { method: 'GET' });
+            await redis.del('permissions');
         } catch (err) {
             console.error(err);
             return new Response("Error", { status: 500 });

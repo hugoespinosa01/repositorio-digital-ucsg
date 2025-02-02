@@ -86,6 +86,7 @@ export async function GET(request: Request, { params }: Params) {
         const data = await prisma.documentoDetalleKardex.findMany({
             where: {
                 IdDocumentoKardex: Number(id),
+                Estado: 1,
             },
         });
 

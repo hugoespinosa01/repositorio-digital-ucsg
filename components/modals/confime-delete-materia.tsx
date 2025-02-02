@@ -10,13 +10,11 @@ import { KardexDetalle } from '@/types/kardexDetalle';
 export default function ConfirmDeleteMateria({
     openModal,
     setOpenModal,
-    materiaId,
     deleteRow,
     deletedData
 }: {
     openModal: boolean,
     setOpenModal: (open: boolean) => void,
-    materiaId: number | undefined,
     deleteRow: (id: number) => void,
     deletedData: KardexDetalle | null
 }) {

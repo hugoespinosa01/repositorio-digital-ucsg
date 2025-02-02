@@ -40,6 +40,8 @@ interface ColumnMapping {
     cicloRow?: number;
     periodoRow?: number;
     calificacionIndexes?: number[];
+    periodoColumnIndex?: number;
+    supletorioColumnIndex?: number;
 }
 
 
@@ -288,7 +290,7 @@ export async function POST(request: NextRequest) {
 //     - Eliminar tildes
 //     - IdDocumentoKardex siempre 0
 //     - Estado siempre 1
-    
+
 //     ESQUEMA:
 //     [{
 //       "Id": number,
@@ -300,10 +302,10 @@ export async function POST(request: NextRequest) {
 //       "IdDocumentoKardex": 0,
 //       "Estado": 1
 //     }]
-    
+
 //     DATOS:
 //     ${JSON.stringify(chunk)}
-    
+
 //     RESPONDE SOLO CON EL JSON.`;
 
 //         try {
@@ -443,7 +445,9 @@ const parseData = (tables: any) => {
                 if (!materia || materia === "ASIGNATURAS") return; // Saltamos filas vacías o encabezados
 
                 // Buscar el periodo
-                const periodo = extractPeriodoFromRow(row) || ultimoPeriodo; // Si no se encuentra un nuevo periodo, usar el último válido
+                const periodo = mapping.periodoColumnIndex !== undefined ?
+                    row[mapping.periodoColumnIndex]?.trim() || "" :
+                    extractPeriodoFromRow(row); // Tu lógica previa para el caso normal
                 if (periodo) ultimoPeriodo = periodo; // Actualizamos el último periodo encontrado
 
 
@@ -496,25 +500,35 @@ const findTableStructure = (cells: any[]): ColumnMapping | null => {
         const content = cell.content?.toString().trim().toUpperCase() || "";
 
         // Encontrar columna de ASIGNATURAS
-        if (content.includes("ASIGNATURA")) {
+        if (content.includes("ASIGNATURA") || content.includes("MATERIAS")) {
             mapping.materiaIndex = cell.columnIndex;
         }
 
         // Encontrar columnas de MATRÍCULA
-        if (content.includes("MATRICULA")) {
+        if (content.includes("MATRICULA") || content.includes("MTR")) {
             if (!mapping.matriculasIndexes) mapping.matriculasIndexes = [];
             mapping.matriculasIndexes.push(cell.columnIndex);
         }
 
         // Buscar fila que contiene el ciclo (puede estar en la columna de asignaturas)
-        if (content.match(/\d{4}-[III]+|NIVEL \d{3}|PRIMER CURSO|SEGUNDO CURSO|TERCER CURSO/i)) {
+        if (content.match(/\d{4}-[III]+|NIVEL \d{3}|PRIMER CURSO|SEGUNDO CURSO|TERCER CURSO|CUARTO CURSO|QUINTO CURSO|SEXTO CURSO|SEMESTRE/i)) {
             mapping.cicloRow = cell.rowIndex;
         }
 
         // Buscar fila que contiene el periodo
-        if (content.match(/\d{4}/)) {
+        if (content.match(/\d{4}/) || content.includes("AÑO") || content.includes("SEMESTRE")) {
             mapping.periodoRow = cell.rowIndex;
         }
+
+        // Encontrar la columna de AÑO (PERIODO) para la carrera de Computación
+        if (content.includes("AÑO")) {
+            mapping.periodoColumnIndex = cell.columnIndex;
+        }
+
+        if (content.includes("SUPLET")) {
+            mapping.supletorioColumnIndex = cell.columnIndex;
+        }
+
 
         // Encontrar columnas de calificación ("PROMED", "FINAL", etc.)
         if (content.includes("PROMED") || content.includes("FINAL")) {
@@ -551,7 +565,7 @@ const extractNivelOCicloFromRow = (row: any): string | null => {
     const contenidoFila = Object.values(row)
         .join(" ")
         .toUpperCase();
-    const match = contenidoFila.match(/NIVEL \d{3}|PRIMER CURSO|SEGUNDO CURSO|CURSO|TERCER|CUARTO|QUINTO|SEXTO|TERCER CURSO/i);
+    const match = contenidoFila.match(/NIVEL \d{3}|PRIMER CURSO|SEGUNDO CURSO|TERCER CURSO|CUARTO CURSO|QUINTO CURSO|SEXTO CURSO|TERCER CURSO/i);
     return match ? match[0].trim() : null; // Retorna el nivel encontrado o null
 };
 

@@ -5,7 +5,6 @@ import { checkCarrera } from '@/utils/checkCarrera';
 import { searchParentFolders } from '@/utils/searchParentFolders';
 import { getServerSession } from 'next-auth';
 import auth from '@/lib/auth';
-import type { Folder } from "@/types/folder";
 
 export async function GET(request: NextRequest) {
   try {

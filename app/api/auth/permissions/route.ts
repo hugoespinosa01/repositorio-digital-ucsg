@@ -1,10 +1,26 @@
 import { getAccessToken } from "@/utils/session-token-accessor";
 import { getServerSession } from "next-auth";
 import auth from "@/lib/auth";
+import { redis } from "@/lib/redis";
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
+
+        const cachedPermissions = await redis.get('permissions');
+
+        if (cachedPermissions) {
+            return new Response(JSON.stringify({
+                message: 'Permisos obtenidos correctamente con cache',
+                data: JSON.parse(cachedPermissions)
+            }), {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                status: 200,
+            });
+        }
+
         const accessToken = await getAccessToken();
         const session = await getServerSession(auth);
 
@@ -54,7 +70,9 @@ export async function GET() {
         });
 
         const permissions = await rolesResponse.json();
-        
+
+        await redis.set('permissions', JSON.stringify(permissions.authorization));
+
         return new Response(JSON.stringify({
             message: 'Permisos obtenidos correctamente',
             data: permissions.authorization

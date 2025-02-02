@@ -625,7 +625,6 @@ export const MateriasDataTable = ({ fileId, canCreateMateria, canUpdateMateria, 
                 </Button>
             </div>
             <ConfirmDeleteMateria
-                materiaId={Number(fileId)}
                 openModal={openDeleteModal}
                 setOpenModal={setOpenDeleteModal}
                 deleteRow={deleteRow}
