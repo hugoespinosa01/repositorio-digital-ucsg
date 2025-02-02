@@ -30,12 +30,11 @@ export const DeleteCell = ({ row, table }: Props) => {
                 <Trash size={15} color="#c84141" />
             </Button>
 
-            <ConfirmDeleteMateria
+            {/* <ConfirmDeleteMateria
                 openModal={openModal}
                 setOpenModal={setOpenModal}
                 materiaId={row.original.Id}
-                persistSamePage={true}
-            />
+            /> */}
         </>
     )
 }
