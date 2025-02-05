@@ -2,6 +2,7 @@ import React from 'react';
 import { Page, Text, View, Document, StyleSheet, renderToStream, Image, Font } from '@react-pdf/renderer';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import logoUcsg from '@/img/logo_ucsg.png';
 
 // Create styles
 const styles = StyleSheet.create({
@@ -226,7 +227,7 @@ const MyDocument = ({
                 <View style={styles.containerHeader}>
                     <View style={styles.colHeaderImage}>
                         <Image
-                            src={"img/logo_ucsg.png"}
+                            src={"public/logo_ucsg.png"}
                             style={styles.image}
                         />
                     </View>
