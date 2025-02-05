@@ -38,6 +38,7 @@ const auth: NextAuthOptions = {
             clientId: process.env.KEYCLOAK_BACKEND_CLIENT_ID || '',
             clientSecret: process.env.KEYCLOAK_CLIENT_SECRET || '',
             issuer: process.env.KEYCLOAK_ISSUER || '',
+            checks: [ 'none']
         }),
     ],
     callbacks: {
