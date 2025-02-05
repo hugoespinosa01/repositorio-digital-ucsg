@@ -1,4 +1,3 @@
-'use server';
 import { Redis } from "ioredis"
 import dotenv from 'dotenv';
 
