@@ -81,6 +81,9 @@ const auth: NextAuthOptions = {
             session.user.cedula = token.decoded.cedula;
             return session;
         },
+        async redirect({ url, baseUrl }) {
+            return baseUrl;
+        }
     },
     pages: {
         error: '/unAuthorized',
