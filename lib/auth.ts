@@ -83,7 +83,6 @@ const auth: NextAuthOptions = {
         },
     },
     pages: {
-        verifyRequest: '/unAuthorized',
         error: '/unAuthorized',
     }
 };
