@@ -20,23 +20,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <Suspense>
-      <SessionProviderWrapper>
-        <html lang="es" suppressHydrationWarning={true}>
-          <body className={GeistSans.className}>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-              <FolderProvider>
-                <ChildrenProvider>
+    <SessionProviderWrapper>
+      <html lang="es" suppressHydrationWarning={true}>
+        <body className={GeistSans.className}>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <FolderProvider>
+              <ChildrenProvider>
+                <Suspense>
                   <div vaul-drawer-wrapper="" aria-hidden="false" className="bg-background">
                     {children}
                   </div>
-                </ChildrenProvider>
-              </FolderProvider>
-              <Toaster />
-            </ThemeProvider>
-          </body>
-        </html>
-      </SessionProviderWrapper>
-    </Suspense>
+                </Suspense>
+              </ChildrenProvider>
+            </FolderProvider>
+            <Toaster />
+          </ThemeProvider>
+        </body>
+      </html>
+    </SessionProviderWrapper>
   );
 }
