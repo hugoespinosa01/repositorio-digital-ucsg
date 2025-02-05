@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const getRedisUrl = () => {
-    return process.env.REDIS_URL || "redis://localhost:6379"
+    return process.env.REDIS_URL || "rediss://default:AXHgAAIjcDFiMDFlODEyNDI5MWU0NzU4OGZkOWVlMjFhOGM4Mjc5NHAxMA@integral-termite-29152.upstash.io:6379"
 }
 
 // Configuración para Redis
