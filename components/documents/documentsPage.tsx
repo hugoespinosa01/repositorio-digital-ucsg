@@ -8,7 +8,6 @@ import noDocuments from '@/img/no_documents.png';
 import CreateFolderModal from './createFolderModal';
 import { useContext } from 'react';
 import { FolderContext } from '@/context/folder-context';
-import { ChildrenContext } from '@/context/children-context';
 import { FolderCard } from '@/components/custom-folder-card';
 import { Folder } from '@/types/folder';
 import MoveFolderModal from './moveFolderModal';
@@ -26,8 +25,6 @@ import { SearchResult } from '@/types/searchResult';
 import { TextShimmer } from '../loading-text-effect';
 import { X } from 'lucide-react';
 import useAuthRoles from '@/hooks/useAuthRoles';
-import { Button } from '../ui/button';
-
 
 const PAGE_SIZE = 6;
 

@@ -7,6 +7,7 @@ import { FolderProvider } from '@/context/folder-context'
 import { ChildrenProvider } from '@/context/children-context';
 import SessionProviderWrapper from '@/utils/sessionProviderWrapper';
 import { AuthProvider } from '@/context/auth-context';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: 'Sinergia | Repositorio digital documental',
@@ -19,7 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <SessionProviderWrapper>
+    <Suspense>
+      <SessionProviderWrapper>
         <html lang="es" suppressHydrationWarning={true}>
           <body className={GeistSans.className}>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
@@ -34,6 +36,7 @@ export default function RootLayout({
             </ThemeProvider>
           </body>
         </html>
-    </SessionProviderWrapper>
+      </SessionProviderWrapper>
+    </Suspense>
   );
 }

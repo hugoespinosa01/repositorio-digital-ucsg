@@ -53,14 +53,26 @@ function AuthLandingPage() {
           </div>
 
           {/* Botón de Inicio de Sesión */}
-          <div className="w-full">
-            <Button
-              className="w-full bg-rose-900 hover:bg-rose-800 text-white transition-colors duration-200"
-              onClick={handleLogin}
-            >
-              Ingresar
-            </Button>
-          </div>
+
+          {
+            loading ? (<div className="w-full">
+              <Button
+                className="w-full bg-rose-900 hover:bg-rose-800 text-white transition-colors duration-200"
+                disabled
+              >
+                Ingresando...
+              </Button>
+            </div>) : (<div className="w-full">
+              <Button
+                className="w-full bg-rose-900 hover:bg-rose-800 text-white transition-colors duration-200"
+                onClick={handleLogin}
+              >
+                Ingresar
+              </Button>
+            </div>)
+          }
+
+
         </div>
       </Card>
 
@@ -69,9 +81,9 @@ function AuthLandingPage() {
         <div className="absolute left-[50%] top-[50%] -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] opacity-[0.02] dark:opacity-[0.05]">
           <svg viewBox="0 0 100 100" className="w-full h-full fill-rose-900">
             <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-              <path d="M 10 0 L 0 0 0 10" fill="none" stroke="currentColor" strokeWidth="0.5"/>
+              <path d="M 10 0 L 0 0 0 10" fill="none" stroke="currentColor" strokeWidth="0.5" />
             </pattern>
-            <rect width="100" height="100" fill="url(#grid)"/>
+            <rect width="100" height="100" fill="url(#grid)" />
           </svg>
         </div>
       </div>
