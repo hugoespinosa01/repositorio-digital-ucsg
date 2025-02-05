@@ -4,13 +4,13 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ContainerScroll } from "@/components/scroll-custom-comp";
 import Image from "next/image";
-import screen from "@/img/screen.png";
+import screen from "@/public/screen.png";
 import { IconCloud } from '@/components/icon-cloud';
 import { LayoutDashboard, Loader2, LogIn } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useSession, signIn } from 'next-auth/react';
 import { LogoutButton } from '@/components/logoutButton';
-import { Suspense, useState } from 'react';
+import { useState } from 'react';
 
 const slugs = [
   "typescript",

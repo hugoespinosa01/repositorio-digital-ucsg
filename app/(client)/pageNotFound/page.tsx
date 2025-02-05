@@ -1,6 +1,6 @@
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import notFound from '../../../img/not_found.jpg'
+import notFound from '../../../public/not_found.jpg'
 import Image from 'next/image';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";

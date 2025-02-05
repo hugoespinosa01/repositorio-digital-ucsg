@@ -4,7 +4,7 @@ import { useState, useEffect, use } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import LoadingDocuments from './loading';
 import Image from 'next/image';
-import noDocuments from '@/img/no_documents.png';
+import noDocuments from '@/public/no_documents.png';
 import CreateFolderModal from './createFolderModal';
 import { useContext } from 'react';
 import { FolderContext } from '@/context/folder-context';
