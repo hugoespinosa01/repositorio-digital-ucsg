@@ -45,7 +45,7 @@ function AuthLandingPage() {
           {/* Mensaje de Bienvenida */}
           <div className="space-y-2">
             <h1 className="text-2xl font-semibold tracking-tight">
-              Bienvenido a Sinergia
+              Bienvenido a sinergIA
             </h1>
             <p className="text-muted-foreground">
               Por favor, inicia sesión para acceder al contenido

@@ -13,7 +13,7 @@ import UploadPage from "../../../components/upload/uploadPage";
 
 export default function DashboardPage() {
   return (
-    <ContentLayout title="Sinergia">
+    <ContentLayout title="sinergIA">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>

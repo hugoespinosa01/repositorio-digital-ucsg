@@ -58,7 +58,7 @@ export default function DocumentDetail() {
   }
 
   return (
-    <ContentLayout title="Sinergia">
+    <ContentLayout title="sinergIA">
       {
         loading ? (
           <LoadingBreadcrumb />

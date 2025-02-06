@@ -62,7 +62,7 @@ useEffect(() => {
   }
 
   return (
-    <ContentLayout title="Sinergia">
+    <ContentLayout title="sinergIA">
       {
         loading ? (
           <LoadingBreadcrumb />

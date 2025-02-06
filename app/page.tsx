@@ -11,6 +11,8 @@ import { useSearchParams } from 'next/navigation';
 import { useSession, signIn } from 'next-auth/react';
 import { LogoutButton } from '@/components/logoutButton';
 import { useState } from 'react';
+import { Hammersmith_One } from 'next/font/google';
+import logosinergIA from '@/public/logo_sinergIA.png';
 
 const slugs = [
   "typescript",
@@ -25,7 +27,13 @@ const slugs = [
   "github",
   "visualstudiocode",
   "tailwindcss",
-]
+];
+
+const hammersmith = Hammersmith_One({
+  subsets: ['latin'],
+  weight: '400', // Define los pesos necesarios
+  display: 'swap',        // Reduce el impacto del cambio de fuentes
+})
 
 export default function Home() {
 
@@ -43,14 +51,23 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <main className="min-h-[calc(100vh-57px-97px)] flex-1">
+    <div className="flex flex-col min-h-screen overflow-hidden bg-gradient-to-br from-rose-50 via-white to-red-50">
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#ff000008_1px,transparent_1px),linear-gradient(to_bottom,#ff000008_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+      <main className="min-h-[calc(100vh-57px-97px)] flex-1 ">
         <div className='container relative pb-10'>
           <div className='flex items-center justify-center h-screen'>
             <section className="mx-auto flex max-w-[980px] flex-col items-center gap-4 py-10 md:py-12 md:pb-8 lg:py-24 lg:pb-6">
-              <h1 className="text-6xl font-bold drop-shadow-[0px_0px_45px_rgba(255,0,123,0.7)]">
-                Sinergia
-              </h1>
+              <div className='flex items-center space-x-4'>
+                <Image
+                  src={logosinergIA}
+                  alt="Logo sinergIA"
+                  width={60}
+                  height={60}
+                />
+                <h1 className={`text-8xl font-bold ${hammersmith.className}`}>
+                  sinergIA
+                </h1>
+              </div>
               <span className="max-w-[750px] mt-3 text-center text-lg font-light text-foreground">Gestiona tus documentos con inteligencia artificial</span>
               <div className="flex w-full items-center justify-center space-x-4 py-4 md:pb-6">
                 {

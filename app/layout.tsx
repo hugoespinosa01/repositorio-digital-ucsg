@@ -6,7 +6,6 @@ import { GeistSans } from 'geist/font/sans';
 import { FolderProvider } from '@/context/folder-context'
 import { ChildrenProvider } from '@/context/children-context';
 import SessionProviderWrapper from '@/utils/sessionProviderWrapper';
-import { AuthProvider } from '@/context/auth-context';
 import { Suspense } from 'react';
 
 export const metadata: Metadata = {

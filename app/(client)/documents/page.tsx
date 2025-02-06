@@ -14,7 +14,7 @@ import DocumentsPage from "@/components/documents/documentsPage";
 export default function DashboardPage() {
 
   return (
-    <ContentLayout title="Sinergia">
+    <ContentLayout title="sinergIA">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>

@@ -13,7 +13,7 @@ import AccountDetails from "@/components/account/account-card";
 
 export default function AccountPage() {
   return (
-    <ContentLayout title="Sinergia">
+    <ContentLayout title="sinergIA">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
