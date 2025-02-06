@@ -12,7 +12,7 @@ import { useSession, signIn } from 'next-auth/react';
 import { LogoutButton } from '@/components/logoutButton';
 import { useState } from 'react';
 import { Hammersmith_One } from 'next/font/google';
-import logosinergIA from '@/public/logo_sinergIA.png';
+import logosinergIA from '@/public/logo_sinergia.png';
 
 const slugs = [
   "typescript",
