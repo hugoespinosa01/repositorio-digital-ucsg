@@ -32,7 +32,7 @@ const slugs = [
 const hammersmith = Hammersmith_One({
   subsets: ['latin'],
   weight: '400', // Define los pesos necesarios
-  display: 'swap',        // Reduce el impacto del cambio de fuentes
+  style: 'normal'
 })
 
 export default function Home() {
@@ -64,7 +64,7 @@ export default function Home() {
                   width={60}
                   height={60}
                 />
-                <h1 className={`text-8xl font-bold ${hammersmith.className}`}>
+                <h1 className={`text-8xl font-bold text-black ${hammersmith.className}`}>
                   sinergIA
                 </h1>
               </div>
@@ -129,7 +129,7 @@ export default function Home() {
                 <>
                   <h1 className="text-4xl font-semibold text-black dark:text-white">
                     Gestión documental con<br />
-                    <span className="text-4xl md:text-[6rem] font-bold mt-1 leading-none">
+                    <span className="text-4xl md:text-[6rem] font-bold text-black dark:text-white mt-1 leading-none">
                       Inteligencia Artificial
                     </span>
                   </h1>
@@ -153,7 +153,7 @@ export default function Home() {
             </div>
             <div className='mx-auto ml-28 flex items-center'>
               <h4
-                className='text-2xl text-foreground'
+                className='text-2xl text-foreground dark:text-white text-black'
               >
                 Construido con las últimas tecnologías de vanguardia para la
                 <span className='text-primary'> Falcultad de Ingeniería</span>
