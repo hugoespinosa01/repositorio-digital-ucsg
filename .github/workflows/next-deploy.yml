@@ -18,7 +18,6 @@ jobs:
     steps:
       # Cache the build directory for future builds.
       - uses: actions/cache@v4
-      - name: Cache node modules and build directory
         with:
           path: |
             ~/.npm
