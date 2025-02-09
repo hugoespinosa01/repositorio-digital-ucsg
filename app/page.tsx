@@ -52,8 +52,8 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen overflow-hidden bg-gradient-to-br from-rose-50 via-white to-red-50">
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#ff000008_1px,transparent_1px),linear-gradient(to_bottom,#ff000008_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+    <div className="flex flex-col min-h-screen overflow-hidden">
+      {/* <div className="absolute inset-0 bg-[linear-gradient(to_right,#ff000008_1px,transparent_1px),linear-gradient(to_bottom,#ff000008_1px,transparent_1px)] bg-[size:24px_24px]"></div> */}
       <main className="min-h-[calc(100vh-57px-97px)] flex-1 ">
         <div className='container relative pb-10'>
           <div className='flex items-center justify-center h-screen'>
@@ -65,7 +65,7 @@ export default function Home() {
                   width={60}
                   height={60}
                 />
-                <h1 className={`text-8xl font-bold `}>
+                <h1 className={`text-8xl font-bold ${hammersmith.className}`}>
                   sinergIA
                 </h1>
               </div>
