@@ -32,7 +32,8 @@ const slugs = [
 const hammersmith = Hammersmith_One({
   subsets: ['latin'],
   weight: '400', // Define los pesos necesarios
-  style: 'normal'
+  style: 'normal',
+  display: 'swap'
 })
 
 export default function Home() {
@@ -64,11 +65,11 @@ export default function Home() {
                   width={60}
                   height={60}
                 />
-                <h1 className={`text-8xl font-bold text-black ${hammersmith.className}`}>
+                <h1 className={`text-8xl font-bold text-black dark:text-white ${hammersmith.className}`}>
                   sinergIA
                 </h1>
               </div>
-              <span className="max-w-[750px] mt-3 text-center text-lg font-light text-foreground">Gestiona tus documentos con inteligencia artificial</span>
+              <span className="max-w-[750px] mt-3 text-center text-lg font-light text-black dark:text-white text-foreground">Gestiona tus documentos con inteligencia artificial</span>
               <div className="flex w-full items-center justify-center space-x-4 py-4 md:pb-6">
                 {
                   /* Cuando el estado de autenticación se esté cargando */
@@ -165,7 +166,7 @@ export default function Home() {
       </main>
       <footer className="py-6 md:py-0 border-t border-border/40">
         <div className="container flex flex-col items-center justify-center gap-4 md:h-24 md:flex-row">
-          <p className='text-balance text-center text-sm leading-loose text-muted-foreground'>
+          <p className='text-balance text-center text-sm leading-loose text-muted-foreground text-black dark:text-white'>
             Hecho por Hugo Espinosa y Denisse Ibarra para la UCSG. Todos los derechos reservados
           </p>
         </div>
