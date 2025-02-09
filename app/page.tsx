@@ -52,90 +52,78 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen overflow-hidden bg-gradient-to-br from-rose-50 via-white to-red-50">
-      {/* <div className="absolute inset-0 bg-[linear-gradient(to_right,#ff000008_1px,transparent_1px),linear-gradient(to_bottom,#ff000008_1px,transparent_1px)] bg-[size:24px_24px]"></div> */}
-      <main className="min-h-[calc(100vh-57px-97px)] flex-1 ">
-        <div className='container relative pb-10'>
-          <div className='flex items-center justify-center h-screen'>
-            <section className="mx-auto flex max-w-[980px] flex-col items-center gap-4 py-10 md:py-12 md:pb-8 lg:py-24 lg:pb-6">
+    <div className="flex flex-col min-h-screen overflow-hidden bg-gradient-to-br from-rose-50 via-white to-red-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ff000008_1px,transparent_1px),linear-gradient(to_bottom,#ff000008_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+
+      <main className="min-h-[calc(100vh-57px-97px)] flex-1">
+        <div className='container relative pb-10 px-4 sm:px-6 lg:px-8'>
+          <div className='flex items-center justify-center min-h-screen'>
+            <section className="mx-auto flex max-w-[980px] flex-col items-center gap-4 py-6 sm:py-10 md:py-12 lg:py-24">
+              {/* Logo y Título */}
               <div className='flex items-center space-x-4'>
                 <Image
                   src={logosinergIA}
                   alt="Logo sinergIA"
-                  width={60}
-                  height={60}
+                  width={40}
+                  height={40}
+                  className="sm:w-[60px] sm:h-[60px]"
                 />
-                <h1 className={`text-8xl font-bold ${hammersmith.className}`}>
+                <h1 className={`text-4xl sm:text-6xl lg:text-8xl font-bold ${hammersmith.className} text-black dark:text-white`}>
                   sinergIA
                 </h1>
               </div>
-              <span className="max-w-[750px] mt-3 text-center text-lg font-light  text-foreground">Gestiona tus documentos con inteligencia artificial</span>
-              <div className="flex w-full items-center justify-center space-x-4 py-4 md:pb-6">
-                {
-                  /* Cuando el estado de autenticación se esté cargando */
-                  status === 'loading' ? (
-                    <Button
-                      variant={'default'}
-                      size={'sm'}
-                      disabled
-                    >Cargando...
-                    </Button>
-                  ) :
-                    /* Cuando esté autenticado y haya una sesión vigente */
-                    status === 'authenticated' && session ? (
-                      <>
-                        <Link href={"/documents?page=1"}>
-                          <Button
-                            variant={'default'}
-                            size={'sm'}
-                          >Ir a panel de control
-                            <LayoutDashboard className="ml-2 w-4 h-4" />
-                          </Button>
-                        </Link>
-                        <LogoutButton />
-                      </>
-                    ) :
-                      /* Si no está autenticado */
 
-                      loading ? (
-                        <Button
-                          variant="default"
-                          className="ml-4"
-                          size={'sm'}
-                          disabled
-                        >
-                          Iniciando sesión...
-                          <Loader2 className="ml-2 w-4 h-4 animate-spin" />
-                        </Button>
-                      ) :
-                        (
-                          <Button
-                            variant="default"
-                            className="ml-4"
-                            onClick={handleLogin}
-                            size={'sm'}
-                          >
-                            Iniciar sesión
-                            <LogIn className="ml-2 w-4 h-4" />
-                          </Button>
+              {/* Subtítulo */}
+              <span className="max-w-[90%] sm:max-w-[750px] mt-2 sm:mt-3 text-center text-base sm:text-lg font-light text-black dark:text-white">
+                Gestiona tus documentos con inteligencia artificial
+              </span>
 
-                        )
-                }
+              {/* Botones de autenticación */}
+              <div className="flex w-full items-center justify-center space-x-2 sm:space-x-4 py-4">
+                {status === 'loading' ? (
+                  <Button variant={'default'} size={'sm'} disabled>
+                    Cargando...
+                  </Button>
+                ) : status === 'authenticated' && session ? (
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                    <Link href={"/documents?page=1"}>
+                      <Button variant={'default'} size={'sm'}>
+                        Ir a panel de control
+                        <LayoutDashboard className="ml-2 w-4 h-4" />
+                      </Button>
+                    </Link>
+                    <LogoutButton />
+                  </div>
+                ) : loading ? (
+                  <Button variant="default" size={'sm'} disabled>
+                    Iniciando sesión...
+                    <Loader2 className="ml-2 w-4 h-4 animate-spin" />
+                  </Button>
+                ) : (
+                  <Button variant="default" size={'sm'} onClick={handleLogin}>
+                    Iniciar sesión
+                    <LogIn className="ml-2 w-4 h-4" />
+                  </Button>
+                )}
               </div>
             </section>
           </div>
-          <div className="w-full flex justify-center relative">
+
+          {/* Sección de Scroll Container */}
+          <div className="w-full flex justify-center relative px-4 sm:px-0">
             <ContainerScroll
               titleComponent={
                 <>
-                  <h1 className="text-4xl font-semibold ">
+                  <h1 className="text-2xl sm:text-4xl  font-semibold">
                     Gestión documental con<br />
-                    <span className="text-4xl md:text-[6rem] font-bold  mt-1 leading-none">
+                    <span className="text-4xl md:text-[6rem] font-bold mt-1 leading-none">
                       Inteligencia Artificial
                     </span>
                   </h1>
                 </>
+
               }
+
             >
               <Image
                 src={screen}
@@ -148,25 +136,25 @@ export default function Home() {
             </ContainerScroll>
           </div>
 
-          <div className="w-full flex">
-            <div className="relative flex size-full max-w-lg items-center justify-center overflow-hidden rounded-lg border bg-background px-20 pb-20 pt-8 ">
+          {/* Sección de Tecnologías */}
+          <div className="w-full flex flex-col lg:flex-row gap-8 mt-8 sm:mt-16">
+            <div className="relative flex w-full lg:max-w-lg items-center justify-center overflow-hidden rounded-lg border px-4 sm:px-20 py-8">
               <IconCloud iconSlugs={slugs} />
             </div>
-            <div className='mx-auto ml-28 flex items-center'>
-              <h4
-                className='text-2xl text-foreground dark:text-white text-black'
-              >
+            <div className='flex items-center justify-center lg:justify-start lg:ml-8 xl:ml-28 px-4'>
+              <h4 className='text-xl sm:text-2xl text-center lg:text-left text-black dark:text-white'>
                 Construido con las últimas tecnologías de vanguardia para la
                 <span className='text-primary'> Falcultad de Ingeniería</span>
               </h4>
             </div>
           </div>
-
         </div>
       </main>
-      <footer className="py-6 md:py-0 border-t border-border/40">
-        <div className="container flex flex-col items-center justify-center gap-4 md:h-24 md:flex-row">
-          <p className='text-balance text-center text-sm leading-loose text-muted-foreground'>
+
+      {/* Footer */}
+      <footer className="py-4 sm:py-6 md:py-0 border-t border-border/40">
+        <div className="container flex flex-col items-center justify-center gap-4 md:h-24 md:flex-row px-4">
+          <p className='text-balance text-center text-xs sm:text-sm leading-loose text-black dark:text-white'>
             Hecho por Hugo Espinosa y Denisse Ibarra para la UCSG. Todos los derechos reservados
           </p>
         </div>
