@@ -65,7 +65,7 @@ export default function Home() {
                   width={60}
                   height={60}
                 />
-                <h1 className={`text-8xl font-bold text-black dark:text-white ${hammersmith.className}`}>
+                <h1 className={`text-8xl font-bold text-black dark:text-white`}>
                   sinergIA
                 </h1>
               </div>
