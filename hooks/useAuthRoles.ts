@@ -4,8 +4,8 @@ import { useRouter } from 'next/navigation';
 import { useState, useCallback, useEffect } from 'react';
 
 interface Permissions {
-    scopes : string[];
-    rsname : string;
+    scopes: string[];
+    rsname: string;
     rsid: string;
 }
 
@@ -31,11 +31,12 @@ function useAuthRoles(autoFetch = false) {
             }
 
             const data = await res.json();
-            setPermissions(data.data.permissions || []); // Asegúrate de manejar casos donde `data.data` sea `undefined`
+            //Antes estaba como data.data.permissions, pero ahora solo coge de data.data
+            setPermissions(data.data || []); // Asegúrate de manejar casos donde `data.data` sea `undefined`
         } catch (err: any) {
             setError(err.message || 'Error desconocido');
             console.error(err);
-            //router.push('/unAuthorized'); // Redirige a la página de inicio en caso de error
+            router.push('/unAuthorized'); // Redirige a la página de inicio en caso de error
         } finally {
             setLoading(false); // Indica que la solicitud ha terminado
         }
@@ -43,10 +44,8 @@ function useAuthRoles(autoFetch = false) {
 
     // Llama a fetchPermissions automáticamente si autoFetch es verdadero
     useEffect(() => {
-        if (autoFetch) {
-            fetchPermissions();
-        }
-    }, [autoFetch, fetchPermissions]);
+        fetchPermissions();
+    }, []);
 
     return { permissions, fetchPermissions, loading, error };
 }

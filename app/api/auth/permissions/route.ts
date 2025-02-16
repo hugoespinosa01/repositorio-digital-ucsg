@@ -66,16 +66,31 @@ export async function GET() {
                 'username': session.user.email || '',
                 'client_id': process.env.KEYCLOAK_BACKEND_CLIENT_ID || 'repositorio-digital-backend',
                 'client_secret': process.env.KEYCLOAK_CLIENT_SECRET || '',
+                //Si por si solo no puede obtener el RPT, le paso este parámetro
+                'token_type_hint': 'requesting_party_token',	
             }),
         });
 
         const permissions = await rolesResponse.json();
 
-        await redis.set('permissions', JSON.stringify(permissions.authorization));
+        if (!permissions) {
+            throw new Error(`Error al obtener los permisos: ${permissions}`);
+        }
+
+        let permisos = permissions.authorization || permissions.permissions;
+
+        // Dependiendo de como sea la respuesta, se guarda en cache el claim authorization o permissions
+        if (permissions.authorization) {
+            await redis.set('permissions', JSON.stringify(permissions.authorization));
+        } 
+
+        if (permissions.permissions) {
+            await redis.set('permissions', JSON.stringify(permissions.permissions));
+        }
 
         return new Response(JSON.stringify({
             message: 'Permisos obtenidos correctamente',
-            data: permissions.authorization
+            data: permisos
         }), {
             headers: {
                 'Content-Type': 'application/json',
