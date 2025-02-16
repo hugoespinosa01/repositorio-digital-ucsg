@@ -5,7 +5,7 @@ import { ReactNode } from "react";
 
 const SessionProviderWrapper = ({ children }: { children: ReactNode }) => {
     return (
-        <SessionProvider>
+        <SessionProvider refetchOnWindowFocus={false}>
             {children}
         </SessionProvider>
     );

@@ -38,8 +38,22 @@ const auth: NextAuthOptions = {
             clientId: process.env.KEYCLOAK_BACKEND_CLIENT_ID || '',
             clientSecret: process.env.KEYCLOAK_CLIENT_SECRET || '',
             issuer: process.env.KEYCLOAK_ISSUER || '',
+            client: {
+                token_endpoint_auth_method: 'client_secret_post'
+            }
         }),
     ],
+    cookies: {
+        pkceCodeVerifier: {
+            name: "next-auth.pkce.code_verifier",
+            options: {
+                httpOnly: true,
+                sameSite: "lax",
+                path: "/",
+                secure: process.env.NODE_ENV === "production"
+            }
+        }
+    },
     callbacks: {
         async jwt({ token, account }) {
             const nowTimeStamp = Math.floor(Date.now() / 1000);
