@@ -5,6 +5,7 @@ import { getServerSession } from 'next-auth';
 import auth from '@/lib/auth';
 import { checkCarrera } from '@/utils/checkCarrera';
 import { searchParentFolders } from '@/utils/searchParentFolders';
+import { redis } from '@/lib/redis';
 
 interface Params {
     params: { id: string };
@@ -177,7 +178,7 @@ export async function PUT(request: Request, { params }: Params) {
             for (const childFolder of childrenFolders) {
                 if (childFolder.Ruta) {
                     let childRuta = childFolder.Ruta;
-                    
+
                     if (oldNombreCarpetaPadre) {
                         childRuta = childRuta.replace(oldNombreCarpetaPadre, body.Nombre);
                     }
@@ -194,6 +195,8 @@ export async function PUT(request: Request, { params }: Params) {
                 }
             }
         }
+
+        await redis.del(`${params.id}`);
 
         const response = {
             message: 'Carpeta actualizada',

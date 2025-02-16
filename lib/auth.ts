@@ -3,7 +3,6 @@ import { jwtDecode } from 'jwt-decode';
 import type { NextAuthOptions } from 'next-auth';
 import { JWT } from 'next-auth/jwt';
 import KeycloakProvider from 'next-auth/providers/keycloak';
-const channel = new BroadcastChannel("auth");
 
 async function refreshAccessToken(token: JWT) {
 

@@ -15,7 +15,7 @@ export async function GET() {
 
         try {
             await fetch(url, { method: 'GET' });
-            await redis.del('permissions');
+            await redis.flushdb();
         } catch (err) {
             console.error(err);
             return new Response("Error", { status: 500 });

@@ -20,38 +20,41 @@ import LoadingBreadcrumb from "@/components/documents/loadingBreadcrumb";
 export default function DocumentDetail() {
 
   const params = useParams<{ parentId: string }>();
-  const [parent, setParent] = useState<Folder | null>(null);
+  const [parentList, setParentList] = useState<Folder[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [pathsForBreadcrumb, setPathsForBreadcrumb] = useState<{ name: string }[]>([]);
+  const [pathsForBreadcrumb, setPathsForBreadcrumb] = useState<{ id: number, name: string }[]>([]);
 
   useEffect(() => {
     if (params.parentId) {
-      fetchParent();
+      fetchAllParentFolders();
     }
   }, [params.parentId]);
 
   useEffect(() => {
-    if (parent) {
-      const paths = parent.Ruta?.split('/').filter(item => item !== '').map((item, index) => {
-        return {
-          name: item
-        }
-      });
-      setPathsForBreadcrumb(paths);
-    }
-  }, [parent]);
 
-  const fetchParent = async () => {
+    if (parentList) {
+      const paths = parentList.map((item, index) => {
+        return {
+          name: item.Nombre,
+          id: item.Id
+        }
+      })
+      setPathsForBreadcrumb(paths.sort((a, b) => a.id - b.id));
+    }
+
+  }, [parentList]);
+
+  const fetchAllParentFolders = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/folders/${params.parentId}`);
+      const response = await fetch(`/api/parentFolders/folderId/${params.parentId}`);
       if (!response.ok) {
-        throw new Error('Error fetching parent data');
+        throw new Error('Error fetching parent folders');
       }
       const res = await response.json();
-      setParent(res.data);
+      setParentList(res.data);
     } catch (error) {
-      console.error('Failed to fetch parent data:', error);
+      console.error('Error fetching document:', error);
     } finally {
       setLoading(false);
     }
@@ -77,19 +80,32 @@ export default function DocumentDetail() {
                 </BreadcrumbLink>
               </BreadcrumbItem>
               {
-                parent && pathsForBreadcrumb?.map((item, index) => {
-                  // if (index === pathsForBreadcrumb.length - 1) {
-                  return (
-                    <React.Fragment key={index}>
-                      <BreadcrumbSeparator />
-                      <BreadcrumbItem>
-                        <BreadcrumbPage>
-                          {item?.name}
-                        </BreadcrumbPage>
-                      </BreadcrumbItem>
-                    </React.Fragment>
-                  )
-                  //} 
+                parentList && pathsForBreadcrumb?.map((item, index) => {
+                  if (index === pathsForBreadcrumb.length - 1) {
+                    return (
+                      <React.Fragment key={index}>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                          <BreadcrumbPage className="text-primary font-bold">
+                            {item?.name}
+                          </BreadcrumbPage>
+                        </BreadcrumbItem>
+                      </React.Fragment>
+                    )
+                  } else {
+                    return (
+                      <React.Fragment key={index}>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                          <BreadcrumbLink asChild>
+                            <Link href={`/documents/${item.id}?page=1`}>
+                              {item?.name}
+                            </Link>
+                          </BreadcrumbLink>
+                        </BreadcrumbItem>
+                      </React.Fragment>
+                    )
+                  }
                 })
               }
             </BreadcrumbList>
