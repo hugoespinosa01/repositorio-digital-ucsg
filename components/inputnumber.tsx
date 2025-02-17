@@ -99,6 +99,12 @@ export default function InputNumber({ value, label, noIcon, vals, id }: InputNum
                     readOnly={!isEditing}
                     value={fieldValue || ""}
                     onChange={handleChange}
+                    onKeyDown={(e) => {
+                        // Prevenir el ingreso del signo menos
+                        if (e.key === '-') {
+                            e.preventDefault();
+                        }
+                    }}
                     min={0}
                     max={10}
                 />

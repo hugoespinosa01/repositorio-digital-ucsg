@@ -482,19 +482,47 @@ export const MateriasDataTable = ({ fileId, canCreateMateria, canUpdateMateria, 
                                     </TableCell>
                                     <TableCell>
                                         <Input
+                                            id="no_matricula"
+                                            type="number"
                                             max={3}
                                             min={0}
+                                            onKeyDown={(e) => {
+                                                // Prevenir el ingreso del signo menos
+                                                if (e.key === '-') {
+                                                    e.preventDefault();
+                                                }
+                                            }}
                                             value={editedData?.NoMatricula || 0}
-                                            onChange={(e) => setEditedData(prev => prev ? { ...prev, NoMatricula: Number(e.target.value) } : null)}
+                                            onChange={(e) => {
+                                                if (Number(e.target.value) > 3) {
+                                                    e.preventDefault();
+                                                    setEditedData(prev => prev ? { ...prev, NoMatricula: 3 } : null);
+                                                    return;
+                                                }
+                                                setEditedData(prev => prev ? { ...prev, NoMatricula: Number(e.target.value) } : null)}
+                                            }
                                         />
                                     </TableCell>
                                     <TableCell>
                                         <Input
+                                            type="number"
                                             max={10}
                                             min={0}
-                                            type="number"
                                             value={editedData?.Calificacion || 0}
-                                            onChange={(e) => setEditedData(prev => prev ? { ...prev, Calificacion: Number(e.target.value) } : null)}
+                                            onKeyDown={(e) => {
+                                                // Prevenir el ingreso del signo menos
+                                                if (e.key === '-') {
+                                                    e.preventDefault();
+                                                }
+                                            }}
+                                            onChange={(e) => {
+                                                if (Number(e.target.value) > 10) {
+                                                    e.preventDefault();
+                                                    setEditedData(prev => prev ? { ...prev, Calificacion: 10 } : null);
+                                                    return;
+                                                }
+                                                setEditedData(prev => prev ? { ...prev, Calificacion: Number(e.target.value) } : null)}
+                                            }
                                         />
                                     </TableCell>
                                     <TableCell>
