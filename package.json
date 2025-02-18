@@ -50,6 +50,7 @@
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.6",
     "@react-pdf/renderer": "^4.1.6",
+    "@sentry/nextjs": "^9.1.0",
     "@t3-oss/env-core": "^0.11.1",
     "@tanstack/react-table": "^8.20.5",
     "@types/cryptr": "^4.0.3",

@@ -5,8 +5,12 @@ import { PineconeStore } from "@langchain/pinecone";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import auth from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
+
 
 export async function POST(req: Request) {
+
+  const start = Date.now(); // Marca de tiempo inicial
 
   const session = await getServerSession(auth);
 
@@ -130,10 +134,15 @@ export async function POST(req: Request) {
 
   } catch (error) {
     console.error("Error performing similarity search:", error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { error: "Failed to perform similarity search" },
       { status: 500 }
     );
+  } finally {
+    const end = Date.now(); // Marca de tiempo al final
+    console.log(`Tiempo total: ${end - start}ms`);
+    Sentry.captureMessage(`Tiempo de respuesta: ${end - start}ms`);
   }
 }
 
@@ -193,7 +202,7 @@ async function buscarDocumentos(idCarpeta: number, query: string, carrera: strin
         {
           Documento: {
             IdCarpeta: {
-                  in: carpetas
+              in: carpetas
             }
           },
         }
@@ -201,5 +210,5 @@ async function buscarDocumentos(idCarpeta: number, query: string, carrera: strin
     },
   });
 
-return documentos;
+  return documentos;
 }
