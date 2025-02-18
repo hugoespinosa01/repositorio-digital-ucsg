@@ -542,7 +542,7 @@ const findTableStructure = (cells: any[]): ColumnMapping | null => {
 
 // Función para determinar cuál de las tres matrículas está marcada
 const determineMatricula = (row: any, matriculasIndexes: number[]): number => {
-    for (let i = 0; i < matriculasIndexes.length; i++) {
+    for (let i = 0; i < matriculasIndexes?.length; i++) {
         const content = row[matriculasIndexes[i]]?.toString().trim().toUpperCase() || "";
         if (content === "+" || content === "A") {
             return i + 1; // Retorna 1, 2 o 3 según la matrícula marcada
