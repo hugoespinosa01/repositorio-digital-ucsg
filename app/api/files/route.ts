@@ -92,10 +92,20 @@ export async function POST(request: NextRequest) {
         //Subo al blob storage
         const blobName = await uploadToBlobStorage(pdfData);
 
-        const classifiedDoc = await classifyDocument(pdfData);
+        // Clasificar el documento
+        let classifiedDoc = null;
+        try {
+            classifiedDoc = await classifyDocument(pdfData);
+            console.log('Document classification result:', classifiedDoc);
+        } catch (error) {
+            console.error('Error during document classification:', error);
+            throw new Error('Unable to classify document');
+        }
 
-        if (!classifiedDoc) {
-            throw new Error('Error classifying document');
+        // Validar clasificación    
+        if (typeof classifiedDoc !== 'string' || !['kardex-computacion', 'kardex-civil'].includes(classifiedDoc)) {
+            console.error('Invalid document classification:', classifiedDoc);
+            throw new Error('Invalid document classification');
         }
 
         let extractedData = null;
