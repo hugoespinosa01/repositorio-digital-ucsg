@@ -585,34 +585,36 @@ const extractDetailData = async (file: ArrayBuffer, model: string) => {
 const classifyDocument = async (file: ArrayBuffer): Promise<string | null> => {
     try {
 
-        const endpoint = process.env.FORM_CUSTOM_CLASSIFICATION_ENDPOINT;
-        const apiKey = process.env.FORM_CUSTOM_CLASSIFICATION_API_KEY;
+        throw new Error('Entro por aqui');
 
-        if (!endpoint || !apiKey) {
-            throw new Error('Form Recognizer credentials not configured');
-        }
+        // const endpoint = process.env.FORM_CUSTOM_CLASSIFICATION_ENDPOINT;
+        // const apiKey = process.env.FORM_CUSTOM_CLASSIFICATION_API_KEY;
 
-        const credential = new AzureKeyCredential(apiKey);
-        const client = new DocumentAnalysisClient(endpoint, credential);
+        // if (!endpoint || !apiKey) {
+        //     throw new Error('Form Recognizer credentials not configured');
+        // }
 
-        const poller = await client.beginClassifyDocument('clasificador-modelo-kardex', file);
+        // const credential = new AzureKeyCredential(apiKey);
+        // const client = new DocumentAnalysisClient(endpoint, credential);
 
-        const result = await poller.pollUntilDone();
+        // const poller = await client.beginClassifyDocument('clasificador-modelo-kardex', file);
+
+        // const result = await poller.pollUntilDone();
 
 
-        if (!result.documents || result.documents.length === 0) {
-            return null;
-        }
+        // if (!result.documents || result.documents.length === 0) {
+        //     return null;
+        // }
 
-        const docType = result.documents[0].docType;
+        // const docType = result.documents[0].docType;
 
-        // Validar explícitamente el tipo de documento
-        const validTypes = ['kardex-computacion', 'kardex-civil'];
-        if (!validTypes.includes(docType)) {
-            return null;
-        }
+        // // Validar explícitamente el tipo de documento
+        // const validTypes = ['kardex-computacion', 'kardex-civil'];
+        // if (!validTypes.includes(docType)) {
+        //     return null;
+        // }
 
-        return docType;
+        // return docType;
 
     } catch (err) {
         throw err;
