@@ -585,38 +585,42 @@ const extractDetailData = async (file: ArrayBuffer, model: string) => {
 const classifyDocument = async (file: ArrayBuffer): Promise<string | null> => {
     try {
 
-        throw new Error('Entro por aqui');
 
-        // const endpoint = process.env.FORM_CUSTOM_CLASSIFICATION_ENDPOINT;
-        // const apiKey = process.env.FORM_CUSTOM_CLASSIFICATION_API_KEY;
+        console.log('Classifying document...');
+        const endpoint = process.env.FORM_CUSTOM_CLASSIFICATION_ENDPOINT;
+        const apiKey = process.env.FORM_CUSTOM_CLASSIFICATION_API_KEY;
 
-        // if (!endpoint || !apiKey) {
-        //     throw new Error('Form Recognizer credentials not configured');
-        // }
+        if (!endpoint || !apiKey) {
+            throw new Error('Form Recognizer credentials not configured');
+        }
 
-        // const credential = new AzureKeyCredential(apiKey);
-        // const client = new DocumentAnalysisClient(endpoint, credential);
+        const credential = new AzureKeyCredential(apiKey);
+        const client = new DocumentAnalysisClient(endpoint, credential);
 
-        // const poller = await client.beginClassifyDocument('clasificador-modelo-kardex', file);
+        console.log('Beginning document classification...');
+        const poller = await client.beginClassifyDocument('clasificador-modelo-kardex', file);
 
-        // const result = await poller.pollUntilDone();
+        console.log('Waiting for classification to complete...');
+        const result = await poller.pollUntilDone();
 
+        if (!result.documents || result.documents.length === 0) {
+            return null;
+        }
 
-        // if (!result.documents || result.documents.length === 0) {
-        //     return null;
-        // }
+        console.log('Classification completed successfully', result.documents[0].docType);
 
-        // const docType = result.documents[0].docType;
+        const docType = result.documents[0].docType;
 
-        // // Validar explícitamente el tipo de documento
-        // const validTypes = ['kardex-computacion', 'kardex-civil'];
-        // if (!validTypes.includes(docType)) {
-        //     return null;
-        // }
+        // Validar explícitamente el tipo de documento
+        const validTypes = ['kardex-computacion', 'kardex-civil'];
+        if (!validTypes.includes(docType)) {
+            return null;
+        }
 
-        // return docType;
+        return docType;
 
     } catch (err) {
+        console.error('Error clasificando los documentos dentro de la funcion classifyDocument:', err);
         throw err;
     }
 };
