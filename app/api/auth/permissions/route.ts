@@ -8,23 +8,23 @@ export async function GET() {
     try {
 
         // // Verificar conexión
-        // if (!redis.status || redis.status !== 'ready') {
-        //     await redis.connect();
-        // }
+        if (!redis.status || redis.status !== 'ready') {
+            await redis.connect();
+        }
 
-        // const cachedPermissions = await redis.get('permissions');
+        const cachedPermissions = await redis.get('permissions');
 
-        // if (cachedPermissions) {
-        //     return new Response(JSON.stringify({
-        //         message: 'Permisos obtenidos correctamente con cache',
-        //         data: JSON.parse(cachedPermissions)
-        //     }), {
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //         },
-        //         status: 200,
-        //     });
-        // }
+        if (cachedPermissions) {
+            return new Response(JSON.stringify({
+                message: 'Permisos obtenidos correctamente con cache',
+                data: JSON.parse(cachedPermissions)
+            }), {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                status: 200,
+            });
+        }
 
         const accessToken = await getAccessToken();
         const session = await getServerSession(auth);
@@ -85,13 +85,13 @@ export async function GET() {
         let permisos = permissions.authorization || permissions.permissions;
 
         // Dependiendo de como sea la respuesta, se guarda en cache el claim authorization o permissions
-        // if (permissions.authorization) {
-        //     await redis.set('permissions', JSON.stringify(permissions.authorization));
-        // } 
+        if (permissions.authorization) {
+            await redis.set('permissions', JSON.stringify(permissions.authorization));
+        } 
 
-        // if (permissions.permissions) {
-        //     await redis.set('permissions', JSON.stringify(permissions.permissions));
-        // }
+        if (permissions.permissions) {
+            await redis.set('permissions', JSON.stringify(permissions.permissions));
+        }
 
         return new Response(JSON.stringify({
             message: 'Permisos obtenidos correctamente',

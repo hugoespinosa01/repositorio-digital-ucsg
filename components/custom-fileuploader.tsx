@@ -27,7 +27,7 @@ const FileUpload = ({ file, setFile, isSubmitting }: FileUploadProps) => {
                 <input {...getInputProps()} />
 
                 {
-                    file ? (
+                    file && !isSubmitting? (
 
                         <p className="mt-2 flex align-middle items-center justify-center space-x-2">
                             <File className='w-10 h-10 text-rose-900' />
