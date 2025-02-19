@@ -19,6 +19,9 @@ const nextConfig = {
       }
     ]
   },
+  env: {
+    REDIS_URL: process.env.REDIS_URL,
+  },
   output: 'standalone',
   reactStrictMode: true,
   distDir: 'build',
