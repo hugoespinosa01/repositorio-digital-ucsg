@@ -574,18 +574,30 @@ const extractDetailData = async (file: ArrayBuffer, model: string) => {
 
 const classifyDocument = async (file: ArrayBuffer) => {
     try {
-        const endpoint = process.env.FORM_CUSTOM_CLASSIFICATION_ENDPOINT || "<endpoint>";
-        const credential = new AzureKeyCredential(process.env.FORM_CUSTOM_CLASSIFICATION_API_KEY || "<api key>");
-        const client = new DocumentAnalysisClient(endpoint, credential);
+        // Validar variables de entorno
+        const endpoint = process.env.FORM_CUSTOM_CLASSIFICATION_ENDPOINT;
+        const apiKey = process.env.FORM_CUSTOM_CLASSIFICATION_API_KEY;
 
-        const poller = await client.beginClassifyDocument('clasificador-modelo-kardex', file)
-
-        const { documents } = await poller.pollUntilDone();
-
-        if (!documents) {
-            return NextResponse.json({ error: 'Error extracting data' }, { status: 500 });
+        if (!endpoint || !apiKey) {
+            throw new Error('Form Recognizer credentials not configured');
         }
 
+        // Configurar cliente
+        const credential = new AzureKeyCredential(apiKey);
+        const client = new DocumentAnalysisClient(endpoint, credential);
+
+        // Iniciar clasificación
+        console.log('Starting document classification...');
+        const poller = await client.beginClassifyDocument('clasificador-modelo-kardex', file);
+        const { documents } = await poller.pollUntilDone();
+
+        // Validar resultado
+        if (!documents || documents.length === 0) {
+            console.error('No documents found in classification result');
+            return null;
+        }
+
+        console.log('Document classified as:', documents[0].docType);
         return documents[0].docType;
 
     } catch (err) {
