@@ -10,32 +10,24 @@ import { loadToPinecone } from '@/lib/pinecone';
 import { checkCarrera } from '@/utils/checkCarrera';
 import { Materia } from '@/types/materia';
 import { KardexDetalle } from '@/types/kardexDetalle';
-import { OpenAIApi, Configuration } from 'openai-edge'
 import { File } from 'buffer';
 import { PDFDocument } from 'pdf-lib';
 
-
-const configuration = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
-});
-
-const openai = new OpenAIApi(configuration);
 
 dotenv.config();
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
 const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME || '';
 
-type Row = {
-    Matr1: {
-        value: string | undefined;
+interface DocumentField {
+    value: any;
+    confidence: number;
+}
+
+interface ExtractedDataFields {
+    fields: {
+        [field: string]: DocumentField;
     };
-    Matr2: {
-        value: string | undefined;
-    };
-    Matr3: {
-        value: string | undefined;
-    };
-};
+}
 
 interface ColumnMapping {
     materiaIndex?: number;
@@ -110,10 +102,38 @@ export async function POST(request: NextRequest) {
 
         // Clasifica los documentos según la carrera
         if (classifiedDoc == 'kardex-computacion') {
-            extractedData = await extractData(pdfData, 'computacion-1-model') as unknown as ExtractedData;
+            try {
+                extractedData = await extractData(pdfData, 'computacion-1-model');
+                console.log('Extracted data for computacion:', extractedData);
+            } catch (error) {
+                console.error('Error extracting computacion data:', error);
+                throw new Error('Error extracting data for extractedData');
+            }
         } else if (classifiedDoc == 'kardex-civil') {
-            // Extraigo los datos del documento (usar modelo modelo_computacion_v1)
-            extractedData = await extractData(pdfData, 'modelo_civil_v11') as unknown as ExtractedData;
+            try {
+                extractedData = await extractData(pdfData, 'modelo_civil_v11');
+                console.log('Extracted data for civil:', extractedData);
+            } catch (error) {
+                console.error('Error extracting civil data:', error);
+                throw new Error('Error extracting data for extractedData');
+            }
+        } else {
+            throw new Error('Invalid document classification');
+        }
+
+        if (!extractedData) {
+            throw new Error('Invalid extracted data structure');
+        }
+
+
+        const { fields } = extractedData as ExtractedDataFields;
+
+        // Validar campos específicos necesarios
+        const requiredFields = ['Alumno', 'NoIdentificacion', 'Carrera'];
+        for (const field of requiredFields) {
+            if (!fields[field] || !fields[field].value) {
+                throw new Error(`Missing required field: ${field}`);
+            }
         }
 
         let extractedDetails = await extractDetailData(pdfData, 'prebuilt-document');
@@ -126,11 +146,6 @@ export async function POST(request: NextRequest) {
 
         const parsedDetails = parseData(extractedDetails);
 
-        if (!extractedData) {
-            throw new Error('Error extracting data for extractedData');
-        }
-
-        const { fields } = extractedData;
 
         // Busco el ID de la carrera
         const carreraArray = await checkCarrera(fields.Carrera.value);
@@ -460,26 +475,54 @@ const formatData = (data: string) => {
 
 const extractData = async (file: ArrayBuffer, model: string) => {
     try {
-        const endpoint = process.env.FORM_RECOGNIZER_ENDPOINT || "<endpoint>";
-        const credential = new AzureKeyCredential(process.env.FORM_RECOGNIZER_API_KEY || "<api key>");
+
+        // Validar inputs
+        if (!file || !(file instanceof ArrayBuffer)) {
+            throw new Error('Invalid file data provided');
+        }
+
+        if (!model) {
+            throw new Error('Model ID is required');
+        }
+
+        // Validar credenciales
+        const endpoint = process.env.FORM_RECOGNIZER_ENDPOINT;
+        const apiKey = process.env.FORM_RECOGNIZER_API_KEY;
+
+        if (!endpoint || !apiKey) {
+            throw new Error('Form Recognizer credentials not configured');
+        }
+
+        console.log('Starting extraction with model:', model);
+
+        const credential = new AzureKeyCredential(apiKey);
         const client = new DocumentAnalysisClient(endpoint, credential);
 
-        const modelId = model;
+        console.log('Beginning document analysis...');
+        const poller = await client.beginAnalyzeDocument(model, file);
+        console.log('Waiting for analysis to complete...');
+        const result = await poller.pollUntilDone();
 
-        const poller = await client.beginAnalyzeDocument(modelId, file);
+        if (!result || !result.documents || result.documents.length === 0) {
+            throw new Error('No documents found in analysis result');
+        }
 
-        const { documents } = await poller.pollUntilDone();
+        console.log('Analysis completed successfully');
 
-        if (!documents) {
-            return NextResponse.json({ error: 'Error extracting data at Azure API' },  { status: 500 });
+
+        // Validar campos
+        const firstDocument = result.documents[0];
+        if (!firstDocument.fields) {
+            throw new Error('No fields found in document');
         }
 
         return {
-            fields: documents[0].fields,
+            fields: firstDocument.fields,
         };
 
+
     } catch (err) {
-        console.error('Error extracting data:', err);
+        console.error('Error extracting data in function extractData:', err);
         return NextResponse.json({ error: 'Error extracting data', status: 500 });
     }
 }
@@ -496,9 +539,9 @@ const extractDetailData = async (file: ArrayBuffer, model: string) => {
         const [lastPage] = await newPdfDoc.copyPages(pdfDoc, [pageCount - 1]);
         newPdfDoc.addPage(lastPage);
 
-         // Convertir a ArrayBuffer
-         const lastPagePdfBytes = await newPdfDoc.save();
-         const lastPageBuffer = new Uint8Array(lastPagePdfBytes).buffer;
+        // Convertir a ArrayBuffer
+        const lastPagePdfBytes = await newPdfDoc.save();
+        const lastPageBuffer = new Uint8Array(lastPagePdfBytes).buffer;
 
         const endpoint = process.env.FORM_RECOGNIZER_ENDPOINT || "<endpoint>";
         const credential = new AzureKeyCredential(process.env.FORM_RECOGNIZER_API_KEY || "<api key>");
@@ -512,7 +555,7 @@ const extractDetailData = async (file: ArrayBuffer, model: string) => {
         const modelId = model;
 
         console.log('Starting document analysis...');
-        const poller = await client.beginAnalyzeDocument(modelId, lastPageBuffer );
+        const poller = await client.beginAnalyzeDocument(modelId, lastPageBuffer);
         console.log('Waiting for analysis to complete...');
         const result = await poller.pollUntilDone();
 
