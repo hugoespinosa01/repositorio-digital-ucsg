@@ -582,9 +582,9 @@ const extractDetailData = async (file: ArrayBuffer, model: string) => {
     }
 }
 
-const classifyDocument = async (file: ArrayBuffer) => {
+const classifyDocument = async (file: ArrayBuffer): Promise<string | null> => {
     try {
-        // Validar variables de entorno
+
         const endpoint = process.env.FORM_CUSTOM_CLASSIFICATION_ENDPOINT;
         const apiKey = process.env.FORM_CUSTOM_CLASSIFICATION_API_KEY;
 
@@ -592,29 +592,33 @@ const classifyDocument = async (file: ArrayBuffer) => {
             throw new Error('Form Recognizer credentials not configured');
         }
 
-        // Configurar cliente
         const credential = new AzureKeyCredential(apiKey);
         const client = new DocumentAnalysisClient(endpoint, credential);
 
-        // Iniciar clasificación
-        console.log('Starting document classification...');
         const poller = await client.beginClassifyDocument('clasificador-modelo-kardex', file);
-        const { documents } = await poller.pollUntilDone();
 
-        // Validar resultado
-        if (!documents || documents.length === 0) {
-            console.error('No documents found in classification result');
+        const result = await poller.pollUntilDone();
+
+
+        if (!result.documents || result.documents.length === 0) {
             return null;
         }
 
-        console.log('Document classified as:', documents[0].docType);
-        return documents[0].docType;
+        const docType = result.documents[0].docType;
+
+        // Validar explícitamente el tipo de documento
+        const validTypes = ['kardex-computacion', 'kardex-civil'];
+        if (!validTypes.includes(docType)) {
+            return null;
+        }
+
+        return docType;
 
     } catch (err) {
-        console.error('Error classifying data:', err);
-        return NextResponse.json({ error: 'Error classifying data', status: 500 });
+        throw err;
     }
-}
+};
+
 
 const uploadToBlobStorage = async (pdfData: ArrayBuffer): Promise<string> => {
     try {
@@ -640,3 +644,5 @@ const uploadToBlobStorage = async (pdfData: ArrayBuffer): Promise<string> => {
     }
 
 }
+
+
