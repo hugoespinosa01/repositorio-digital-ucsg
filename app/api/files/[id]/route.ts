@@ -3,6 +3,14 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import auth from '@/lib/auth';
 import { Prisma } from '@prisma/client';
+import { Pinecone } from "@pinecone-database/pinecone";
+
+// Crea un cliente de Pinecone
+const getPineconeClient = () => {
+    return new Pinecone({
+        apiKey: process.env.PINECONE_API_KEY!,
+    });
+};
 
 
 interface Params {
@@ -12,7 +20,6 @@ interface Params {
 export async function DELETE(request: Request, { params }: Params) {
     try {
 
-        //Corregir esto
         const documentId = params.id;
 
         const tipoDocKardex = await prisma.tipoDocumentoKardex.findFirst({
@@ -60,6 +67,18 @@ export async function DELETE(request: Request, { params }: Params) {
                 Estado: 0,
             },
         });
+
+        // 3. Inserción a Pinecone
+        const client = await getPineconeClient();
+        const pineconeIndex = await client.index(process.env.PINECONE_INDEX || "documentos-ucsg");
+
+        // Establezco un namespace para el índice (este va a aglomerar a todos los documentos)
+        const namespace = pineconeIndex.namespace(process.env.PINECONE_NAMESPACE || "documentos-ucsg");
+
+        if (deletedFile.RefArchivo) {
+            await namespace.deleteOne(deletedFile.RefArchivo);
+        }
+
         const result = {
             message: 'Documento eliminado con éxito',
             status: 200,

@@ -124,10 +124,12 @@ export async function POST(req: Request) {
         const doc = await prisma?.documento.findUnique({
           where: {
             Id: result.metadata.fileId,
+            Estado: 1,
           },
         });
         return doc;
       }));
+      results = results.filter((x) => x != null);
     }
 
     return NextResponse.json({ message: "Documento buscado con éxito", results }, { status: 200 });

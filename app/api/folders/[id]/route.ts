@@ -227,12 +227,21 @@ export async function PATCH(request: Request, { params }: Params) {
 
         const body = await request.json();
 
-        if (!body.IdCarpetaPadre) {
-            return NextResponse.json({ error: 'Carpeta destino requerida' }, { status: 400 });
+        if (body.IdCarpetaPadre && typeof body.IdCarpetaPadre !== 'number') {
+            return NextResponse.json({ error: 'El id de la carpeta destino debe ser un número' }, { status: 400 });
         }
 
-        if (typeof body.IdCarpetaPadre !== 'number') {
-            return NextResponse.json({ error: 'El id de la carpeta destino debe ser un número' }, { status: 400 });
+        if (!body.IdCarpetaPadre) {
+            await prisma.carpeta.update({
+                where: {
+                    Id: Number(params.id)
+                },
+                data: {
+                    IdCarpetaPadre: null,
+                    FechaActualizacion: new Date()
+                }
+            });
+            return NextResponse.json({ message: 'Carpeta movida', status: 200 });
         }
 
         const carpeta = await prisma.carpeta.findFirst({

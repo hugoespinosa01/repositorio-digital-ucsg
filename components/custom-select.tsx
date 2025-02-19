@@ -73,6 +73,7 @@ export const CustomSelect = ({
                             backgroundColor: '#ba4665',
                             borderColor: '#ba4665',
                             color: 'white'
+                            
                         },
                         ":hover": {
                             backgroundColor: '#d4c9cc',

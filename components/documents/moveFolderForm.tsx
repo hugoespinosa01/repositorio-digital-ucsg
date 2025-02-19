@@ -58,6 +58,7 @@ export default function MoveFolderForm({ idFolder, idFile, setOpenModal, current
 
     const { moveFolder, pageSize, isSubmitting, fetchChildren, fetchFolders } = useContext(FolderContext);
     const { toast } = useToast();
+    const [isFileSubmitting, setIsFileSubmitting] = useState(false);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -66,9 +67,10 @@ export default function MoveFolderForm({ idFolder, idFile, setOpenModal, current
         }
     })
 
-    const moveFile = async (idFile: number, destino: number, setOpenModal: (open: boolean) => void, pageSize: number, currentPage: number, parentId: number | undefined) => {
+    const moveFile = async (idFile: number, destino: number, setOpenModal: (open: boolean) => void, pageSize: number, currentPage: number) => {
         
         try {
+            setIsFileSubmitting(true);
             const response = await fetch(`/api/files/${idFile}`, {
                 method: 'PATCH',
                 headers: {
@@ -90,7 +92,7 @@ export default function MoveFolderForm({ idFolder, idFile, setOpenModal, current
             });
 
             if (parentId) {
-                fetchChildren(destino.toString(), currentPage, pageSize);
+                fetchChildren(parentId.toString(), currentPage, pageSize);
             } else {
                 fetchFolders(currentPage, pageSize);
             }
@@ -104,14 +106,15 @@ export default function MoveFolderForm({ idFolder, idFile, setOpenModal, current
             });
         } finally {
             setOpenModal(false);
+            setIsFileSubmitting(false);
         }
     }
 
     function onSubmit(values: z.infer<typeof formSchema>) {
         if (idFile) {
-            moveFile(idFile, Number(values.carpeta_destino), setOpenModal, pageSize, currentPage, parentId);
+            moveFile(idFile, Number(values.carpeta_destino), setOpenModal, pageSize, currentPage);
         } else {
-            moveFolder(idFolder, Number(values.carpeta_destino), setOpenModal, pageSize, currentPage, parentId);
+            moveFolder(idFolder, Number(values.carpeta_destino) || null, setOpenModal, pageSize, currentPage, parentId);
         }
     }
 
@@ -136,7 +139,7 @@ export default function MoveFolderForm({ idFolder, idFile, setOpenModal, current
                 />
                 <div className="flex justify-center sm:justify-end">
                     {
-                        isSubmitting ?
+                        isSubmitting || isFileSubmitting?
                             <Button disabled className="w-full sm:w-auto min-w-[120px]" type="button">
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 Cargando...
