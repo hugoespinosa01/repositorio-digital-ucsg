@@ -6,7 +6,7 @@ dotenv.config();
 const getRedisUrl = () => {
 
     if (process.env.REDIS_URL) {
-        return process.env.REDIS_URL
+        return process.env.REDIS_URL || 'rediss://default:AXHgAAIjcDFiMDFlODEyNDI5MWU0NzU4OGZkOWVlMjFhOGM4Mjc5NHAxMA@integral-termite-29152.upstash.io:6379'
     } else {
         throw new Error('No se ha definido la variable de entorno REDIS_URL')
     }
