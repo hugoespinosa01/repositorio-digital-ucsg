@@ -7,11 +7,6 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
     try {
 
-        // // Verificar conexión
-        if (!redis.status || redis.status !== 'ready') {
-            await redis.connect();
-        }
-
         const cachedPermissions = await redis.get('permissions');
 
         if (cachedPermissions) {

@@ -26,7 +26,7 @@ const redisConfig = {
     // Tiempo máximo de reconexión
     maxRetriesPerRequest: 20000,
     // Tiempo de espera para conexión
-    connectTimeout: 10000,
+    connectTimeout: 50000,
 };
 
 export const redis = new Redis(getRedisUrl(), redisConfig);
