@@ -11,6 +11,9 @@ import { checkCarrera } from '@/utils/checkCarrera';
 import { Materia } from '@/types/materia';
 import { KardexDetalle } from '@/types/kardexDetalle';
 import { OpenAIApi, Configuration } from 'openai-edge'
+import { File } from 'buffer';
+import { PDFDocument } from 'pdf-lib';
+
 
 const configuration = new Configuration({
     apiKey: process.env.OPENAI_API_KEY,
@@ -80,9 +83,14 @@ export async function POST(request: NextRequest) {
     try {
 
         const formData = await request.formData();
-        const file = formData.get('file') as File;
 
-        if (!file) {
+        if (!formData) {
+            return NextResponse.json({ error: 'No form data' }, { status: 400 });
+        }
+
+        const file = formData.get('file');
+
+        if (!file || !(file instanceof File)) {
             return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
         }
 
@@ -110,10 +118,10 @@ export async function POST(request: NextRequest) {
 
         let extractedDetails = await extractDetailData(pdfData, 'prebuilt-document');
 
-        if (!extractedDetails) {
-            throw new Error('Error extracting data');
+        if (!extractedDetails || !Array.isArray(extractedDetails)) {
+            console.error('Invalid extracted details:', extractedDetails);
+            extractedDetails = [];
         }
-
         // let processedData = await processDataWithOpenAI(extractedDetails);
 
         const parsedDetails = parseData(extractedDetails);
@@ -242,165 +250,19 @@ export async function POST(request: NextRequest) {
         const errResponse = {
             error: 'Error creating document',
             status: 500,
-            message: err.message,
+            message: err instanceof Error ? err.message : 'Error desconocido, ver más logs',
         }
         return NextResponse.json(errResponse, { status: 500 });
     }
 }
 
-// const processDataWithOpenAI = async (rawData: any) => {
-//     // Configuración de lotes
-//     const BATCH_SIZE = 4000; // Ajusta según necesidad
-//     const MAX_RETRIES = 3;
-//     const DELAY_BETWEEN_BATCHES = 1000; // 1 segundo
-
-//     const splitIntoChunks = (data: any) => {
-//         if (!Array.isArray(data.tables)) return [data];
-
-//         const chunks = [];
-//         let currentChunk: any = { tables: [] };
-//         let currentSize = 0;
-
-//         for (const table of data.tables) {
-//             const tableSize = JSON.stringify(table).length;
-//             if (currentSize + tableSize > BATCH_SIZE) {
-//                 chunks.push(currentChunk);
-//                 currentChunk = { tables: [] };
-//                 currentSize = 0;
-//             }
-//             currentChunk.tables.push(table);
-//             currentSize += tableSize;
-//         }
-
-//         if (currentChunk.tables.length > 0) {
-//             chunks.push(currentChunk);
-//         }
-
-//         return chunks;
-//     };
-
-//     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-//     const processChunk = async (chunk: any, retryCount = 0): Promise<any[]> => {
-//         const prompt = `Genera ÚNICAMENTE un array JSON que siga este esquema. NO incluyas explicaciones ni texto adicional.
-//     REGLAS:
-//     - CICLOS: "PRIMER CURSO", "SEGUNDO CURSO", "TERCER CURSO", etc.
-//     - PERIODO: Años que empiecen con "19"
-//     - MATRÍCULA: Solo valores 1, 2, 3
-//     - CALIFICACIÓN: Número sobre 10 con punto decimal
-//     - Eliminar tildes
-//     - IdDocumentoKardex siempre 0
-//     - Estado siempre 1
-
-//     ESQUEMA:
-//     [{
-//       "Id": number,
-//       "Ciclo": string,
-//       "Materia": string,
-//       "Periodo": string,
-//       "Calificacion": number,
-//       "NoMatricula": number,
-//       "IdDocumentoKardex": 0,
-//       "Estado": 1
-//     }]
-
-//     DATOS:
-//     ${JSON.stringify(chunk)}
-
-//     RESPONDE SOLO CON EL JSON.`;
-
-//         try {
-//             const response = await openai.createChatCompletion({
-//                 model: "gpt-4",
-//                 messages: [
-//                     {
-//                         role: "system",
-//                         content: "Eres un analizador de datos que SOLO responde con JSON válido, sin explicaciones. Procesas todos los datos proporcionados sin excepción."
-//                     },
-//                     {
-//                         role: "user",
-//                         content: prompt
-//                     }
-//                 ],
-//                 max_tokens: 4000,
-//                 temperature: 0,
-//             });
-
-//             const responseData = await response.json();
-//             const content = responseData.choices[0].message?.content || '[]';
-
-//             // Extraer y validar JSON
-//             let parsedData;
-//             try {
-//                 // Intentar encontrar y parsear el JSON
-//                 const jsonMatch = content.match(/$[\s\S]*$/);
-//                 if (!jsonMatch) throw new Error('No JSON found');
-//                 parsedData = JSON.parse(jsonMatch[0]);
-//             } catch (parseError) {
-//                 if (parseError instanceof Error) {
-//                     throw new Error(`JSON parsing failed: ${parseError.message}`);
-//                 } else {
-//                     throw new Error('JSON parsing failed');
-//                 }
-//             }
-
-//             return Array.isArray(parsedData) ? parsedData : [];
-
-//         } catch (error) {
-//             if (retryCount < MAX_RETRIES) {
-//                 await delay(DELAY_BETWEEN_BATCHES * (retryCount + 1));
-//                 return processChunk(chunk, retryCount + 1);
-//             }
-//             throw error;
-//         }}
-
-//         // Procesar todos los datos
-//         const chunks = splitIntoChunks(rawData);
-//         let allResults: any[] = [];
-//         let currentId = 1;
-
-//         for (const chunk of chunks) {
-//             const chunkResults = await processChunk(chunk);
-
-//             // Procesar y validar los resultados del chunk
-//             const processedResults = chunkResults.map((item: any) => ({
-//                 Id: currentId++,
-//                 Ciclo: item.Ciclo?.toUpperCase() || 'N/A',
-//                 Materia: item.Materia?.normalize('NFD')
-//                     .replace(/[\u0300-\u036f]/g, '')
-//                     .toUpperCase(),
-//                 Periodo: item.Periodo || 'N/A',
-//                 Calificacion: parseFloat(item.Calificacion) || 0,
-//                 NoMatricula: [1, 2, 3].includes(item.NoMatricula) ? item.NoMatricula : 1,
-//                 IdDocumentoKardex: 0,
-//                 Estado: 1
-//             }));
-
-//             allResults = [...allResults, ...processedResults];
-
-//             // Esperar entre chunks para evitar límites de rate
-//             if (chunks.length > 1) await delay(DELAY_BETWEEN_BATCHES);
-//         }
-
-//         return allResults;
-
-//         // Extraer solo el JSON de la respuesta
-//         // const jsonMatch = content.match(/$[\s\S]*$/);
-//         // if (!jsonMatch) {
-//         //     throw new Error('No se encontró un JSON válido en la respuesta');
-//         // }
-
-//         // // Parsear el JSON extraído
-//         // //const parsedData = JSON.parse(jsonMatch[0]);
-
-//         // // Validar la estructura del JSON
-//         // if (!Array.isArray(parsedData)) {
-//         //     throw new Error('La respuesta no es un array JSON válido');
-//         // }
-//         // return parsedData; // Parsear el resultado como JSON
-
-// };
-
 const parseData = (tables: any) => {
+
+    if (!Array.isArray(tables)) {
+        console.error('No se encontraron celdas en la tabla', tables);
+        return [];
+    }
+
     const rows: KardexDetalle[] = [];
     let cicloGlobal = ""; // Este valor será propagado entre tablas
     let ultimoPeriodo = ""; // Para almacenar el último periodo encontrado y propagarlo
@@ -408,6 +270,8 @@ const parseData = (tables: any) => {
 
     // Iterar a través de todas las tablas en el OCR
     tables.forEach((table: any) => {
+
+
 
         const mapping = findTableStructure(table.cells);
         if (!mapping) return; // Si no encontramos la estructura esperada, saltamos esta tabla
@@ -493,6 +357,14 @@ const findCalificacionFromRow = (row: any, calificacionIndexes: number[]): numbe
 
 // Función para encontrar la estructura de la tabla
 const findTableStructure = (cells: any[]): ColumnMapping | null => {
+
+    if (!Array.isArray(cells)) {
+        console.error('Cells is not an array:', cells);
+        return null;
+    }
+
+
+
     const mapping: ColumnMapping = {};
 
     // Buscamos los índices de columnas importantes
@@ -551,15 +423,6 @@ const determineMatricula = (row: any, matriculasIndexes: number[]): number => {
     return 0; // Si no encuentra ninguna marca
 };
 
-
-// Función para extraer el nivel o ciclo de la tabla como un todo
-const extractNivelOCiclo = (table: any): string | null => {
-    const posibleNivel = table.cells.find((cell: any) =>
-        /NIVEL \d{3}|CURSO|PRIMER|SEGUNDO|TERCER|CUARTO|QUINTO|SEXTO|SEPTIMO/i.test(cell.content)
-    );
-    return posibleNivel ? posibleNivel.content.trim() : null; // Retorna el nivel (si se encuentra)
-};
-
 // Función para extraer el nivel o ciclo desde una fila específica
 const extractNivelOCicloFromRow = (row: any): string | null => {
     const contenidoFila = Object.values(row)
@@ -588,36 +451,12 @@ const extractPeriodoFromRow = (row: any): string | null => {
     return null; // Si no se encuentra nada, retornamos null
 };
 
-const populateDetalleMaterias = async (datosExtraidos: any, fields: any) => {
-    // Verifica que "detalle-materias" y sus valores existan antes de iterar
-    if (fields["detalle-materias"]?.values) {
-        for (const materia of fields["detalle-materias"].values) {
-            // Validación y mapeo seguro
-            datosExtraidos.materiasAprobadas.push({
-                ciclo: materia.properties?.Nivel?.value ?? "", // Asegúrate de que "Nivel" exista
-                materia: materia.properties?.Materia?.value ?? "",
-                periodo: materia.properties?.periodo?.value ?? "",
-                calificacion: materia.properties?.Calificacion?.value ?? "",
-                noMatricula: transformData(materia.properties)
-            });
-        }
-    }
-}
-
 const formatData = (data: string) => {
     if (data.includes("\n")) {
         return data.replace("\n", " ");
     }
     return data;
 }
-
-function transformData(data: Row): number {
-    if (data?.Matr1?.value?.includes("+") || data?.Matr1?.value?.includes("A")) return 1;
-    if (data?.Matr2?.value?.includes("+") || data?.Matr1?.value?.includes("A")) return 2;
-    if (data?.Matr3?.value?.includes("+") || data?.Matr1?.value?.includes("A")) return 3;
-    else return 0;
-}
-
 
 const extractData = async (file: ArrayBuffer, model: string) => {
     try {
@@ -647,21 +486,36 @@ const extractData = async (file: ArrayBuffer, model: string) => {
 
 const extractDetailData = async (file: ArrayBuffer, model: string) => {
     try {
+
+        // Cargar el PDF y extraer última página
+        const pdfDoc = await PDFDocument.load(file);
+        const pageCount = pdfDoc.getPageCount();
+
+        // Crear nuevo PDF con solo la última página
+        const newPdfDoc = await PDFDocument.create();
+        const [lastPage] = await newPdfDoc.copyPages(pdfDoc, [pageCount - 1]);
+        newPdfDoc.addPage(lastPage);
+
+         // Convertir a ArrayBuffer
+         const lastPagePdfBytes = await newPdfDoc.save();
+         const lastPageBuffer = new Uint8Array(lastPagePdfBytes).buffer;
+
         const endpoint = process.env.FORM_RECOGNIZER_ENDPOINT || "<endpoint>";
         const credential = new AzureKeyCredential(process.env.FORM_RECOGNIZER_API_KEY || "<api key>");
         const client = new DocumentAnalysisClient(endpoint, credential);
 
         const modelId = model;
 
-        const poller = await client.beginAnalyzeDocument(modelId, file);
+        const poller = await client.beginAnalyzeDocument(modelId, lastPageBuffer );
+        const result = await poller.pollUntilDone();
 
-        const { tables } = await poller.pollUntilDone();
-
-        if (!tables) {
-            return NextResponse.json({ error: 'Error extracting detail data' }, { status: 500 });
+        // Validate tables exists and is an array
+        if (!result.tables || !Array.isArray(result.tables)) {
+            console.error('Invalid tables structure:', result.tables);
+            return [];
         }
 
-        return tables;
+        return result.tables;
     } catch (err) {
         console.error('Error extracting data:', err);
         return NextResponse.json({ error: 'Error extracting data', status: 500 });
@@ -689,7 +543,6 @@ const classifyDocument = async (file: ArrayBuffer) => {
         return NextResponse.json({ error: 'Error classifying data', status: 500 });
     }
 }
-
 
 const uploadToBlobStorage = async (pdfData: ArrayBuffer): Promise<string> => {
     try {
