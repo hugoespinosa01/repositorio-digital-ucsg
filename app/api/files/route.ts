@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
         const parsedDetails = parseData(extractedDetails);
 
         if (!extractedData) {
-            throw new Error('Error extracting data');
+            throw new Error('Error extracting data for extractedData');
         }
 
         const { fields } = extractedData;
@@ -471,7 +471,7 @@ const extractData = async (file: ArrayBuffer, model: string) => {
         const { documents } = await poller.pollUntilDone();
 
         if (!documents) {
-            return NextResponse.json({ error: 'Error extracting data' }, { status: 500 });
+            return NextResponse.json({ error: 'Error extracting data at Azure API' },  { status: 500 });
         }
 
         return {
@@ -504,9 +504,16 @@ const extractDetailData = async (file: ArrayBuffer, model: string) => {
         const credential = new AzureKeyCredential(process.env.FORM_RECOGNIZER_API_KEY || "<api key>");
         const client = new DocumentAnalysisClient(endpoint, credential);
 
+        if (!endpoint || !credential) {
+            throw new Error('Form Recognizer credentials not configured');
+        }
+
+
         const modelId = model;
 
+        console.log('Starting document analysis...');
         const poller = await client.beginAnalyzeDocument(modelId, lastPageBuffer );
+        console.log('Waiting for analysis to complete...');
         const result = await poller.pollUntilDone();
 
         // Validate tables exists and is an array
