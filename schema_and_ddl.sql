@@ -27,9 +27,9 @@ BEGIN
         Tamano decimal(18, 2),
         Extension varchar(10),
         Estado int,
-        Tipo VARCHAR(15);
+        Tipo VARCHAR(15)
     );
-END
+END;
 
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Carpeta]') AND type in (N'U'))
 BEGIN
@@ -41,9 +41,9 @@ BEGIN
         [FechaActualizacion] DATETIME,
         [IdCarrera] INT,
         [Estado] INT,
-        Tipo VARCHAR(15);
-        Ruta VARCHAR(255);
-        IdHijos VARCHAR(255);
+        Tipo VARCHAR(15),
+        Ruta VARCHAR(255),
+        IdHijos VARCHAR(255)
     );
 END
 

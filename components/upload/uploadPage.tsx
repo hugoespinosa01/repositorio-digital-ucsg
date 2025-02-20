@@ -12,7 +12,7 @@ import { Loader2 } from 'lucide-react';
 import useAuthRoles from '@/hooks/useAuthRoles';
 
 
-const MAX_FILE_SIZE = 1024 * 1024 * 20; // 20MB MAX (AZURE LIMITA MAX 500 MB EN EL PLAN F0)
+const MAX_FILE_SIZE = 1024 * 1024 * 25; // 25MB MAX (AZURE LIMITA MAX 500 MB EN EL PLAN F0)
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -120,7 +120,7 @@ export default function UploadPage() {
               <p>
                 <strong>Consideraciones:</strong><br />
                 • Solo se permiten archivos <strong>PDF</strong>.<br />
-                • El tamaño máximo del archivo debe ser de <strong>20 MB</strong>.<br />
+                • El tamaño máximo del archivo debe ser de <strong>25 MB</strong>.<br />
                 • Digitalizar <strong>SIEMPRE</strong> el detalle de las notas aprobadas en la <strong>última página</strong> del archivo si tuviera más de una página.<br />
                 • No deben subirse documentos protegidos con contraseña.<br />
                 • El documento debe ser <strong>legible</strong>.<br />

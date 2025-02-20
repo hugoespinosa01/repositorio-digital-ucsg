@@ -295,9 +295,6 @@ const parseData = (tables: any) => {
 
     // Iterar a través de todas las tablas en el OCR
     tables.forEach((table: any) => {
-
-
-
         const mapping = findTableStructure(table.cells);
         if (!mapping) return; // Si no encontramos la estructura esperada, saltamos esta tabla
 
@@ -418,7 +415,7 @@ const findTableStructure = (cells: any[]): ColumnMapping | null => {
         }
 
         // Encontrar la columna de AÑO (PERIODO) para la carrera de Computación
-        if (content.includes("AÑO")) {
+        if (content == ("AÑO")) {
             mapping.periodoColumnIndex = cell.columnIndex;
         }
 
@@ -478,8 +475,13 @@ const extractPeriodoFromRow = (row: any): string | null => {
 
 const formatData = (data: string) => {
     if (data.includes("\n")) {
-        return data.replace("\n", " ");
+        return data.replace("\n", " ").split('-')[0].trim();;
     }
+
+    if (data.includes("-")) {
+        return data.split('-')[0].trim();
+    }
+    
     return data;
 }
 
