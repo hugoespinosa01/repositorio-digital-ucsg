@@ -13,6 +13,8 @@ import { LogoutButton } from '@/components/logoutButton';
 import { useState } from 'react';
 import { Hammersmith_One } from 'next/font/google';
 import logosinergIA from '@/public/logo_sinergia.png';
+import { Typewriter } from '@/components/typewriter';
+import { Squares } from '@/components/background';
 
 const slugs = [
   "typescript",
@@ -74,9 +76,22 @@ export default function Home() {
               </div>
 
               {/* Subtítulo */}
-              <span className="max-w-[90%] sm:max-w-[750px] mt-2 sm:mt-3 text-center text-base sm:text-lg font-light text-black dark:text-white">
-                Gestiona tus documentos con inteligencia artificial
+              <span className="max-w-[90%] sm:max-w-[750px] mt-2 sm:mt-3 text-center text-base sm:text-2xl font-light text-black dark:text-white">
+                Gestiona tus documentos con inteligencia artificial.
               </span>
+              <Typewriter
+                text={[
+                  " Sube tus documentos.",
+                  " Organiza tus archivos por categorías.",
+                  " Busca cualquier documento con algoritmos heurísticos.",
+                ]}
+                className='max-w-[90%] sm:max-w-[750px] text-center text-base sm:text-lg font-medium text-primary dark:text-white'
+                speed={70}
+                waitTime={1500}
+                deleteSpeed={40}
+                cursorChar={"_"}
+              />
+
 
               {/* Botones de autenticación */}
               <div className="flex w-full items-center justify-center space-x-2 sm:space-x-4 py-4">
@@ -110,12 +125,12 @@ export default function Home() {
           </div>
 
           {/* Sección de Scroll Container */}
-          <div className="w-full flex justify-center relative px-4 sm:px-0">
+          <div className="w-full flex justify-center relative px-3 sm:px-0">
             <ContainerScroll
               titleComponent={
                 <>
                   <h1 className="text-2xl sm:text-4xl  font-semibold">
-                    Gestión documental con<br />
+                    Ahorra tiempo de digitación manual con<br />
                     <span className="text-4xl md:text-[6rem] font-bold mt-1 leading-none">
                       Inteligencia Artificial
                     </span>
@@ -144,7 +159,7 @@ export default function Home() {
             <div className='flex items-center justify-center lg:justify-start lg:ml-8 xl:ml-28 px-4'>
               <h4 className='text-xl sm:text-2xl text-center lg:text-left text-black dark:text-white'>
                 Construido con las últimas tecnologías de vanguardia para la
-                <span className='text-primary'> Falcultad de Ingeniería</span>
+                <span className='text-primary'> Facultad de Ingeniería</span>
               </h4>
             </div>
           </div>
