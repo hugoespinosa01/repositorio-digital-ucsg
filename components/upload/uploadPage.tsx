@@ -21,7 +21,7 @@ export default function UploadPage() {
   const [fileId, setFileId] = useState<string | null>(null);
   const router = useRouter();
 
-  const { permissions } = useAuthRoles(true);
+  const { permissions } = useAuthRoles();
 
   const hasPermission = (resource: string, action: string) => {
     return permissions.some(

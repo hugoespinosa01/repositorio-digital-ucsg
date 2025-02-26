@@ -154,24 +154,6 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
     }
   }
 
-  //Resultado de la búsqueda
-
-  if (isSearching) {
-    return (
-      <>
-        <div className="flex justify-center mb-8">
-
-          <TextShimmer
-            duration={1.2}
-            className='text-sm font-medium color:theme(colors.blue.600)] [--base-gradient-color:theme(colors.blue.200)] dark:[--base-color:theme(colors.blue.700)] dark:[--base-gradient-color:theme(colors.blue.400)]'
-          >
-            Buscando documentos...
-          </TextShimmer>
-
-        </div>
-      </>
-    )
-  }
 
   return (
     <Card className='p-5 mt-5'>
@@ -217,10 +199,11 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                           />
                         </div>
 
-                        {/* {
-                          isSearching && (
-                            <div className="flex justify-center mb-8">
+                        {/* Resultado de la búsqueda */}
 
+                        {
+                          isSearching && (
+                            <div className="flex justify-center mt-4 mb-8">
                               <TextShimmer
                                 duration={1.2}
                                 className='text-sm font-medium color:theme(colors.blue.600)] [--base-gradient-color:theme(colors.blue.200)] dark:[--base-color:theme(colors.blue.700)] dark:[--base-gradient-color:theme(colors.blue.400)]'
@@ -230,7 +213,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
 
                             </div>
                           )
-                        } */}
+                        }
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                           {
@@ -324,7 +307,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
 
                       {
                         isSearching && (
-                          <div className="flex justify-center mb-8">
+                          <div className="flex justify-center mt-4 mb-8">
                             <TextShimmer
                               duration={1.2}
                               className='text-sm font-medium color:theme(colors.blue.600)] [--base-gradient-color:theme(colors.blue.200)] dark:[--base-color:theme(colors.blue.700)] dark:[--base-gradient-color:theme(colors.blue.400)]'
@@ -385,13 +368,17 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
 
                         ))}
                       </div>
-                      <div className='flex justify-center text-center mt-5'>
-                        <PaginationWithLinks
-                          page={currentPage}
-                          pageSize={PAGE_SIZE}
-                          totalCount={totalFolders}
-                        />
-                      </div>
+                      {
+                        !isSearching && !isAlreadySearched && results.length === 0 && (
+                          <div className='flex justify-center text-center mt-5'>
+                            <PaginationWithLinks
+                              page={currentPage}
+                              pageSize={PAGE_SIZE}
+                              totalCount={totalFolders}
+                            />
+                          </div>
+                        )
+                      }
                     </>
                   ) : (
 

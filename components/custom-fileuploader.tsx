@@ -69,6 +69,7 @@ const FileUpload = ({ file, setFile, isSubmitting }: FileUploadProps) => {
                         color='red'
                         variant='ghost'
                         onClick={() => setFile(null)}
+                        disabled={isSubmitting}
                     >
                         <Trash2Icon className='w-4 h-4' />
                     </Button>

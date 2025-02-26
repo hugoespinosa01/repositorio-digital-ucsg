@@ -37,8 +37,6 @@ export function Menu({ isOpen }: MenuProps) {
     }
   }
 
-
-
   return (
     <ScrollArea className="h-screen overflow-auto">
       <nav
@@ -87,9 +85,9 @@ export function Menu({ isOpen }: MenuProps) {
                                 </span>
                                 <p
                                   className={cn(
-                                    "max-w-[200px] truncate",
-                                    isOpen === false
-                                      ? "-translate-x-96 opacity-0"
+                                    "max-w-[200px] transition-all duration-300 ease-in-out ",
+                                    !isOpen
+                                      ? "w-1 opacity-0"
                                       : "translate-x-0 opacity-100"
                                   )}
                                 >

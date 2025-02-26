@@ -2,10 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import LoadingDocuments from '@/components/documents/loading';
-import { useContext } from 'react';
 import GetBackButton from '../getback-button';
-import { AuthContext } from '@/context/auth-context';
-import Datatable from '../dataTable/Datatable';
 import { GetColumns } from '../dataTable/Columns';
 import { useRouter } from 'next/navigation';
 import { Button } from '../ui/button';
@@ -44,7 +41,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [openModalDelete, setOpenModalDelete] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
-  const { permissions } = useAuthRoles(true);
+  const { permissions } = useAuthRoles();
 
   useEffect(() => {
     if (fileId) {

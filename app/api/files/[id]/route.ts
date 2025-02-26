@@ -123,14 +123,9 @@ export async function GET(request: Request, { params }: Params) {
 
         const kardexDetalle = await prisma.documentoDetalleKardex.findMany({
             where: {
-                IdDocumentoKardex: kardex?.Id,
+                IdDocumentoKardex: kardex.Id,
                 Estado: 1
             },
-            // orderBy: {
-            //     TipoDocumentoKardex: {
-
-            //     }
-            // }
         });
 
         if (!kardexDetalle) {

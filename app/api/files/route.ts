@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { BlobServiceClient } from '@azure/storage-blob';
+import { BlobDeleteOptions, BlobDeleteResponse, BlobServiceClient, BlockBlobClient, ContainerClient } from '@azure/storage-blob';
 import { prisma } from '@/lib/prisma';
 import { Documento } from '@/types/file';
 import dotenv from 'dotenv';
@@ -146,14 +146,17 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        let cedula = fields.NoIdentificacion.value.replace(/[^0-9]/g, '') ?? ''
+
         const documentoYaSubido = await prisma.tipoDocumentoKardex.findFirst({
             where: {
-                NoIdentificacion: fields.NoIdentificacion.value,
+                NoIdentificacion: cedula,
                 Estado: 1
             }
         });
 
         if (documentoYaSubido) {
+            await deleteBlob(blobName);
             throw new Error('El documento ya ha sido subido anteriormente');
         }
 
@@ -178,7 +181,7 @@ export async function POST(request: NextRequest) {
         //Extraigo datos del documento (producto de Azure AI Intelligence)
         const datosExtraidos = {
             alumno: formatData(fields.Alumno.value),
-            noIdentificacion: fields.NoIdentificacion.value.replace(/[^0-9]/g, '') ?? '',
+            noIdentificacion: cedula,
             carrera: carreraArray[0].nombre ?? '',
             materiasAprobadas: [] as Materia[]
         }
@@ -188,7 +191,7 @@ export async function POST(request: NextRequest) {
         //await populateDetalleMaterias(datosExtraidos, fields);
 
         //Busco la carpeta root
-        const carpetaRoot = await prisma.carpeta.findFirst({
+        let carpetaRoot = await prisma.carpeta.findFirst({
             where: {
                 IdCarpetaPadre: null,
                 Estado: 1
@@ -196,20 +199,20 @@ export async function POST(request: NextRequest) {
         });
 
         if (!carpetaRoot) {
-            await prisma.carpeta.create({
+            carpetaRoot = await prisma.carpeta.create({
                 data: {
                     FechaCreacion: new Date,
                     IdCarpetaPadre: null,
                     Nombre: 'ucsg',
                     Tipo: 'Carpeta',
-                    Ruta: '/ucsg',
+                    Ruta: '/',
                     Estado: 1
                 }
             });
         }
 
         // Busco el Id de la carpeta de la carrera correspondiente
-        const carpetaObjetivo = await prisma.carpeta.findFirst({
+        let carpetaObjetivo = await prisma.carpeta.findFirst({
             where: {
                 IdCarrera: {
                     in: carreraArray.map(item => item.id)
@@ -220,7 +223,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (!carpetaObjetivo) {
-            await prisma.carpeta.create({
+            carpetaObjetivo = await prisma.carpeta.create({
                 data: {
                     FechaCreacion: new Date,
                     IdCarrera: carreraArray[0].id,
@@ -228,7 +231,7 @@ export async function POST(request: NextRequest) {
                     Nombre: datosExtraidos.carrera,
                     Estado: 1,
                     Tipo: 'Carpeta',
-                    Ruta: `/ucsg/${datosExtraidos.carrera}`
+                    Ruta: `/${carpetaRoot.Nombre}/${datosExtraidos.carrera}`
                 }
             });
         }
@@ -678,6 +681,34 @@ const uploadToBlobStorage = async (pdfData: ArrayBuffer): Promise<string> => {
         throw new Error('Error uploading blob');
     }
 
+}
+
+const deleteBlob = async (ref: string): Promise<void> => {
+    try {
+
+        const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
+        const containerClient = blobServiceClient.getContainerClient(containerName);
+
+        // Create blob client from container client
+        const blockBlobClient: BlockBlobClient = containerClient.getBlockBlobClient(ref);
+
+        // include: Delete the base blob and all of its snapshots
+        // only: Delete only the blob's snapshots and not the blob itself
+        const options: BlobDeleteOptions = {
+            deleteSnapshots: 'include'
+        };
+
+        const blobDeleteResponse: BlobDeleteResponse = await blockBlobClient.delete(options);
+
+        if (!blobDeleteResponse) {
+            throw new Error('Error deleting blob');
+        }
+
+        console.log('Blob eliminado con éxito', ref);
+    } catch (err) {
+        console.error('Error deleting blob:', err);
+        throw new Error('Error deleting blob');
+    }
 }
 
 
