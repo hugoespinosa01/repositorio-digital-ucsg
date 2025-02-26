@@ -98,12 +98,14 @@ export async function POST(request: NextRequest) {
             classifiedDoc = await classifyDocument(pdfData);
             console.log('Document classification result:', classifiedDoc);
         } catch (error) {
+            await deleteBlob(blobName);
             console.error('Error during document classification:', error);
             throw new Error('Unable to classify document');
         }
 
         // Validar clasificación    
         if (typeof classifiedDoc !== 'string' || !['kardex-computacion', 'kardex-civil'].includes(classifiedDoc)) {
+            await deleteBlob(blobName);
             console.error('Invalid document classification:', classifiedDoc);
             throw new Error('Invalid document classification');
         }
@@ -116,6 +118,7 @@ export async function POST(request: NextRequest) {
                 extractedData = await extractData(pdfData, 'computacion-1-model');
                 console.log('Extracted data for computacion:', extractedData);
             } catch (error) {
+                await deleteBlob(blobName);
                 console.error('Error extracting computacion data:', error);
                 throw new Error('Error extracting data for extractedData');
             }
@@ -124,14 +127,17 @@ export async function POST(request: NextRequest) {
                 extractedData = await extractData(pdfData, 'modelo_civil_v11');
                 console.log('Extracted data for civil:', extractedData);
             } catch (error) {
+                await deleteBlob(blobName);
                 console.error('Error extracting civil data:', error);
                 throw new Error('Error extracting data for extractedData');
             }
         } else {
+            await deleteBlob(blobName);
             throw new Error('Invalid document classification');
         }
 
         if (!extractedData) {
+            await deleteBlob(blobName);
             throw new Error('Invalid extracted data structure');
         }
 
@@ -142,6 +148,7 @@ export async function POST(request: NextRequest) {
         const requiredFields = ['Alumno', 'NoIdentificacion', 'Carrera'];
         for (const field of requiredFields) {
             if (!fields[field] || !fields[field].value) {
+                await deleteBlob(blobName);
                 throw new Error(`Missing required field: ${field}`);
             }
         }
@@ -572,18 +579,37 @@ const extractData = async (file: ArrayBuffer, model: string) => {
 const extractDetailData = async (file: ArrayBuffer, model: string) => {
     try {
 
-        // Cargar el PDF y extraer última página
+        // Cargar el PDF
         const pdfDoc = await PDFDocument.load(file);
         const pageCount = pdfDoc.getPageCount();
 
-        // Crear nuevo PDF con solo la última página
-        const newPdfDoc = await PDFDocument.create();
-        const [lastPage] = await newPdfDoc.copyPages(pdfDoc, [pageCount - 1]);
-        newPdfDoc.addPage(lastPage);
+        // Clasificar si es malla curricular
+        console.log('Clasificando documento...');
+        const resultClassification = await classifyMallaCurricular(file);
 
-        // Convertir a ArrayBuffer
-        const lastPagePdfBytes = await newPdfDoc.save();
-        const lastPageBuffer = new Uint8Array(lastPagePdfBytes).buffer;
+        if (!resultClassification) {
+            throw new Error('Error classifying malla curricular');
+        }
+
+        let pdfToAnalyze;
+
+        // Validar clasificación
+        if (resultClassification == 'malla-curricular') {
+            console.log('Documento clasificado como malla curricular, excluyendo primera página...');
+
+            // Crear nuevo PDF sin la primera página
+            const newPdfDoc = await PDFDocument.create();
+            const pagesToCopy = Array.from({ length: pageCount - 1 }, (_, i) => i + 1);
+            const copiedPages = await newPdfDoc.copyPages(pdfDoc, pagesToCopy);
+            copiedPages.forEach(page => newPdfDoc.addPage(page));
+
+            const newPdfBytes = await newPdfDoc.save();
+            pdfToAnalyze = new Uint8Array(newPdfBytes).buffer;
+        } else {
+            console.log('Documento no es malla curricular, procesando todas las páginas...');
+            // Usar el documento original completo
+            pdfToAnalyze = file;
+        }
 
         const endpoint = process.env.FORM_RECOGNIZER_ENDPOINT || "<endpoint>";
         const credential = new AzureKeyCredential(process.env.FORM_RECOGNIZER_API_KEY || "<api key>");
@@ -593,11 +619,10 @@ const extractDetailData = async (file: ArrayBuffer, model: string) => {
             throw new Error('Form Recognizer credentials not configured');
         }
 
-
         const modelId = model;
 
         console.log('Starting document analysis...');
-        const poller = await client.beginAnalyzeDocument(modelId, lastPageBuffer);
+        const poller = await client.beginAnalyzeDocument(modelId, pdfToAnalyze);
         console.log('Waiting for analysis to complete...');
         const result = await poller.pollUntilDone();
 
@@ -614,9 +639,53 @@ const extractDetailData = async (file: ArrayBuffer, model: string) => {
     }
 }
 
+// Clasificar malla curricular
+// Esto porque en el modelo pre entrenado, coge la primera hoja (malla curricular) como una tabla
+// Y eso afecta al pre procesamiento de los datos
+const classifyMallaCurricular = async (file: ArrayBuffer): Promise<string | null> => {
+    try {
+        console.log('Classifying malla...');
+        const endpoint = process.env.FORM_CUSTOM_CLASSIFICATION_ENDPOINT;
+        const apiKey = process.env.FORM_CUSTOM_CLASSIFICATION_API_KEY;
+
+        if (!endpoint || !apiKey) {
+            throw new Error('Form Recognizer credentials not configured');
+        }
+
+        const credential = new AzureKeyCredential(apiKey);
+        const client = new DocumentAnalysisClient(endpoint, credential);
+
+        console.log('Beginning document classification...');
+
+        const poller = await client.beginClassifyDocument('malla-curricular-classifier', file);
+
+        console.log('Waiting for classification to complete...');
+        const result = await poller.pollUntilDone();
+
+        if (!result.documents || result.documents.length === 0) {
+            return null;
+        }
+
+        console.log('Classification completed successfully', result.documents[0].docType);
+
+        const docType = result.documents[0].docType;
+
+        // Validar explícitamente el tipo de documento
+        const validTypes = ['malla-curricular', 'no-malla'];
+
+        if (!validTypes.includes(docType)) {
+            return null;
+        }
+
+        return docType;
+    } catch (err) {
+        console.error('Error clasificando los documentos dentro de la funcion classifyMallaCurricular:', err);
+        throw err;
+    }
+}
+
 const classifyDocument = async (file: ArrayBuffer): Promise<string | null> => {
     try {
-
 
         console.log('Classifying document...');
         const endpoint = process.env.FORM_CUSTOM_CLASSIFICATION_ENDPOINT;
@@ -656,7 +725,6 @@ const classifyDocument = async (file: ArrayBuffer): Promise<string | null> => {
         throw err;
     }
 };
-
 
 const uploadToBlobStorage = async (pdfData: ArrayBuffer): Promise<string> => {
     try {

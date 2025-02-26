@@ -27,7 +27,7 @@ const FileUpload = ({ file, setFile, isSubmitting }: FileUploadProps) => {
                 <input {...getInputProps()} />
 
                 {
-                    file && !isSubmitting? (
+                    file && !isSubmitting ? (
 
                         <p className="mt-2 flex align-middle items-center justify-center space-x-2">
                             <File className='w-10 h-10 text-rose-900' />
@@ -39,7 +39,7 @@ const FileUpload = ({ file, setFile, isSubmitting }: FileUploadProps) => {
                         (
                             <>
                                 <LoaderCircle className='h-10 w-10 text-red-600 animate-spin' />
-                                <p>
+                                <p className='text-foreground text-sm mt-2'>
                                     Cargando y extrayendo texto...
                                 </p>
                             </>
@@ -66,12 +66,11 @@ const FileUpload = ({ file, setFile, isSubmitting }: FileUploadProps) => {
                     <p className='text-slate-500'>Archivo seleccionado: <strong>{file.name}</strong></p>
                     <Button
                         type='button'
-                        color='red'
                         variant='ghost'
                         onClick={() => setFile(null)}
                         disabled={isSubmitting}
                     >
-                        <Trash2Icon className='w-4 h-4' />
+                        <Trash2Icon color='red' className='w-4 h-4' />
                     </Button>
                 </div>}
         </div>

@@ -20,7 +20,7 @@ export async function DELETE(request: Request, { params }: Params) {
         });
 
         if (!deletedMateria) {
-            return NextResponse.json({message: "Error al eliminar materia"}, { status: 404 });
+            return NextResponse.json({ message: "Error al eliminar materia" }, { status: 404 });
         }
 
         const result = {
@@ -40,7 +40,7 @@ export async function DELETE(request: Request, { params }: Params) {
     }
 }
 
-export async function PUT(request: Request, {params}: Params) {
+export async function PUT(request: Request, { params }: Params) {
     try {
         const { id } = params;
 
@@ -59,7 +59,7 @@ export async function PUT(request: Request, {params}: Params) {
         });
 
         if (!data) {
-            return NextResponse.json({message: "Error al actualizar materia"}, { status: 404 });
+            return NextResponse.json({ message: "Error al actualizar materia" }, { status: 404 });
         }
 
         const result = {
@@ -83,15 +83,31 @@ export async function GET(request: Request, { params }: Params) {
     try {
         const { id } = params
 
+        if (!id) {
+            throw new Error('No se ha enviado un id de documento');
+        }
+
+        const kardex = await prisma.tipoDocumentoKardex.findFirst({
+            where: {
+                IdDocumento: Number(id),
+                Estado: 1
+            }
+        });
+
+
+        if (!kardex) {
+            throw new Error('Documento kardex no encontrado');
+        }
+
         const data = await prisma.documentoDetalleKardex.findMany({
             where: {
-                IdDocumentoKardex: Number(id),
+                IdDocumentoKardex: kardex.Id,
                 Estado: 1,
             },
         });
 
         if (!data) {
-            return NextResponse.json({message: "Error al obtener materias"}, { status: 404 });
+            return NextResponse.json({ message: "Error al obtener materias" }, { status: 404 });
         }
 
         const result = {
@@ -120,17 +136,17 @@ export async function POST(request: Request, { params }: Params) {
         // Validaciones
 
         if (!body) {
-            return NextResponse.json({message: "Debe enviar un cuerpo"}, { status: 400 });
+            return NextResponse.json({ message: "Debe enviar un cuerpo" }, { status: 400 });
         }
 
         if (body.Calificacion > 10 || body.Calificacion < 0) {
-            return NextResponse.json({message: "La calificación debe ser mayor a 0 y menor a 10"}, { status: 400 });
+            return NextResponse.json({ message: "La calificación debe ser mayor a 0 y menor a 10" }, { status: 400 });
         }
 
         if (body.NoMatricula > 3 || body.NoMatricula < 0) {
-            return NextResponse.json({message: "El número de matrícula debe ser mayor a 0 y menor a 3"}, { status: 400 });
+            return NextResponse.json({ message: "El número de matrícula debe ser mayor a 0 y menor a 3" }, { status: 400 });
         }
-        
+
         //Este campo lo prescindo
         delete body['isNewRow'];
         delete body['Id'];
@@ -145,7 +161,7 @@ export async function POST(request: Request, { params }: Params) {
         });
 
         if (!data) {
-            return NextResponse.json({message: "Error al crear materia"}, { status: 404 });
+            return NextResponse.json({ message: "Error al crear materia" }, { status: 404 });
         }
 
         const result = {

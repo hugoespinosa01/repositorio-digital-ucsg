@@ -381,8 +381,9 @@ export async function GET(request: Request, { params }: { params: { fileId: stri
         where: {
             IdDocumentoKardex: kardex?.Id,
             Estado: 1
-        }
+        },
     });
+
 
     if (!kardexDetalle) {
         throw new Error('Detalles de documento kardex no encontrados');

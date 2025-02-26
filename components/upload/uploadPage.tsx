@@ -121,7 +121,7 @@ export default function UploadPage() {
                 <strong>Consideraciones:</strong><br />
                 • Solo se permiten archivos <strong>PDF</strong>.<br />
                 • El tamaño máximo del archivo debe ser de <strong>25 MB</strong>.<br />
-                • Digitalizar <strong>SIEMPRE</strong> el detalle de las notas aprobadas en la <strong>última página</strong> del archivo si tuviera más de una página.<br />
+                • Digitalizar <strong>SIEMPRE</strong> el detalle de las notas aprobadas en las <strong>últimas páginas</strong> del archivo, si tuviera más de una página.<br />
                 • No deben subirse documentos protegidos con contraseña.<br />
                 • El documento debe ser <strong>legible</strong>.<br />
                 • Se permite subir <strong>un documento por estudiante.</strong><br />
