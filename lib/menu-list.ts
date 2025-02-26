@@ -9,7 +9,8 @@ import {
   File,
   User,
   FileUp,
-  Files
+  Files,
+  Info
 } from "lucide-react";
 
 type Submenu = {
@@ -53,13 +54,20 @@ export function getMenuList(pathname: string): Group[] {
       ]
     },
     {
-      groupLabel: "Configuración",
+      groupLabel: "Ajustes",
       menus: [
         {
           href: "/account",
           label: "Cuenta",
           active: pathname.includes("/account"),
           icon: User,
+          submenus: []
+        },
+        {
+          href: "/info",
+          label: "Información del sistema",
+          active: pathname.includes("/info"),
+          icon: Info,
           submenus: []
         }
       ]

@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
     const result = {
       message: 'Consulta exitosa',
       status: 200,
-      data: carpetas.length > 0 ? carpetas : [rootFolder],
+      data: carpetas.length > 0 ? carpetas : rootFolder ? [rootFolder] : [],
       length: totalLength,
       currentPage: page,
     }

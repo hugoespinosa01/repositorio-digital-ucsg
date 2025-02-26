@@ -40,14 +40,14 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
   const [idFolder, setIdFolder] = useState<number>(0);
   const [idFile, setIdFile] = useState<number>(0);
   const [editMode, setEditMode] = useState(false);
-  const { folders, fetchFolders, loading, totalFolders, fetchChildren, childrenDocsAndFiles, loadingChildren, totalChildren} = useContext(FolderContext);
+  const { folders, fetchFolders, loading, totalFolders, fetchChildren, childrenDocsAndFiles, loadingChildren, totalChildren } = useContext(FolderContext);
   const [openModalDelete, setOpenModalDelete] = useState<boolean>(false);
   const [results, setResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [isAlreadySearched, setIsAlreadySearched] = useState<boolean>(false);
   const [query, setQuery] = useState<string>('');
 
-  const { permissions } = useAuthRoles(true);
+  const { permissions } = useAuthRoles();
 
   const hasPermission = (resource: string, action: string) => {
     return permissions.some(
@@ -154,6 +154,25 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
     }
   }
 
+  //Resultado de la búsqueda
+
+  if (isSearching) {
+    return (
+      <>
+        <div className="flex justify-center mb-8">
+
+          <TextShimmer
+            duration={1.2}
+            className='text-sm font-medium color:theme(colors.blue.600)] [--base-gradient-color:theme(colors.blue.200)] dark:[--base-color:theme(colors.blue.700)] dark:[--base-gradient-color:theme(colors.blue.400)]'
+          >
+            Buscando documentos...
+          </TextShimmer>
+
+        </div>
+      </>
+    )
+  }
+
   return (
     <Card className='p-5 mt-5'>
       <CardHeader className='gap-y-2 lg:flex-row lg:items-center lg:justify-between'>
@@ -162,7 +181,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
           <p className="text-2xl font-bold mb-4">Documentos</p>
           <GetBackButton />
         </CardTitle>
-        
+
         <DocumentHeader
           handleCreateFolder={handleCreateFolder}
           canCreateFolder={hasPermission('res:folders', 'create')}
@@ -195,11 +214,10 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                               handleSearch(query, setResults, setIsSearching);
                               setQuery(query);
                             }}
-
                           />
                         </div>
 
-                        {
+                        {/* {
                           isSearching && (
                             <div className="flex justify-center mb-8">
 
@@ -212,7 +230,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
 
                             </div>
                           )
-                        }
+                        } */}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                           {
@@ -355,10 +373,10 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                           <FolderCard
                             canEditFolder={hasPermission('res:folders', 'update')}
                             canDeleteFolder={hasPermission('res:folders', 'delete')}
-                            key={doc.Id}
+                            key={doc?.Id}
                             folder={doc}
-                            fileName={doc.Nombre}
-                            creationDate={doc.FechaCreacion}
+                            fileName={doc?.Nombre}
+                            creationDate={doc?.FechaCreacion}
                             onEdit={handleEditFolder}
                             onDelete={handleDeleteFolder}
                             onMove={handleMoveFolder}

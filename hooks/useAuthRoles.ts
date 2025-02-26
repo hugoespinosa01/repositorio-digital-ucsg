@@ -9,7 +9,7 @@ interface Permissions {
     rsid: string;
 }
 
-function useAuthRoles(autoFetch = false) {
+function useAuthRoles() {
     const [permissions, setPermissions] = useState<Permissions[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);

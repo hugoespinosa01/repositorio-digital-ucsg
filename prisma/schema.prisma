@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Carpeta {
-  Id                 Int         @id(map: "PK__Carpeta__3214EC071E03CBC5") @default(autoincrement())
+  Id                 Int         @id(map: "PK__Carpeta__3214EC07F05BB7F9") @default(autoincrement())
   Nombre             String?     @db.VarChar(255)
   IdCarpetaPadre     Int?
   FechaCreacion      DateTime?   @db.DateTime
@@ -25,14 +25,14 @@ model Carpeta {
 }
 
 model Carrera {
-  Id             Int              @id(map: "PK__Carrera__3214EC07DEC958CF") @default(autoincrement())
+  Id             Int              @id(map: "PK__Carrera__3214EC07D21C596A") @default(autoincrement())
   Nombre         String?          @db.VarChar(255)
   Carpeta        Carpeta[]
   UsuarioCarrera UsuarioCarrera[]
 }
 
 model Documento {
-  Id                  Int                   @id(map: "PK__Document__3214EC0705F3D70E") @default(autoincrement())
+  Id                  Int                   @id(map: "PK__Document__3214EC079F4544E1") @default(autoincrement())
   IdCarpeta           Int?
   NombreArchivo       String?               @db.VarChar(255)
   Ruta                String?               @db.VarChar(255)
@@ -46,20 +46,10 @@ model Documento {
   TipoDocumentoKardex TipoDocumentoKardex[]
 }
 
-model sysdiagrams {
-  name         String @db.NVarChar(128)
-  principal_id Int
-  diagram_id   Int    @id(map: "PK__sysdiagr__C2B05B61D1625058") @default(autoincrement())
-  version      Int?
-  definition   Bytes?
-
-  @@unique([principal_id, name], map: "UK_principal_name")
-}
-
 model Usuario {
-  Id             Int              @id(map: "PK__Usuario__3214EC071D0F22F9") @default(autoincrement())
+  Id             Int              @id(map: "PK__Usuario__3214EC0798E556AE") @default(autoincrement())
   Nombre         String?          @db.VarChar(255)
-  Apellido       BigInt?
+  Apellido       Int?
   Email          String?          @db.VarChar(255)
   Contrasena     String?          @db.VarChar(255)
   Estado         Int?
@@ -67,16 +57,16 @@ model Usuario {
 }
 
 model UsuarioCarrera {
-  Id        Int      @id(map: "PK__UsuarioC__3214EC07514C68B8") @default(autoincrement())
+  Id        Int      @id(map: "PK__UsuarioC__3214EC07182E1554") @default(autoincrement())
   IdUsuario Int?
   IdCarrera Int?
-  Estado    BigInt?
+  Estado    Int?
   Carrera   Carrera? @relation(fields: [IdCarrera], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "UsuarioCarrera_IdCarrera_fk")
   Usuario   Usuario? @relation(fields: [IdUsuario], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "UsuarioCarrera_IdUsuario_fk")
 }
 
 model DocumentoDetalleKardex {
-  Id                  Int                  @id(map: "PK__Document__3214EC073D3A0BBC") @default(autoincrement())
+  Id                  Int                  @id(map: "PK__Document__3214EC07921974AD") @default(autoincrement())
   Ciclo               String?              @db.VarChar(255)
   Materia             String?              @db.VarChar(255)
   Periodo             String?              @db.VarChar(255)
@@ -88,15 +78,15 @@ model DocumentoDetalleKardex {
 }
 
 model TipoDocumentoKardex {
-  Id                      Int                      @id(map: "PK__TipoDocu__3214EC0758A323E6") @default(autoincrement())
+  Id                      Int                      @id(map: "PK__TipoDocu__3214EC07DD4741E2") @default(autoincrement())
   IdDocumento             Int
   Alumno                  String?                  @db.VarChar(255)
   NoIdentificacion        String?                  @db.VarChar(255)
   Estado                  Int?
-  Carrera                 String?                  @db.VarChar(100)
   NotaGraduacionSeminario Decimal?                 @db.Decimal(18, 2)
   PromMateriasAprobadas   Decimal?                 @db.Decimal(18, 2)
   PromGraduacion          Decimal?                 @db.Decimal(18, 2)
+  Carrera                 String?                  @db.VarChar(100)
   DocumentoDetalleKardex  DocumentoDetalleKardex[]
   Documento               Documento                @relation(fields: [IdDocumento], references: [Id], onUpdate: NoAction, map: "IdDocumento_fk")
 }

@@ -77,6 +77,7 @@ BEGIN
         Alumno varchar(255),
         NoIdentificacion varchar(255),
         Estado int,
+        Carrera varchar(255),
         NotaGraduacionSeminario decimal(18, 2),
         PromMateriasAprobadas decimal(18, 2),
         PromGraduacion decimal(18, 2),

@@ -146,6 +146,17 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        const documentoYaSubido = await prisma.tipoDocumentoKardex.findFirst({
+            where: {
+                NoIdentificacion: fields.NoIdentificacion.value,
+                Estado: 1
+            }
+        });
+
+        if (documentoYaSubido) {
+            throw new Error('El documento ya ha sido subido anteriormente');
+        }
+
         let extractedDetails = await extractDetailData(pdfData, 'prebuilt-document');
 
         if (!extractedDetails || !Array.isArray(extractedDetails)) {
@@ -184,6 +195,19 @@ export async function POST(request: NextRequest) {
             }
         });
 
+        if (!carpetaRoot) {
+            await prisma.carpeta.create({
+                data: {
+                    FechaCreacion: new Date,
+                    IdCarpetaPadre: null,
+                    Nombre: 'ucsg',
+                    Tipo: 'Carpeta',
+                    Ruta: '/ucsg',
+                    Estado: 1
+                }
+            });
+        }
+
         // Busco el Id de la carpeta de la carrera correspondiente
         const carpetaObjetivo = await prisma.carpeta.findFirst({
             where: {
@@ -198,10 +222,13 @@ export async function POST(request: NextRequest) {
         if (!carpetaObjetivo) {
             await prisma.carpeta.create({
                 data: {
+                    FechaCreacion: new Date,
                     IdCarrera: carreraArray[0].id,
                     IdCarpetaPadre: carpetaRoot?.Id,
                     Nombre: datosExtraidos.carrera,
-                    Estado: 1
+                    Estado: 1,
+                    Tipo: 'Carpeta',
+                    Ruta: `/ucsg/${datosExtraidos.carrera}`
                 }
             });
         }
@@ -481,7 +508,7 @@ const formatData = (data: string) => {
     if (data.includes("-")) {
         return data.split('-')[0].trim();
     }
-    
+
     return data;
 }
 
