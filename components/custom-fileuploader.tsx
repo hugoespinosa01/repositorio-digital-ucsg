@@ -39,7 +39,7 @@ const FileUpload = ({ file, setFile, isSubmitting }: FileUploadProps) => {
                         (
                             <>
                                 <LoaderCircle className='h-10 w-10 text-red-600 animate-spin' />
-                                <p className='text-foreground text-sm mt-2'>
+                                <p className='text-foreground text-sm mt-2 dark:text-black'>
                                     Cargando y extrayendo texto...
                                 </p>
                             </>

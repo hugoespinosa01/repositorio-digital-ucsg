@@ -5,7 +5,6 @@ import { Documento } from '@/types/file';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 import { AzureKeyCredential, DocumentAnalysisClient } from "@azure/ai-form-recognizer";
-import { ExtractedData } from '@/types/extractedData';
 import { loadToPinecone } from '@/lib/pinecone';
 import { checkCarrera } from '@/utils/checkCarrera';
 import { Materia } from '@/types/materia';
@@ -30,7 +29,7 @@ interface ExtractedDataFields {
 }
 
 interface ColumnMapping {
-    materiaIndex?: number;
+    materiaIndex?: number[];  // Cambiado a array para guardar múltiples ocurrencias
     matriculasIndexes?: number[];
     cicloRow?: number;
     periodoRow?: number;
@@ -363,9 +362,18 @@ const parseData = (tables: any) => {
                     cicloPropagado = newNivel;
                 }
 
+                let materia = "";
+
                 // Extraemos datos importantes
-                const materia = row[mapping.materiaIndex!]?.trim() || "";
-                if (!materia || materia === "ASIGNATURAS") return; // Saltamos filas vacías o encabezados
+                mapping.materiaIndex?.forEach((index) => {
+                    materia = row[index]?.trim() || "";
+                    if (!materia || materia === "ASIGNATURAS") {
+                        return;
+                    }
+                });
+
+                // const materia = row[mapping.materiaIndex!]?.trim() || "";
+                // if (!materia || materia === "ASIGNATURAS") return; // Saltamos filas vacías o encabezados
 
                 // Buscar el periodo
                 const periodo = mapping.periodoColumnIndex !== undefined ?
@@ -381,7 +389,7 @@ const parseData = (tables: any) => {
                 const calificacion = findCalificacionFromRow(row, mapping.calificacionIndexes!);
 
                 // Agregamos solo si la materia y la matrícula son válidas
-                if (materia && noMatricula) {
+                if (materia.length > 0 && noMatricula) {
                     const kardexDetalle: KardexDetalle = {
                         Id: rowIndex + 1,
                         Ciclo: cicloPropagado || "", // Usamos el ciclo propagado o un valor predeterminado
@@ -422,37 +430,56 @@ const findTableStructure = (cells: any[]): ColumnMapping | null => {
         return null;
     }
 
+    const mapping: ColumnMapping = {
+        materiaIndex: [],  // Inicializamos como array vacío
+        matriculasIndexes: [],
+        calificacionIndexes: []
+    };
 
 
-    const mapping: ColumnMapping = {};
+    // Mapa para tracking de headers por fila
+    const headersByRow = new Map<number, Set<string>>();
 
     // Buscamos los índices de columnas importantes
     cells.forEach((cell) => {
         const content = cell.content?.toString().trim().toUpperCase() || "";
+        const rowIndex = cell.rowIndex;
+
+        // Inicializar Set para esta fila si no existe
+        if (!headersByRow.has(rowIndex)) {
+            headersByRow.set(rowIndex, new Set());
+        }
 
         // Encontrar columna de ASIGNATURAS
         if (content.includes("ASIGNATURA") || content.includes("MATERIAS")) {
-            mapping.materiaIndex = cell.columnIndex;
+            mapping.materiaIndex?.push(cell.columnIndex);
+            headersByRow.get(rowIndex)?.add('ASIGNATURA');
         }
 
         // Encontrar columnas de MATRÍCULA
         if (content.includes("MATRICULA") || content.includes("MTR")) {
-            if (!mapping.matriculasIndexes) mapping.matriculasIndexes = [];
-            mapping.matriculasIndexes.push(cell.columnIndex);
+            mapping.matriculasIndexes?.push(cell.columnIndex);
+            headersByRow.get(rowIndex)?.add('MATRICULA');
         }
 
-        // Buscar fila que contiene el ciclo (puede estar en la columna de asignaturas)
+        // Buscar fila que contiene el ciclo
         if (content.match(/\d{4}-[III]+|NIVEL \d{3}|PRIMER CURSO|SEGUNDO CURSO|TERCER CURSO|CUARTO CURSO|QUINTO CURSO|SEXTO CURSO|SEMESTRE/i)) {
-            mapping.cicloRow = cell.rowIndex;
+            // Solo actualizar si no se ha encontrado antes o si está en una fila anterior
+            if (!mapping.cicloRow || rowIndex < mapping.cicloRow) {
+                mapping.cicloRow = rowIndex;
+            }
         }
 
         // Buscar fila que contiene el periodo
         if (content.match(/\d{4}/) || content.includes("AÑO") || content.includes("SEMESTRE")) {
-            mapping.periodoRow = cell.rowIndex;
+            // Solo actualizar si no se ha encontrado antes o si está en una fila anterior
+            if (!mapping.periodoRow || rowIndex < mapping.periodoRow) {
+                mapping.periodoRow = rowIndex;
+            }
         }
 
-        // Encontrar la columna de AÑO (PERIODO) para la carrera de Computación
-        if (content == ("AÑO")) {
+        // Encontrar la columna de AÑO (PERIODO)
+        if (content === "AÑO") {
             mapping.periodoColumnIndex = cell.columnIndex;
         }
 
@@ -460,13 +487,33 @@ const findTableStructure = (cells: any[]): ColumnMapping | null => {
             mapping.supletorioColumnIndex = cell.columnIndex;
         }
 
-
-        // Encontrar columnas de calificación ("PROMED", "FINAL", etc.)
+        // Encontrar columnas de calificación
         if (content.includes("PROMED") || content.includes("FINAL")) {
-            if (!mapping.calificacionIndexes) mapping.calificacionIndexes = [];
-            mapping.calificacionIndexes.push(cell.columnIndex);
+            mapping.calificacionIndexes?.push(cell.columnIndex);
+            headersByRow.get(rowIndex)?.add('CALIFICACION');
         }
     });
+
+    // Procesar las filas de encabezado encontradas
+    let validHeaderRows: number[] = [];
+    headersByRow.forEach((headers, rowIndex) => {
+        // Una fila válida de encabezado debe tener al menos estos elementos
+        if (headers.has('ASIGNATURA') &&
+            (headers.has('MATRICULA') || headers.has('CALIFICACION'))) {
+            validHeaderRows.push(rowIndex);
+        }
+    });
+
+    // Ordenar las filas válidas por índice
+    validHeaderRows.sort((a, b) => a - b);
+
+    // Si encontramos múltiples filas de encabezado válidas, 
+    // podemos determinar dónde comienza cada tabla
+    if (validHeaderRows.length > 1) {
+        // Aquí puedes manejar múltiples tablas
+        // Por ejemplo, crear un array de mappings, uno para cada tabla
+        console.log(`Detected ${validHeaderRows.length} tables at rows:`, validHeaderRows);
+    }
 
     return Object.keys(mapping).length > 0 ? mapping : null;
 };
