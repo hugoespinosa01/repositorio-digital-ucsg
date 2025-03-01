@@ -30,7 +30,7 @@ const FileUpload = ({ file, setFile, isSubmitting }: FileUploadProps) => {
                     file && !isSubmitting ? (
 
                         <p className="mt-2 flex align-middle items-center justify-center space-x-2">
-                            <File className='w-10 h-10 text-rose-900' />
+                            <File className='w-10 h-10' color='gray' />
                             <br />
                             <strong className='text-slate-500'>{file.name}</strong>
                         </p>
@@ -55,10 +55,6 @@ const FileUpload = ({ file, setFile, isSubmitting }: FileUploadProps) => {
                                 </>
                             )
                 }
-
-
-
-
             </div>
 
             {file &&

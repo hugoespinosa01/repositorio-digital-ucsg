@@ -28,7 +28,6 @@ interface ExtractedDataFields {
     };
 }
 
-// Definición completa de la interfaz ColumnMapping
 interface ColumnMapping {
     materiaIndex?: number[];
     matriculas?: {
@@ -38,9 +37,11 @@ interface ColumnMapping {
     }[];
     calificacionIndexes?: number[];
     supletorioColumnIndex?: number;
-    periodoColumnIndex?: number; // Agregamos esta propiedad que faltaba
-    cicloRow?: number;
-    periodoRow?: number;
+}
+
+interface TableSection {
+    startRow: number;
+    endRow: number;
 }
 
 
@@ -323,116 +324,155 @@ export async function POST(request: NextRequest) {
 
 
 const parseData = (tables: any): KardexDetalle[] => {
-    if (!Array.isArray(tables)) {
-      console.error("No se encontraron tablas", tables);
-      return [];
-    }
-  
     const rows: KardexDetalle[] = [];
-    let cicloGlobal = ""; // Variable para propagar el ciclo entre tablas
-    
-    // Iterar en cada tabla extraída del OCR
+    let currentCiclo = "";
+
     tables.forEach((table: any) => {
-      if (!table.cells || !Array.isArray(table.cells)) {
-        console.error("No hay celdas en la tabla", table);
-        return;
-      }
-      
-      const mapping = findTableStructure(table.cells);
-      if (!mapping) {
-        console.log("No se encontró estructura en la tabla");
-        return;
-      }
-      
-      // Construir rowMap: estructura que organiza las celdas por fila y columna
-      const rowMap: { [key: number]: { [key: number]: string } } = {};
-      
-      table.cells.forEach((cell: any) => {
-        const { rowIndex, columnIndex, content } = cell;
-        
-        if (!rowMap[rowIndex]) {
-          rowMap[rowIndex] = {};
+        if (!table.cells?.length) return;
+
+        const mapping = findTableStructure(table.cells);
+        if (!mapping) return;
+
+        // Ordenar las celdas por fila
+        const rowMap = new Map<number, Map<number, string>>();
+
+        [...table.cells].sort((a, b) => a.rowIndex - b.rowIndex)
+            .forEach(cell => {
+                if (!rowMap.has(cell.rowIndex)) {
+                    rowMap.set(cell.rowIndex, new Map());
+                }
+                rowMap.get(cell.rowIndex)?.set(
+                    cell.columnIndex,
+                    cell.content?.toString().trim() || ""
+                );
+            });
+
+
+        // Si hay repetición de encabezados, dividir en dos grupos
+        if (mapping.materiaIndex && mapping.materiaIndex.length > 1) {
+            // Dividir los índices en dos grupos
+            const mitad = Math.floor(mapping.materiaIndex.length / 2);
+
+            const tablas = [
+                {
+                    materiaIndex: mapping.materiaIndex.slice(0, mitad),
+                    matriculas: mapping.matriculas?.slice(0, mitad) || [],
+                    calificacionIndexes: mapping.calificacionIndexes?.slice(0, mitad) || []
+                },
+                {
+                    materiaIndex: mapping.materiaIndex.slice(mitad),
+                    matriculas: mapping.matriculas?.slice(mitad) || [],
+                    calificacionIndexes: mapping.calificacionIndexes?.slice(mitad) || []
+                }
+            ];
+
+            // Procesar cada grupo como una tabla independiente
+            tablas.forEach(subMapping => {
+                Array.from(rowMap.keys())
+                    .sort((a, b) => a - b)
+                    .forEach(rowIndex => {
+                        const row = rowMap.get(rowIndex);
+                        if (!row) return;
+
+                        const rowObj: { [key: number]: string } = {};
+                        row.forEach((value, key) => {
+                            rowObj[key] = value;
+                        });
+
+                        // Detectar ciclo
+                        const cicloDetectado = detectarCiclo(rowObj, mapping, rowIndex);
+                        if (cicloDetectado) {
+                            currentCiclo = cicloDetectado;
+                            return;
+                        }
+
+                        // Procesar materia solo si hay contenido válido
+                        subMapping.materiaIndex?.forEach(materiaIdx => {
+                            const materia = rowObj[materiaIdx]?.trim();
+                            if (!materia || materia.toUpperCase().includes("ASIGNATURA")) return;
+
+                            const noMatricula = determineMatricula(rowObj, subMapping.matriculas);
+                            const calificacion = findCalificacionFromRow(
+                                rowObj,
+                                subMapping.calificacionIndexes
+                            );
+
+                            if (materia && noMatricula !== null) {
+                                rows.push({
+                                    Id: rows.length + 1,
+                                    Ciclo: currentCiclo,
+                                    Materia: materia,
+                                    Calificacion: Number(calificacion),
+                                    NoMatricula: noMatricula,
+                                    IdDocumentoKardex: 0,
+                                    Estado: 1,
+                                    Periodo: extractPeriodoFromRow(rowObj) || ""
+                                });
+                            }
+                        });
+                    });
+            });
+        } else {
+            // Encontrar la fila de encabezado
+            const headerRow = Math.min(...mapping.materiaIndex || [0]);
+
+            // Procesar filas en orden
+            Array.from(rowMap.keys())
+                .sort((a, b) => a - b)
+                .forEach(rowIndex => {
+                    // Saltar la fila de encabezado
+                    if (rowIndex === headerRow) return;
+
+                    const row = rowMap.get(rowIndex);
+                    if (!row) return;
+
+                    const rowObj: { [key: number]: string } = {};
+                    row.forEach((value, key) => {
+                        rowObj[key] = value;
+                    });
+
+                    // Detectar ciclo
+                    const cicloDetectado = detectarCiclo(rowObj);
+                    if (cicloDetectado) {
+                        currentCiclo = cicloDetectado;
+                        return;
+                    }
+
+                    // Procesar materia solo si hay contenido válido
+                    mapping.materiaIndex?.forEach(materiaIdx => {
+                        const materia = rowObj[materiaIdx]?.trim();
+                        if (!materia) return;
+
+                        const noMatricula = determineMatricula(rowObj, mapping.matriculas);
+                        const calificacion = findCalificacionFromRow(
+                            rowObj,
+                            mapping.calificacionIndexes || []
+                        );
+
+                        // Usar un valor por defecto (0) si la calificación es null
+                        const calificacionFinal = calificacion !== null ? Number(calificacion) : 0;
+
+                        if (materia && noMatricula !== null) {
+                            rows.push({
+                                Id: rows.length + 1,
+                                Ciclo: currentCiclo,
+                                Materia: materia,
+                                Calificacion: calificacionFinal,
+                                NoMatricula: noMatricula,
+                                IdDocumentoKardex: 0,
+                                Estado: 1,
+                                Periodo: extractPeriodoFromRow(rowObj) || ""
+                            });
+                        }
+                    });
+                });
         }
-        
-        rowMap[rowIndex][columnIndex] = content;
-      });
-      
-      // Encontrar índices de filas que corresponden a encabezados
-      const headerRows = new Set<number>();
-      
-      table.cells.forEach((cell: any) => {
-        const content = cell.content?.toString().trim().toUpperCase() || "";
-        if (content.includes("ASIGNATURA") || 
-            content.includes("MATERIAS") ||
-            content.includes("MATRICULA")) {
-          headerRows.add(cell.rowIndex);
-        }
-        
-        // Agregar también filas con subencabezados (1,2,3)
-        if (/^[123]$/.test(content)) {
-          headerRows.add(cell.rowIndex);
-        }
-      });
-      
-      let cicloPropagado = cicloGlobal;
-      
-      // Procesar cada fila que no sea encabezado
-      Object.keys(rowMap)
-        .map(key => parseInt(key, 10))
-        .filter(rowIndex => !headerRows.has(rowIndex)) // Filtrar filas de encabezado
-        .forEach(rowIndex => {
-          const row = rowMap[rowIndex];
-          
-          // Detectar si la fila tiene un ciclo/nivel
-          const newNivel = extractNivelOCicloFromRow(row);
-          if (newNivel) {
-            cicloPropagado = newNivel;
-          }
-          
-          // Procesar cada índice de materia encontrado
-          mapping.materiaIndex?.forEach(materiaIdx => {
-            const materia = row[materiaIdx]?.trim() || "";
-            
-            // Omitir filas sin contenido en la columna de materia
-            if (!materia) return;
-            
-            // Detectar el número de matrícula
-            const noMatricula = determineMatricula(row, mapping.matriculas);
-            
-            // Extraer calificación
-            const calificacion = findCalificacionFromRow(row, mapping.calificacionIndexes || []);
-            
-            // Extraer periodo (si está disponible)
-            const periodo = mapping.periodoColumnIndex ? 
-              row[mapping.periodoColumnIndex]?.trim() || "" : 
-              "";
-            
-            // Solo agregar a los resultados si hay materia y matrícula
-            if (materia.length > 0 && noMatricula) {
-              const kardexDetalle: KardexDetalle = {
-                Id: rows.length + 1, // ID secuencial
-                Ciclo: cicloPropagado || "",
-                Materia: materia,
-                Periodo: periodo,
-                Calificacion: Number(calificacion),
-                NoMatricula: noMatricula,
-                IdDocumentoKardex: 0, // Se asignará posteriormente
-                Estado: 1
-              };
-              
-              rows.push(kardexDetalle);
-            }
-          });
-        });
-      
-      // Actualizar el ciclo global para la siguiente tabla
-      cicloGlobal = cicloPropagado;
+
+
     });
-    
+
     return rows;
-  };
-
-
+};
 
 // Función para encontrar las calificaciones en una fila con base en la palabra clave "PROMED" o "FINAL"
 const findCalificacionFromRow = (row: any, calificacionIndexes: number[]): number | null => {
@@ -443,87 +483,177 @@ const findCalificacionFromRow = (row: any, calificacionIndexes: number[]): numbe
     return null; // No se encontró calificación
 };
 
-
-const findTableStructure = (cells: any[]): ColumnMapping | null => {
-    if (!Array.isArray(cells)) {
-        console.error('Cells is not an array:', cells);
-        return null;
+const detectarCiclo = (
+    rowObj: { [key: number]: string },
+    mapping?: ColumnMapping,
+    currentRowIndex?: number
+): string | null => {
+    // Si no hay mapping o información de la estructura, procesar normalmente
+    if (!mapping || !mapping.materiaIndex || mapping.materiaIndex.length <= 1) {
+        const valores = Object.values(rowObj).map(v => v.toString().trim().toUpperCase());
+        const posibleCiclo = valores.find(v =>
+            v.includes("CICLO") ||
+            v.includes("NIVEL") ||
+            /^[1-9](ER|DO|RO|TO|NO|MO)?\s*(CICLO|NIVEL)/i.test(v)
+        );
+        return posibleCiclo || null;
     }
 
+    // Para tablas complejas, solo buscar en las columnas relevantes
+    // Determinar en qué sección de la tabla estamos
+    const primeraColumnaMateria = Math.min(...mapping.materiaIndex);
+    const ultimaColumnaMateria = Math.max(...mapping.materiaIndex) - 1;
+
+    const valores = Object.entries(rowObj)
+        .filter(([colIndex]) => {
+            const col = parseInt(colIndex);
+            // Solo procesar columnas dentro del rango de la sección actual
+            return col >= primeraColumnaMateria && col <= ultimaColumnaMateria;
+        })
+        .map(([_, v]) => v.toString().trim().toUpperCase());
+
+    const posibleCiclo = valores.find(v =>
+        v.includes("CICLO") ||
+        v.includes("NIVEL") ||
+        /^[1-9](ER|DO|RO|TO|NO|MO)?\s*(CICLO|NIVEL)/i.test(v)
+    );
+
+    return posibleCiclo || null;
+};
+const findTableStructure = (cells: any[]): ColumnMapping | null => {
     const mapping: ColumnMapping = {
         materiaIndex: [],
         matriculas: [],
         calificacionIndexes: []
     };
 
-    // Primero identificamos todas las filas que contienen encabezados
-    const headerRows = cells
-        .filter(cell => {
-            const content = cell.content?.toString().trim().toUpperCase() || "";
-            return content.includes("ASIGNATURA") || 
-                   content.includes("MATERIAS") ||
-                   content.includes("MATRICULA");
-        })
-        .map(cell => cell.rowIndex);
+    // 1. Encontrar todas las ocurrencias de encabezados principales
+    const encabezadosPrincipales = cells.filter(cell => {
+        const content = cell.content?.toString().trim().toUpperCase() || "";
+        return content.includes("ASIGNATURA") ||
+            content.includes("MATERIAS") ||
+            content.includes("MATRICULA");
+    });
 
-    const uniqueHeaderRows = [...new Set(headerRows)].sort((a, b) => a - b);
+    // 2. Contar repeticiones de cada tipo de encabezado
+    const conteoEncabezados = encabezadosPrincipales.reduce((acc, cell) => {
+        const content = cell.content?.toString().trim().toUpperCase();
+        if (content.includes("ASIGNATURA")) acc.asignatura++;
+        if (content.includes("MATERIAS")) acc.materias++;
+        if (content.includes("MATRICULA")) acc.matricula++;
+        return acc;
+    }, { asignatura: 0, materias: 0, matricula: 0 });
 
-    // Para cada fila de encabezado, analizamos su estructura
-    uniqueHeaderRows.forEach(headerRow => {
+    // 3. Determinar si algún encabezado se repite
+    const hayRepeticiones = conteoEncabezados.asignatura > 1 ||
+        conteoEncabezados.materias > 1 ||
+        conteoEncabezados.matricula > 1;
+
+    // 4. Procesar según si hay repeticiones o no
+    if (!hayRepeticiones) {
+        // Caso simple: no hay repeticiones de encabezados
+        const headerRow = Math.min(...encabezadosPrincipales.map(cell => cell.rowIndex));
         const headerCells = cells.filter(cell => cell.rowIndex === headerRow);
-        const nextRowCells = cells.filter(cell => cell.rowIndex === headerRow + 1);
 
-        // Analizar la estructura de esta sección
-        let hasSubheaders = false;
-        let matriculaHeader: any = null;
-
-        // Buscar el encabezado MATRÍCULA
         headerCells.forEach(cell => {
-            const content = cell.content?.toString().trim().toUpperCase() || "";
-            
+            const content = cell.content?.toString().trim().toUpperCase();
+
             if (content.includes("ASIGNATURA") || content.includes("MATERIAS")) {
                 mapping.materiaIndex?.push(cell.columnIndex);
             }
-            
             if (content.includes("MATRICULA")) {
-                matriculaHeader = cell;
+                mapping.matriculas?.push({
+                    tipo: 'simple',
+                    indices: [cell.columnIndex]
+                });
             }
-
             if (content.includes("PROMED") || content.includes("FINAL")) {
                 mapping.calificacionIndexes?.push(cell.columnIndex);
             }
-
             if (content.includes("SUPLET")) {
                 mapping.supletorioColumnIndex = cell.columnIndex;
             }
         });
+    } else {
 
-        // Verificar si hay subencabezados (1,2,3) en la siguiente fila
-        if (matriculaHeader) {
-            const subheaders = nextRowCells
-                .filter(cell => /^[123]$/.test(cell.content?.toString().trim()))
-                .sort((a, b) => a.columnIndex - b.columnIndex);
+        // Caso complejo: hay repeticiones de encabezados
+        const headerRows = [...new Set(encabezadosPrincipales.map(cell => cell.rowIndex))].sort();
 
-            if (subheaders.length === 3) {
-                // Caso con subencabezados
-                mapping.matriculas?.push({
-                    tipo: 'agrupada',
-                    indices: subheaders.map(cell => cell.columnIndex),
-                    headerIndex: matriculaHeader.columnIndex
-                });
-            } else {
-                // Caso simple
-                mapping.matriculas?.push({
-                    tipo: 'simple',
-                    indices: [matriculaHeader.columnIndex]
-                });
-            }
-        }
-    });
+        headerRows.forEach(headerRow => {
+            const headerCells = cells.filter(cell => cell.rowIndex === headerRow);
+            const nextRowCells = cells.filter(cell => cell.rowIndex === headerRow + 1);
+
+            headerCells.forEach(cell => {
+                const content = cell.content?.toString().trim().toUpperCase();
+
+                if (content.includes("ASIGNATURA") || content.includes("MATERIAS")) {
+                    mapping.materiaIndex?.push(cell.columnIndex);
+                }
+                if (content.includes("MATRICULA")) {
+                    // Verificar si hay subencabezados
+                    const subheaders = nextRowCells
+                        .filter(nextCell => {
+                            const content = nextCell.content?.toString().trim();
+                            const columnDistance = nextCell.columnIndex - cell.columnIndex;
+
+                            // Verificar si el contenido es un número y convertirlo
+                            const num = parseInt(content);
+
+                            // Aceptar '1', '2', '3' o '30' para la tercera matrícula
+                            return columnDistance >= 0 &&
+                                columnDistance <= 2 &&
+                                !isNaN(num) &&
+                                (num === 1 || num === 2 || num === 3 || num === 30);
+                        })
+                        .sort((a, b) => {
+                            // Normalizar el valor '30' a '3' para el ordenamiento
+                            const getVal = (cell: any) => {
+                                const num = parseInt(cell.content?.toString().trim());
+                                return num === 30 ? 3 : num;
+                            };
+                            return getVal(a) - getVal(b);
+                        })
+
+                    if (subheaders.length === 3) {
+                        mapping.matriculas?.push({
+                            tipo: 'agrupada',
+                            indices: subheaders.map(sh => sh.columnIndex)
+                        });
+                    } else {
+                        mapping.matriculas?.push({
+                            tipo: 'simple',
+                            indices: [cell.columnIndex]
+                        });
+                    }
+                }
+                if (content.includes("PROMED") || content.includes("FINAL")) {
+                    mapping.calificacionIndexes?.push(cell.columnIndex);
+                }
+                if (content.includes("SUPLET")) {
+                    mapping.supletorioColumnIndex = cell.columnIndex;
+                }
+            });
+
+            // Ahora buscar también en la siguiente fila para capturar "PROMED" o "FINAL"
+            nextRowCells.forEach(cell => {
+                const content = cell.content?.toString().trim().toUpperCase();
+
+                if (content.includes("PROMED") || content.includes("FINAL")) {
+                    mapping.calificacionIndexes?.push(cell.columnIndex);
+                }
+
+                if (content.includes("SUPLET")) {
+                    mapping.supletorioColumnIndex = cell.columnIndex;
+                }
+            });
+
+        });
+
+
+    }
 
     return mapping;
 };
-
 
 const determineMatricula = (row: any, matriculas: ColumnMapping['matriculas']): number => {
     if (!matriculas) return 0;

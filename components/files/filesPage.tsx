@@ -6,7 +6,7 @@ import GetBackButton from '../getback-button';
 import { GetColumns } from '../dataTable/Columns';
 import { useRouter } from 'next/navigation';
 import { Button } from '../ui/button';
-import { DownloadIcon, FileDown, Table, Trash, TrashIcon } from 'lucide-react';
+import { CheckCircle, DownloadIcon, File, FileDown, Table, Trash, TrashIcon } from 'lucide-react';
 import PDFViewerComponent from '../pdf-viewer';
 import InputDemo from '../inputtext';
 import InputNumber from '../inputnumber';
@@ -18,6 +18,16 @@ import { useSession } from 'next-auth/react';
 import useAuthRoles from '@/hooks/useAuthRoles';
 import LoadingFilePage from './loading';
 import MateriasDataTable from '../advanced-datatable';
+import {
+  Pill,
+  PillAvatar,
+  PillButton,
+  PillStatus,
+  PillIndicator,
+  PillDelta,
+  PillIcon,
+  PillAvatarGroup,
+} from '../pill';
 
 interface FileData {
   Id: number;
@@ -146,7 +156,13 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
       <CardHeader className="gap-y-2 flex flex-col lg:flex-row lg:items-center lg:justify-between">
         <CardTitle>
           <p className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4">
-            Detalle del archivo {fileData?.NombreArchivo}
+            {fileData?.NombreArchivo}
+            {/* <Pill className='ml-4'>
+              <PillStatus>
+                <CheckCircle className="mr-2" size={15} />
+              </PillStatus>
+              Borrador
+            </Pill> */}
           </p>
           <GetBackButton />
         </CardTitle>
