@@ -10,6 +10,7 @@ import FileUpload from '@/components/custom-fileuploader';
 import GetBackButton from '../getback-button';
 import { Loader2 } from 'lucide-react';
 import useAuthRoles from '@/hooks/useAuthRoles';
+import Link from 'next/link';
 
 
 const MAX_FILE_SIZE = 1024 * 1024 * 25; // 25MB MAX (AZURE LIMITA MAX 500 MB EN EL PLAN F0)
@@ -117,6 +118,14 @@ export default function UploadPage() {
               isSubmitting={isSubmitting}
             />
             <div>
+              <div className='mb-3'>
+                <Link
+                  href={'/documents/scan-examples'}
+                  className='text-primary text-sm underline'
+                >
+                  Ver ejemplo de documento bien escaneado
+                </Link>
+              </div>
               <p>
                 <strong>Consideraciones:</strong><br />
                 • Solo se permiten archivos <strong>PDF</strong>.<br />
