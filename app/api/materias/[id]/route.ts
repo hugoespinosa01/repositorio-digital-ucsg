@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 interface Params {
@@ -9,6 +9,10 @@ export async function DELETE(request: Request, { params }: Params) {
     try {
 
         const materiaId = params.id;
+
+        if (!materiaId) {
+            return NextResponse.json({ message: "Debe enviar un id de materia" }, { status: 400 });
+        }
 
         const deletedMateria = await prisma.documentoDetalleKardex.update({
             where: {
@@ -79,9 +83,12 @@ export async function PUT(request: Request, { params }: Params) {
     }
 }
 
-export async function GET(request: Request, { params }: Params) {
+export async function GET(request: NextRequest, { params }: Params) {
     try {
         const { id } = params
+
+        // const page = Number(request.nextUrl.searchParams.get('page'));
+        // const pageSize = Number(request.nextUrl.searchParams.get('limit'));
 
         if (!id) {
             throw new Error('No se ha enviado un id de documento');
@@ -104,6 +111,8 @@ export async function GET(request: Request, { params }: Params) {
                 IdDocumentoKardex: kardex.Id,
                 Estado: 1,
             },
+            // skip: (page - 1) * pageSize,
+            // take: pageSize,
         });
 
         if (!data) {

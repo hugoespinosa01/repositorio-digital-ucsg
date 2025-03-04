@@ -12,13 +12,13 @@ export async function GET(request: NextRequest, { params }: Params) {
     try {
     
         const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
-        const containerClient = blobServiceClient.getContainerClient(containerName);
+        const containerClient = blobServiceClient.getContainerClient("docs-prueba");
 
         if (!connectionString || !containerName) {
             throw new Error('Azure Storage configuration missing');
         }
 
-        const res = await containerClient.getBlockBlobClient(params.filename).downloadToBuffer();
+        const res = await containerClient.getBlockBlobClient("formato_civil_2/" + params.filename).downloadToBuffer();
 
         return new Response(res, {
             headers: {

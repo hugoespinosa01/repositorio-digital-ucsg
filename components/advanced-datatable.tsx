@@ -228,29 +228,21 @@ export const MateriasDataTable = ({ fileId, canCreateMateria, canUpdateMateria, 
     // Función para procesar y agrupar los datos por ciclo
     const processData = useCallback(() => {
         // Primero, filtramos por materia si hay filtro
-        let filteredData = data;
+        let processedData = data;
+    
         if (filterMateria) {
-            filteredData = filterData(data);
+            processedData = filterData(data); // Filtrar por Materia
         }
-
+    
         // Ordenamos los datos si hay configuración de ordenamiento
         if (sortConfig.direction) {
-            sortData(filteredData);
+            processedData = sortData(processedData); // Ordenar
         }
-
-        // Agrupamos por ciclo
-        const groupedData = filteredData.reduce((acc, item) => {
-            const ciclo = item.Ciclo.trim(); // Asegurarnos de contar el ciclo como clave
-            if (!acc[ciclo]) {
-                acc[ciclo] = [];
-            }
-            acc[ciclo].push(item);
-            return acc;
-        }, {} as { [key: string]: KardexDetalle[] });
-
-        // Convertimos el objeto agrupado de vuelta a un array
-        return Object.values(groupedData).flat();
+    
+        // Simplemente devuelve los datos procesados (sin agrupar)
+        return processedData;
     }, [data, filterMateria, sortConfig]);
+    
 
     // Handle column sort
     const handleSort = (key: keyof KardexDetalle) => {
@@ -359,19 +351,17 @@ export const MateriasDataTable = ({ fileId, canCreateMateria, canUpdateMateria, 
     // Función para generar el rango de páginas a mostrar
     const getPageRange = useCallback(() => {
         const range: number[] = [];
-        const maxVisible = 5; // Máximo número de páginas visibles
+        const maxVisible = 5;
         let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
         let end = Math.min(totalPages, start + maxVisible - 1);
-
-        // Ajustar el inicio si estamos cerca del final
+    
         if (end === totalPages) {
             start = Math.max(1, end - maxVisible + 1);
         }
-        // Ajustar el final si estamos cerca del inicio
         if (start === 1) {
             end = Math.min(totalPages, start + maxVisible - 1);
         }
-
+    
         for (let i = start; i <= end; i++) {
             range.push(i);
         }

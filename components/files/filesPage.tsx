@@ -6,7 +6,7 @@ import GetBackButton from '../getback-button';
 import { GetColumns } from '../dataTable/Columns';
 import { useRouter } from 'next/navigation';
 import { Button } from '../ui/button';
-import { CheckCircle, DownloadIcon, File, FileDown, Table, Trash, TrashIcon } from 'lucide-react';
+import { Check, CheckCircle, DownloadIcon, File, FileDown, Table, Trash, TrashIcon } from 'lucide-react';
 import PDFViewerComponent from '../pdf-viewer';
 import InputDemo from '../inputtext';
 import InputNumber from '../inputnumber';
@@ -157,27 +157,40 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
         <CardTitle>
           <p className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4">
             {fileData?.NombreArchivo}
-            {/* <Pill className='ml-4'>
-              <PillStatus>
-                <CheckCircle className="mr-2" size={15} />
-              </PillStatus>
-              Borrador
-            </Pill> */}
+            {fileData && (
+              <Pill className='ml-4'>
+                <PillStatus>
+                  <File className="mr-2" size={15} />
+                </PillStatus>
+                Borrador
+              </Pill>
+            )}
           </p>
           <GetBackButton />
         </CardTitle>
 
-        {hasPermission("res:documents", "delete") && (
+        <div className='flex justify-between space-x-3'>
           <Button
-            variant={"destructive"}
-            onClick={handleDelete}
             size={"sm"}
+            variant={"default"}
             className="w-full sm:w-auto mt-2 lg:mt-0"
           >
-            <Trash className="mr-2" size={15} />
-            Eliminar
+            <CheckCircle className="mr-2" size={15} />
+            Validar
           </Button>
-        )}
+
+          {hasPermission("res:documents", "delete") && (
+            <Button
+              variant={"destructive"}
+              onClick={handleDelete}
+              size={"sm"}
+              className="w-full sm:w-auto mt-2 lg:mt-0"
+            >
+              <Trash className="mr-2" size={15} />
+              Eliminar
+            </Button>
+          )}
+        </div>
       </CardHeader>
 
       <CardContent>

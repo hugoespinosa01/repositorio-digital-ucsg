@@ -125,28 +125,26 @@ export async function POST(request: NextRequest) {
         // Procesar el PDF
         const pdfData = await file.arrayBuffer();
 
-        //Subo al blob storage
-        const fileName = `${uuidv4()}`;
-
-        const blobName = await uploadToBlobStorage(pdfData, fileName);
-
         // Clasificar el documento
         let classifiedDoc = null;
         try {
             classifiedDoc = await classifyDocument(pdfData);
             console.log('Document classification result:', classifiedDoc);
         } catch (error) {
-            await deleteBlob(blobName);
             console.error('Error during document classification:', error);
             throw new Error('Unable to classify document');
         }
 
         // Validar clasificación    
         if (typeof classifiedDoc !== 'string' || !['kardex-computacion', 'kardex-civil'].includes(classifiedDoc)) {
-            await deleteBlob(blobName);
             console.error('Invalid document classification:', classifiedDoc);
             throw new Error('Invalid document classification');
         }
+
+        //Subo al blob storage
+        const fileName = `${uuidv4()}`;
+
+        const blobName = await uploadToBlobStorage(pdfData, fileName);
 
         let extractedData = null;
 
@@ -155,7 +153,7 @@ export async function POST(request: NextRequest) {
             try {
                 extractedData = await extractData(pdfData, 'computacion-1-model');
                 console.log('Extracted data for computacion:', extractedData);
-                
+
                 // Ejecutar análisis para Human In The Loop
                 await runLayoutAnalysis(pdfData, blobName);
             } catch (error) {
@@ -165,8 +163,8 @@ export async function POST(request: NextRequest) {
             }
         } else if (classifiedDoc == 'kardex-civil') {
             try {
-                extractedData = await extractData(pdfData, 'civil_formato_2_v2');
-                
+                extractedData = await extractData(pdfData, 'civil_formato_2_v3');
+
                 // Ejecutar análisis para Human In The Loop
                 await runLayoutAnalysis(pdfData, blobName);
                 console.log('Extracted data for civil:', extractedData);
@@ -325,7 +323,7 @@ export async function POST(request: NextRequest) {
 
         // Creo los detalles del kardex
         for (let materia of datosExtraidos.materiasAprobadas) {
-            await prisma.documentoDetalleKardex.create({
+            const documentoDetalle = await prisma.documentoDetalleKardex.create({
                 data: {
                     Ciclo: materia.Nivel,
                     Materia: materia.Materia,
@@ -381,14 +379,13 @@ const runLayoutAnalysis = async (pdfData: ArrayBuffer, fileName: string) => {
         const credential = new AzureKeyCredential(apiKey);
         const client = new DocumentAnalysisClient(endpoint, credential);
 
-        console.log('Beginning document analysis...');
+        console.log('Beginning document analysis prebuilt-layout...');
         const poller = await client.beginAnalyzeDocument('prebuilt-layout', pdfData);
         console.log('Waiting for analysis to complete...');
         await poller.pollUntilDone();
         const res = poller.getResult() as AnalyzeResult;
 
-        //Necesito page dimensions (width y height)
-        //const labelsJson = modelToLabelsJson(modelOutput, pageDimensions);
+
 
         console.log('Layout analysis result:', res);
 
@@ -404,7 +401,7 @@ const modelToLabelsJson = (
     fields: Record<string, ModelField>,
     pageDimensions: { width: number; height: number }[]
 ): LabelField[] => {
-    
+
     return Object.entries(fields).map(([label, field]) => {
 
         const groupedValues = field.boundingRegions.map(region => {
@@ -415,7 +412,7 @@ const modelToLabelsJson = (
                 pageDimension.width,
                 pageDimension.height
             );
-            
+
             return {
                 page: region.pageNumber,
                 text: field.valueString,
@@ -434,17 +431,20 @@ const populateDetalleMaterias = async (datosExtraidos: any, fields: any) => {
     // Verifica que "detalle-materias" y sus valores existan antes de iterar
 
     //Concateno cada array de DetalleMaterias
-    const detalleMaterias = fields.DetalleMaterias1.values?.concat(fields.DetalleMaterias2.values, fields.DetalleMaterias3.values, fields.DetalleMaterias4.values);
+    let detalleMaterias = fields.DetalleMaterias1.values?.concat(fields.DetalleMaterias2.values, fields.DetalleMaterias3.values, fields.DetalleMaterias4.values);
+
+    //Remover undefined
+    detalleMaterias = detalleMaterias.filter((materia: any) => materia !== undefined);
 
     if (detalleMaterias) {
         for (const materia of detalleMaterias) {
             // Validación y mapeo seguro
             datosExtraidos.materiasAprobadas.push({
-                ciclo: materia.properties?.Nivel?.value ?? "", // Asegúrate de que "Nivel" exista
-                materia: materia.properties?.Materia?.value ?? "",
-                periodo: materia.properties?.Periodo?.value ?? "",
-                calificacion: materia.properties?.Calificacion?.value ?? "",
-                noMatricula: transformDataMatricula(materia.properties)
+                Nivel: materia.properties?.Nivel?.value ?? "", // Asegúrate de que "Nivel" exista
+                Materia: materia.properties?.Materia?.value ?? "",
+                Periodo: materia.properties?.Periodo?.value ?? "",
+                Calificacion: materia.properties?.Calificacion?.value ?? "",
+                NoMatricula: transformDataMatricula(materia.properties)
             });
         }
     }
@@ -953,6 +953,9 @@ const extractData = async (file: ArrayBuffer, model: string) => {
             throw new Error('No fields found in document');
         }
 
+        //Necesito page dimensions (width y height) res.pages[0].width y res.pages[0].height
+        //const labelsJson = modelToLabelsJson(modelOutput, pageDimensions);
+
         return {
             fields: firstDocument.fields,
         };
@@ -1144,9 +1147,9 @@ const classifyDocument = async (file: ArrayBuffer): Promise<string | null> => {
 const uploadToBlobStorage = async (pdfData: ArrayBuffer, fileName: string): Promise<string> => {
     try {
         const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
-        const containerClient = blobServiceClient.getContainerClient(containerName);
+        const containerClient = blobServiceClient.getContainerClient("docs-prueba");
         const blobName = fileName + '.pdf';
-        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+        const blockBlobClient = containerClient.getBlockBlobClient("formato_civil_2/" + blobName);
 
         const blobResponse = await blockBlobClient.uploadData(pdfData, {
             blobHTTPHeaders: { blobContentType: 'application/pdf' }
