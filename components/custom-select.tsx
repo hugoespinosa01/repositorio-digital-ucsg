@@ -2,6 +2,7 @@
 import { SingleValue } from 'react-select';
 import AsyncSelect from 'react-select/async';
 import { Folder } from '@/types/folder';
+import debounce from "debounce-promise";
 
 type Props = {
     onChange: (value?: string) => void;
@@ -19,7 +20,7 @@ export const CustomSelect = ({
     idFile
 }: Props) => {
 
-    const onSelect = (newValue: SingleValue<{ label: string, value: string }>)=> {
+    const onSelect = (newValue: SingleValue<{ label: string, value: string }>) => {
         const option = newValue as SingleValue<{ label: string, value: string }>;
         onChange(option?.value);
     }
@@ -29,16 +30,17 @@ export const CustomSelect = ({
         value: string;
     }
 
-    const loadOptions = async (searchValue: string): Promise<Option[]> => {
+    const loadOptions = debounce(async (searchValue: string): Promise<Option[]> => {
         let res = null;
         if (idFolder) {
             res = await fetch(`/api/folders?id=${idFolder}&query=${searchValue}`);
-        } else{
+        } else {
             res = await fetch(`/api/folders?query=${searchValue}`);
         }
         const data = await res.json();
         return data.data.map((folder: Folder) => ({ label: folder.Nombre, value: folder.Id.toString() }));
-    }
+
+    }, 300);
 
     return (
         <AsyncSelect
@@ -73,7 +75,7 @@ export const CustomSelect = ({
                             backgroundColor: '#ba4665',
                             borderColor: '#ba4665',
                             color: 'white'
-                            
+
                         },
                         ":hover": {
                             backgroundColor: '#d4c9cc',

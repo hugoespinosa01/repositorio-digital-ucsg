@@ -1,7 +1,7 @@
 export interface Materia {
-    ciclo: string;
-    materia: string;
-    periodo: string;
-    calificacion: string
-    noMatricula: string;
+    Nivel: string;
+    Materia: string;
+    Periodo: string;
+    Calificacion: string
+    NoMatricula: string;
 }

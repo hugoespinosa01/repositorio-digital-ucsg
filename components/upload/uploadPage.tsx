@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import FileUpload from '@/components/custom-fileuploader';
 import GetBackButton from '../getback-button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowUpRight } from 'lucide-react';
 import useAuthRoles from '@/hooks/useAuthRoles';
 import Link from 'next/link';
 
@@ -120,10 +120,12 @@ export default function UploadPage() {
             <div>
               <div className='mb-3'>
                 <Link
-                  href={'/documents/scan-examples'}
+                  href={'https://cuucsgedu-my.sharepoint.com/:f:/g/personal/hugo_espinosa01_cu_ucsg_edu_ec/EtJGLX5qhwFGh-wkWEiT9icBkLg1QRkorkbC-WRqKXpuKQ?e=IEqY7t'}
                   className='text-primary text-sm underline'
+                  target='_blank'
                 >
-                  Ver ejemplo de documento bien escaneado
+                  Ver ejemplos de documentos bien escaneados
+                  <ArrowUpRight className='inline-block ml-1 h-4 w-4' />
                 </Link>
               </div>
               <p>

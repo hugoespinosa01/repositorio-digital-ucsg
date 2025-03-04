@@ -65,6 +65,7 @@
     "cmdk": "^1.0.0",
     "cryptr": "^6.3.0",
     "date-fns": "^3.6.0",
+    "debounce-promise": "^3.1.2",
     "dotenv": "^16.4.5",
     "embla-carousel-react": "^8.3.0",
     "eslint": "8.49.0",
@@ -112,6 +113,7 @@
     "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@types/debounce-promise": "^3.1.9",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/mssql": "^9.1.5",
     "@types/pdf-parse": "^1.1.4",

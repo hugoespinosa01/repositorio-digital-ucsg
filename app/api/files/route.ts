@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { Documento } from '@/types/file';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
-import { AzureKeyCredential, DocumentAnalysisClient } from "@azure/ai-form-recognizer";
+import { AnalyzeResult, AzureKeyCredential, DocumentAnalysisClient } from "@azure/ai-form-recognizer";
 import { loadToPinecone } from '@/lib/pinecone';
 import { checkCarrera } from '@/utils/checkCarrera';
 import { Materia } from '@/types/materia';
@@ -20,6 +20,7 @@ const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME || '';
 interface DocumentField {
     value: any;
     confidence: number;
+    values?: any[];
 }
 
 interface ExtractedDataFields {
@@ -94,7 +95,9 @@ export async function POST(request: NextRequest) {
         const pdfData = await file.arrayBuffer();
 
         //Subo al blob storage
-        const blobName = await uploadToBlobStorage(pdfData);
+        const fileName = `${uuidv4()}.pdf`;
+
+        const blobName = await uploadToBlobStorage(pdfData, fileName);
 
         // Clasificar el documento
         let classifiedDoc = null;
@@ -128,7 +131,7 @@ export async function POST(request: NextRequest) {
             }
         } else if (classifiedDoc == 'kardex-civil') {
             try {
-                extractedData = await extractData(pdfData, 'modelo_civil_v11');
+                extractedData = await extractData(pdfData, 'civil_formato_2_v1');
                 console.log('Extracted data for civil:', extractedData);
             } catch (error) {
                 await deleteBlob(blobName);
@@ -171,16 +174,15 @@ export async function POST(request: NextRequest) {
             throw new Error('El documento ya ha sido subido anteriormente');
         }
 
-        let extractedDetails = await extractDetailData(pdfData, 'prebuilt-document');
+        //let extractedDetails = await extractDetailData(pdfData, 'prebuilt-document');
 
-        if (!extractedDetails || !Array.isArray(extractedDetails)) {
-            console.error('Invalid extracted details:', extractedDetails);
-            extractedDetails = [];
-        }
+        // if (!extractedDetails || !Array.isArray(extractedDetails)) {
+        //     console.error('Invalid extracted details:', extractedDetails);
+        //     extractedDetails = [];
+        // }
         // let processedData = await processDataWithOpenAI(extractedDetails);
 
-        const parsedDetails = parseData(extractedDetails);
-
+        //const parsedDetails = parseData(extractedDetails);
 
         // Busco el ID de la carrera
         const carreraArray = await checkCarrera(fields.Carrera.value);
@@ -194,7 +196,7 @@ export async function POST(request: NextRequest) {
             alumno: formatData(fields.Alumno.value),
             noIdentificacion: cedula,
             carrera: carreraArray[0].nombre ?? '',
-            materiasAprobadas: [] as Materia[]
+            materiasAprobadas: fields.DetalleMaterias1.values?.concat(fields.DetalleMaterias2.values) as Materia[]
         }
 
         // Extraigo las materias aprobadas y las guardo en un array
@@ -287,10 +289,10 @@ export async function POST(request: NextRequest) {
         }
 
         // Creo los detalles del kardex
-        for (let materia of parsedDetails) {
+        for (let materia of datosExtraidos.materiasAprobadas) {
             await prisma.documentoDetalleKardex.create({
                 data: {
-                    Ciclo: materia.Ciclo,
+                    Ciclo: materia.Nivel,
                     Materia: materia.Materia,
                     Periodo: materia.Periodo,
                     Calificacion: Number(materia.Calificacion) || null,
@@ -488,6 +490,11 @@ const detectarCiclo = (
     mapping?: ColumnMapping,
     currentRowIndex?: number
 ): string | null => {
+
+
+    // Expresión regular para extraer solo "NIVEL [algo]"
+    const nivelRegex = /NIVEL\s*\d+/i;
+
     // Si no hay mapping o información de la estructura, procesar normalmente
     if (!mapping || !mapping.materiaIndex || mapping.materiaIndex.length <= 1) {
         const valores = Object.values(rowObj).map(v => v.toString().trim().toUpperCase());
@@ -496,7 +503,14 @@ const detectarCiclo = (
             v.includes("NIVEL") ||
             /^[1-9](ER|DO|RO|TO|NO|MO)?\s*(CICLO|NIVEL)/i.test(v)
         );
-        return posibleCiclo || null;
+
+        // Si se encontró algo, intentar extraer "NIVEL" con la regex
+        if (posibleCiclo) {
+            const match = posibleCiclo.match(nivelRegex);
+            return match ? match[0] : null;
+        }
+
+        return null;
     }
 
     // Para tablas complejas, solo buscar en las columnas relevantes
@@ -518,8 +532,16 @@ const detectarCiclo = (
         /^[1-9](ER|DO|RO|TO|NO|MO)?\s*(CICLO|NIVEL)/i.test(v)
     );
 
-    return posibleCiclo || null;
+    // Intentar extraer "NIVEL" con la regex
+    if (posibleCiclo) {
+        const match = posibleCiclo.match(nivelRegex);
+        return match ? match[0] : null;
+    }
+
+    return null;
 };
+
+
 const findTableStructure = (cells: any[]): ColumnMapping | null => {
     const mapping: ColumnMapping = {
         materiaIndex: [],
@@ -600,7 +622,7 @@ const findTableStructure = (cells: any[]): ColumnMapping | null => {
                             const num = parseInt(content);
 
                             // Aceptar '1', '2', '3' o '30' para la tercera matrícula
-                            return columnDistance >= 0 &&
+                            return columnDistance >= -7 &&
                                 columnDistance <= 2 &&
                                 !isNaN(num) &&
                                 (num === 1 || num === 2 || num === 3 || num === 30);
@@ -662,12 +684,12 @@ const determineMatricula = (row: any, matriculas: ColumnMapping['matriculas']): 
         if (matricula.tipo === 'simple') {
             // Para el caso simple, buscamos "+" o "A" en la columna de matrícula
             const content = row[matricula.indices[0]]?.toString().trim().toUpperCase() || "";
-            if (content === "+" || content === "A") return 1;
+            if (content.includes("+") || content.includes("A") || content.includes("1")) return 1;
         } else {
             // Para el caso agrupado, buscamos en las columnas 1,2,3
             for (let i = 0; i < matricula.indices.length; i++) {
                 const content = row[matricula.indices[i]]?.toString().trim().toUpperCase() || "";
-                if (content === "+" || content === "A") return i + 1;
+                if (content.includes("+") || content.includes("A") || content.includes("1")) return i + 1;
             }
         }
     }
@@ -685,17 +707,59 @@ const extractNivelOCicloFromRow = (row: any): string | null => {
 const extractPeriodoFromRow = (row: any): string | null => {
     const contenidoFila = Object.values(row).join(" ").toUpperCase();
 
-    // Búsqueda por palabras clave específicas
-    const matchAnio = contenidoFila.match(/\b19\d{2}\b/); // Buscar números que empiecen con "19"
-    if (matchAnio) return matchAnio[0]; // Si encontramos un año, lo retornamos
+    // Patrones de periodos comunes (meses-año)
+    const patronesPeriodo = [
+        // Formato "MAYO A SEP/87" o "MAYO-SEP/87" o "MAYO-SEPTIEMBRE 1987"
+        /\b(ENE|FEB|MAR|ABR|MAY|JUN|JUL|AGO|SEP|OCT|NOV|DIC)[\.OA\s\-]+(?:A\s+)?(ENE|FEB|MAR|ABR|MAY|JUN|JUL|AGO|SEP|OCT|NOV|DIC)[\.OA\s\-\/]+(?:DE\s+)?(?:19|20)?\d{2}\b/,
 
-    // Búsqueda por palabras clave "AÑO", "FINAL", o "SEMESTRE"
-    const matchPalabrasClave = contenidoFila.match(/AÑO|FINAL|SEMESTRE/);
+        // Formato "OCT/87-FEB/88" o "OCT.87-FEB.88" o "OCT-87/FEB-88"
+        /\b(ENE|FEB|MAR|ABR|MAY|JUN|JUL|AGO|SEP|OCT|NOV|DIC)[\.\/\-](?:19|20)?\d{2}[\s\-\/]+(?:A\s+)?(ENE|FEB|MAR|ABR|MAY|JUN|JUL|AGO|SEP|OCT|NOV|DIC)[\.\/\-](?:19|20)?\d{2}\b/,
+
+        // Formato "ENERO-FEBRERO 1987" o "ENERO A FEBRERO DE 1987"
+        /\b(ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)[\s\-]+(?:A\s+)?(ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)(?:\s+DE)?\s+(?:19|20)?\d{2,4}\b/,
+
+        // Formato "SEMESTRE: MAYO A SEPT/87"
+        /\bSEMESTRE\s*:?\s*(ENE|FEB|MAR|ABR|MAY|JUN|JUL|AGO|SEP|OCT|NOV|DIC)[\.OA\s\-]+(?:A\s+)?(ENE|FEB|MAR|ABR|MAY|JUN|JUL|AGO|SEP|OCT|NOV|DIC)[\.OA\s\-\/]+(?:DE\s+)?(?:19|20)?\d{2}\b/i,
+
+        // Curso de invierno/verano
+        /\bCURSO\s+(?:DE\s+)?(INVIERNO|VERANO)\s+(?:DE\s+)?(?:19|20)?\d{2,4}\b/i,
+    ];
+
+    // Verificar cada patrón
+    for (const patron of patronesPeriodo) {
+        const match = contenidoFila.match(patron);
+        if (match) {
+            // Limpiamos el resultado para quitar prefijos como "SEMESTRE:" si existen
+            let periodo = match[0].replace(/\bSEMESTRE\s*:?\s*/i, "").trim();
+            return periodo;
+        }
+    }
+
+    // Si no se encontró un patrón específico, buscar meses y años cercanos
+    const mesCercano = contenidoFila.match(/\b(ENE|FEB|MAR|ABR|MAY|JUN|JUL|AGO|SEP|OCT|NOV|DIC|ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)[\.\s\/\-]+(?:19|20)?\d{2}\b/i);
+
+    if (mesCercano) {
+        return mesCercano[0].trim();
+    }
+
+    // Búsqueda de años como último recurso
+    const matchAnio = contenidoFila.match(/\b(?:19|20)\d{2}\b/);
+    if (matchAnio) return matchAnio[0];
+
+    // Búsqueda por palabras clave como último recurso
+    const matchPalabrasClave = contenidoFila.match(/\b(?:AÑO|FINAL|SEMESTRE)\b/);
     if (matchPalabrasClave) {
-        // En caso de detectar palabras clave, tratamos de encontrar un año cercano
-        const anioCercano = contenidoFila.match(/\b19\d{2}\b/);
-        if (anioCercano) return anioCercano[0]; // Retornar el año relacionado
-        return matchPalabrasClave[0]; // Retornamos la palabra clave en caso de no haber año
+        // Buscar texto cercano que podría contener información del periodo
+        const contexto = contenidoFila.substring(
+            Math.max(0, contenidoFila.indexOf(matchPalabrasClave[0]) - 30),
+            Math.min(contenidoFila.length, contenidoFila.indexOf(matchPalabrasClave[0]) + 50)
+        );
+
+        // Intentar encontrar patrones de fecha en el contexto
+        const fechaEnContexto = contexto.match(/\b(?:ENE|FEB|MAR|ABR|MAY|JUN|JUL|AGO|SEP|OCT|NOV|DIC)[\s\/\.-]+(?:19|20)?\d{2}\b/i);
+        if (fechaEnContexto) return fechaEnContexto[0].trim();
+
+        return matchPalabrasClave[0]; // Retornamos la palabra clave en caso de no encontrar nada mejor
     }
 
     return null; // Si no se encuentra nada, retornamos null
@@ -742,6 +806,7 @@ const extractData = async (file: ArrayBuffer, model: string) => {
         const poller = await client.beginAnalyzeDocument(model, file);
         console.log('Waiting for analysis to complete...');
         const result = await poller.pollUntilDone();
+        const res  =  poller.getResult() as AnalyzeResult;
 
         if (!result || !result.documents || result.documents.length === 0) {
             throw new Error('No documents found in analysis result');
@@ -765,6 +830,19 @@ const extractData = async (file: ArrayBuffer, model: string) => {
         console.error('Error extracting data in function extractData:', err);
         return NextResponse.json({ error: 'Error extracting data', status: 500 });
     }
+}
+
+const saveToOcrJson = async (result: AnalyzeResult) => {
+    let date = new Date().toISOString();
+    let ocr_result = {
+        "status": "succeeded",
+        "createdDateTime": date,
+        "lastUpdatedDateTime": date,
+        "analyzeResult": result,
+    }
+
+    let fileName = `ocr-${date}.json`;
+    //const uploadedData = await uploadJsonToBlobStorage(ocr_result, fileName);
 }
 
 const extractDetailData = async (file: ArrayBuffer, model: string) => {
@@ -848,7 +926,7 @@ const classifyMallaCurricular = async (file: ArrayBuffer): Promise<string | null
 
         console.log('Beginning document classification...');
 
-        const poller = await client.beginClassifyDocument('malla-curricular-classifier', file);
+        const poller = await client.beginClassifyDocument('malla-curricular-classifier-2', file);
 
         console.log('Waiting for classification to complete...');
         const result = await poller.pollUntilDone();
@@ -917,15 +995,40 @@ const classifyDocument = async (file: ArrayBuffer): Promise<string | null> => {
     }
 };
 
-const uploadToBlobStorage = async (pdfData: ArrayBuffer): Promise<string> => {
+const uploadToBlobStorage = async (pdfData: ArrayBuffer, fileName: string): Promise<string> => {
     try {
         const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
         const containerClient = blobServiceClient.getContainerClient(containerName);
-        const blobName = `${uuidv4()}.pdf`;
+        const blobName = fileName;
         const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
         const blobResponse = await blockBlobClient.uploadData(pdfData, {
             blobHTTPHeaders: { blobContentType: 'application/pdf' }
+        });
+
+        if (!blobResponse) {
+            throw new Error('Error uploading blob');
+        }
+
+        console.log('Blob subido con éxito');
+
+        return blobName as string;
+    } catch (err) {
+        console.error('Error uploading blob:', err);
+        throw new Error('Error uploading blob');
+    }
+
+}
+
+const uploadJsonToBlobStorage = async (jsonData: Blob, fileName: string): Promise<string> => {
+    try {
+        const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
+        const containerClient = blobServiceClient.getContainerClient(containerName);
+        const blobName = fileName;
+        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+        const blobResponse = await blockBlobClient.uploadData(jsonData, {
+            blobHTTPHeaders: { blobContentType: 'application/json' }
         });
 
         if (!blobResponse) {
