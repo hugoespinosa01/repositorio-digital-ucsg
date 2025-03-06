@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
         // Clasifica los documentos según la carrera
         if (classifiedDoc == 'kardex-computacion') {
             try {
-                extractedData = await extractData(pdfData, 'computacion-1-model');
+                extractedData = await extractData(pdfData, 'computacion_formato1_v1');
                 console.log('Extracted data for computacion:', extractedData);
 
                 // Ejecutar análisis para Human In The Loop

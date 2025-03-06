@@ -87,8 +87,8 @@ export async function GET(request: NextRequest, { params }: Params) {
     try {
         const { id } = params
 
-        // const page = Number(request.nextUrl.searchParams.get('page'));
-        // const pageSize = Number(request.nextUrl.searchParams.get('limit'));
+        const page = Number(request.nextUrl.searchParams.get('page'));
+        const pageSize = Number(request.nextUrl.searchParams.get('limit'));
 
         if (!id) {
             throw new Error('No se ha enviado un id de documento');
@@ -111,8 +111,8 @@ export async function GET(request: NextRequest, { params }: Params) {
                 IdDocumentoKardex: kardex.Id,
                 Estado: 1,
             },
-            // skip: (page - 1) * pageSize,
-            // take: pageSize,
+            skip: (page - 1) * pageSize,
+            take: pageSize,
         });
 
         if (!data) {
@@ -123,6 +123,8 @@ export async function GET(request: NextRequest, { params }: Params) {
             message: 'Materias obtenidas con éxito',
             status: 200,
             data: data,
+            totalPages: Math.ceil(data.length / pageSize),
+            currentPage: page,
         }
         return NextResponse.json(result);
     } catch (error) {

@@ -53,6 +53,7 @@ type SortConfig = {
 
 export const MateriasDataTable = ({ fileId, canCreateMateria, canUpdateMateria, canDeleteMateria, setOpenModal, hideExpandButton }: MateriasDataTableProps) => {
     const [data, setData] = useState<KardexDetalle[]>([]);
+    const [totalPages, setTotalPages] = useState(0);
     const [sortConfig, setSortConfig] = useState<SortConfig>({
         key: 'Ciclo',
         direction: null,
@@ -75,7 +76,7 @@ export const MateriasDataTable = ({ fileId, canCreateMateria, canUpdateMateria, 
     //APIs
     const getNotas = async () => {
         try {
-            const response = await fetch(`/api/materias/${fileId}`);
+            const response = await fetch(`/api/materias/${fileId}?page=${currentPage}&limit=${rowsPerPage}`);
             if (!response.ok) {
                 throw new Error('Error obteniendo las notas');
             }
@@ -173,6 +174,7 @@ export const MateriasDataTable = ({ fileId, canCreateMateria, canUpdateMateria, 
         try {
             const notas = await getNotas(); // Llama la función que pide las notas al servidor
             setData(notas.data);
+            setTotalPages(notas.totalPages);
         } catch (error) {
             toast({ title: 'Error', description: 'No se pudieron cargar las notas' });
         } finally {
@@ -345,8 +347,6 @@ export const MateriasDataTable = ({ fileId, canCreateMateria, canUpdateMateria, 
 
     const processedData = processData();
     const paginatedData = getPaginatedData(processedData);
-    const totalGroups = Object.keys(processedData).length;
-    const totalPages = Math.ceil(totalGroups / rowsPerPage);
 
     // Función para generar el rango de páginas a mostrar
     const getPageRange = useCallback(() => {
