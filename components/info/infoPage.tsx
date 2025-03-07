@@ -29,7 +29,7 @@ export default function InfoPage() {
                                 <Link
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    href="https://www.ucsg.edu.ec/ingenieria/"
+                                    href="https://cuucsgedu-my.sharepoint.com/:b:/g/personal/hugo_espinosa01_cu_ucsg_edu_ec/EXqNrHqruGxNtMeNf6BBag4BC_WMnrHAIK6Rv8z6rRJKWQ?e=XOOPnZ"
                                     className="text-primary underline underline-offset-4"
                                 >Manual de usuario
                                     <ArrowUpRight className="h-4 w-4 inline-block" />
