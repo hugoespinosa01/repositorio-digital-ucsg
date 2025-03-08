@@ -12,7 +12,6 @@ import { KardexDetalle } from '@/types/kardexDetalle';
 import { PDFDocument } from 'pdf-lib';
 import { normalizeCoordinates } from '@/utils/azureDI';
 
-
 dotenv.config();
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
 const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME || '';
@@ -27,6 +26,7 @@ interface ExtractedDataFields {
     fields: {
         [field: string]: DocumentField;
     };
+    docType: string;
 }
 
 interface ColumnMapping {
@@ -107,9 +107,15 @@ export async function GET(request: Request) {
     }
 }
 
+/**
+ * Almacena y extrae datos del documento subido por el usuario
+ * @param request Petición del cliente
+ * @returns 
+ */
 export async function POST(request: NextRequest) {
     try {
 
+        //1. Valido el formdata
         const formData = await request.formData();
 
         if (!formData) {
@@ -122,70 +128,83 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
         }
 
-        // Procesar el PDF
+        // 2. Convierto el archivo a ArrayBuffer
         const pdfData = await file.arrayBuffer();
 
-        // Clasificar el documento
-        let classifiedDoc = null;
-        try {
-            classifiedDoc = await classifyDocument(pdfData);
-            console.log('Document classification result:', classifiedDoc);
-        } catch (error) {
-            console.error('Error during document classification:', error);
-            throw new Error('Unable to classify document');
-        }
+        // try {
+        //     classifiedDoc = await classifyDocument(pdfData);
+        //     console.log('Document classification result:', classifiedDoc);
+        // } catch (error) {
+        //     console.error('Error during document classification:', error);
+        //     throw new Error('Unable to classify document');
+        // }
 
-        // Validar clasificación    
-        if (typeof classifiedDoc !== 'string' || !['kardex-computacion', 'kardex-civil'].includes(classifiedDoc)) {
-            console.error('Invalid document classification:', classifiedDoc);
-            throw new Error('Invalid document classification');
-        }
+        // // 4. Valido clasificación
+        // if (typeof classifiedDoc !== 'string' || !['kardex-computacion', 'kardex-civil'].includes(classifiedDoc)) {
+        //     console.error('Invalid document classification:', classifiedDoc);
+        //     throw new Error('Invalid document classification');
+        // }
 
-        //Subo al blob storage
-        const fileName = `${uuidv4()}`;
+        //Aquí debo subir según el docType en la carpeta correspondiente
 
-        const blobName = await uploadToBlobStorage(pdfData, fileName);
+        //5. Subo al blob storage
+        const blobName = await uploadToBlobStorage(pdfData);
 
+        // 6. Proceso los datos según la carrera
         let extractedData = null;
 
-        // Clasifica los documentos según la carrera
-        if (classifiedDoc == 'kardex-computacion') {
-            try {
-                extractedData = await extractData(pdfData, 'computacion_formato1_v2');
-                console.log('Extracted data for computacion:', extractedData);
+        // Ya hago la extracción de datos con el modelo compuesto
+        extractedData = await extractData(pdfData, 'kardex-composed-model');
+        console.log('Extracted data:', extractedData);
 
-                // Ejecutar análisis para Human In The Loop
-                await runLayoutAnalysis(pdfData, blobName);
-            } catch (error) {
-                await deleteBlob(blobName);
-                console.error('Error extracting computacion data:', error);
-                throw new Error('Error extracting data for extractedData');
-            }
-        } else if (classifiedDoc == 'kardex-civil') {
-            try {
-                extractedData = await extractData(pdfData, 'civil_formato_2_v3');
+        const { docType } = extractedData as ExtractedDataFields;
 
-                // Ejecutar análisis para Human In The Loop
-                await runLayoutAnalysis(pdfData, blobName);
-                console.log('Extracted data for civil:', extractedData);
-            } catch (error) {
-                await deleteBlob(blobName);
-                console.error('Error extracting civil data:', error);
-                throw new Error('Error extracting data for extractedData');
-            }
-        } else {
-            await deleteBlob(blobName);
-            throw new Error('Invalid document classification');
-        }
+        await runLayoutAnalysis(pdfData, docType + "/" +  blobName);
+
+        // Ejecutar análisis para Human In The Loop
+
+        // if (classifiedDoc == 'kardex-computacion') {
+        //     try {
+        //         extractedData = await extractData(pdfData, 'computacion_formato1_v2');
+        //         console.log('Extracted data for computacion:', extractedData);
+
+        //         const { docType } = extractedData as ExtractedDataFields;
+
+        //         // Ejecutar análisis para Human In The Loop
+        //         await runLayoutAnalysis(pdfData, docType + "/" +  blobName);
+        //     } catch (error) {
+        //         await deleteBlob(blobName);
+        //         console.error('Error extracting computacion data:', error);
+        //         throw new Error('Error extracting data for extractedData');
+        //     }
+        // } else if (classifiedDoc == 'kardex-civil') {
+        //     try {
+        //         extractedData = await extractData(pdfData, 'civil_formato_composed_v1');
+
+        //         const { docType } = extractedData as ExtractedDataFields;
+
+        //         // Ejecutar análisis para Human In The Loop
+        //         await runLayoutAnalysis(pdfData, docType + "/" +  blobName);
+        //         console.log('Extracted data for civil:', extractedData);
+        //     } catch (error) {
+        //         await deleteBlob(blobName);
+        //         console.error('Error extracting civil data:', error);
+        //         throw new Error('Error extracting data for extractedData');
+        //     }
+        // } else {
+        //     await deleteBlob(blobName);
+        //     throw new Error('Invalid document classification');
+        // }
 
         if (!extractedData) {
             await deleteBlob(blobName);
             throw new Error('Invalid extracted data structure');
         }
 
+        // 7. Proceso los datos extraídos
         const { fields } = extractedData as ExtractedDataFields;
 
-        // Validar campos específicos necesarios
+        //8. Validar campos específicos necesarios
         const requiredFields = ['Alumno', 'NoIdentificacion', 'Carrera'];
         for (const field of requiredFields) {
             if (!fields[field] || !fields[field].value) {
@@ -194,6 +213,7 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        //9. Valido si el documento ya ha sido subido anteriormente
         let cedula = fields.NoIdentificacion.value.replace(/[^0-9]/g, '') ?? ''
 
         const documentoYaSubido = await prisma.tipoDocumentoKardex.findFirst({
@@ -208,24 +228,14 @@ export async function POST(request: NextRequest) {
             throw new Error('El documento ya ha sido subido anteriormente');
         }
 
-        //let extractedDetails = await extractDetailData(pdfData, 'prebuilt-document');
-
-        // if (!extractedDetails || !Array.isArray(extractedDetails)) {
-        //     console.error('Invalid extracted details:', extractedDetails);
-        //     extractedDetails = [];
-        // }
-        // let processedData = await processDataWithOpenAI(extractedDetails);
-
-        //const parsedDetails = parseData(extractedDetails);
-
-        // Busco el ID de la carrera
+        // 10. Busco el ID de la carrera
         const carreraArray = await checkCarrera(fields.Carrera.value);
 
         if (carreraArray.length === 0) {
             throw new Error('El documento no es válido o no se pudo extraer la carrera');
         }
 
-        //Extraigo datos del documento (producto de Azure AI Intelligence)
+        // 11. Extraigo datos del documento (producto de Azure AI Intelligence)
         const datosExtraidos = {
             alumno: formatData(fields.Alumno.value),
             noIdentificacion: cedula,
@@ -233,10 +243,10 @@ export async function POST(request: NextRequest) {
             materiasAprobadas: [] as Materia[]
         }
 
-        // Extraigo las materias aprobadas y las guardo en un array
+        // 12. Extraigo las materias aprobadas y las guardo en un array
         await populateDetalleMaterias(datosExtraidos, fields);
 
-        //Busco la carpeta root
+        // 13. Busco la carpeta root
         let carpetaRoot = await prisma.carpeta.findFirst({
             where: {
                 IdCarpetaPadre: null,
@@ -244,12 +254,13 @@ export async function POST(request: NextRequest) {
             }
         });
 
+        // 14. Creo la carpeta root si no existe
         if (!carpetaRoot) {
             carpetaRoot = await prisma.carpeta.create({
                 data: {
                     FechaCreacion: new Date,
                     IdCarpetaPadre: null,
-                    Nombre: 'ucsg',
+                    Nombre: 'ucsg', // Carpeta raíz predeterminada
                     Tipo: 'Carpeta',
                     Ruta: '/',
                     Estado: 1
@@ -257,7 +268,7 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        // Busco el Id de la carpeta de la carrera correspondiente
+        // 15. Busco el Id de la carpeta de la carrera correspondiente
         let carpetaObjetivo = await prisma.carpeta.findFirst({
             where: {
                 IdCarrera: {
@@ -268,6 +279,7 @@ export async function POST(request: NextRequest) {
             }
         });
 
+        // 16. Creo la carpeta de la carrera si no existe
         if (!carpetaObjetivo) {
             carpetaObjetivo = await prisma.carpeta.create({
                 data: {
@@ -282,12 +294,36 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        const nombreArchivo = datosExtraidos.alumno + ' - ' + datosExtraidos.noIdentificacion
-        const ruta = `/${carpetaRoot?.Nombre}/${carpetaObjetivo?.Nombre}/${nombreArchivo}`;
-        const idCarpeta = carpetaObjetivo?.Id;
+        // 16. Busco la carpeta del estudiante
+        let carpetaEstudiante = await prisma.carpeta.findFirst({
+            where: {
+                Nombre: datosExtraidos.alumno,
+                IdCarpetaPadre: carpetaObjetivo?.Id,
+                Estado: 1,
+            }
+        });
+
+        // 17. Creo la carpeta del estudiante si no existe
+        if (!carpetaEstudiante) {
+            carpetaEstudiante = await prisma.carpeta.create({
+                data: {
+                    FechaCreacion: new Date,
+                    IdCarpetaPadre: carpetaObjetivo?.Id,
+                    IdCarrera: carreraArray[0].id,
+                    Nombre: datosExtraidos.alumno,
+                    Estado: 1,
+                    Tipo: 'Carpeta',
+                    Ruta: `/${carpetaRoot?.Nombre}/${carpetaObjetivo?.Nombre}/${datosExtraidos.alumno}`
+                }
+            });
+        }
+
+        const nombreArchivo = datosExtraidos.alumno + ' - ' + datosExtraidos.noIdentificacion;
+        const ruta = `/${carpetaRoot?.Nombre}/${carpetaObjetivo?.Nombre}/${datosExtraidos.alumno}/${nombreArchivo}`;
+        const idCarpeta = carpetaEstudiante?.Id;
         const extension = file.name.substring(file.name.lastIndexOf('.') + 1);
 
-        // Creo el documento (archivo)
+        // 19. Creo el documento (archivo)
         const newDocumento = await prisma.documento.create({
             data: {
                 IdCarpeta: idCarpeta,
@@ -306,7 +342,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Error creando documento' }, { status: 500 });
         }
 
-        // Creo el tipo de documento kardex
+        // 20. Creo el tipo de documento kardex
         const tipoDocKardex = await prisma.tipoDocumentoKardex.create({
             data: {
                 IdDocumento: newDocumento.Id,
@@ -321,9 +357,9 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Error creando tipo de documento kardex' }, { status: 500 });
         }
 
-        // Creo los detalles del kardex
+        // 21. Creo los detalles del kardex
         for (let materia of datosExtraidos.materiasAprobadas) {
-            const documentoDetalle = await prisma.documentoDetalleKardex.create({
+            await prisma.documentoDetalleKardex.create({
                 data: {
                     Ciclo: materia.Nivel,
                     Materia: materia.Materia,
@@ -336,11 +372,11 @@ export async function POST(request: NextRequest) {
             })
         }
 
-        // Subo a la base de conocimientos
+        // 22. Subo a la base de conocimientos
         await loadToPinecone(file.name, newDocumento as Documento, datosExtraidos);
 
         const result = {
-            message: 'Documento creado',
+            message: 'Documento creado con éxito',
             status: 200,
             data: newDocumento,
         }
@@ -356,7 +392,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(errResponse, { status: 500 });
     }
 }
-
 
 /**
  * Ejecuta el análisis con el modelo 'prebuilt-layout'
@@ -384,8 +419,6 @@ const runLayoutAnalysis = async (pdfData: ArrayBuffer, fileName: string) => {
         console.log('Waiting for analysis to complete...');
         await poller.pollUntilDone();
         const res = poller.getResult() as AnalyzeResult;
-
-
 
         console.log('Layout analysis result:', res);
 
@@ -929,7 +962,6 @@ const extractData = async (file: ArrayBuffer, model: string) => {
         if (!endpoint || !apiKey) {
             throw new Error('Form Recognizer credentials not configured');
         }
-
         console.log('Starting extraction with model:', model);
 
         const credential = new AzureKeyCredential(apiKey);
@@ -954,10 +986,12 @@ const extractData = async (file: ArrayBuffer, model: string) => {
         }
 
         //Necesito page dimensions (width y height) res.pages[0].width y res.pages[0].height
+
         //const labelsJson = modelToLabelsJson(modelOutput, pageDimensions);
 
         return {
             fields: firstDocument.fields,
+            docType: firstDocument.docType,
         };
 
 
@@ -969,11 +1003,16 @@ const extractData = async (file: ArrayBuffer, model: string) => {
 
 const saveToOcrJson = async (result: AnalyzeResult, blobName: string) => {
     let date = new Date().toISOString();
+
+    //Añado una propiedad que es necesaria para el ocr.json
+    let resultExtend = result as any;
+    resultExtend.stringIndexType = "utf16CodeUnit";
+
     let ocrResult = {
         "status": "succeeded",
         "createdDateTime": date,
         "lastUpdatedDateTime": date,
-        "analyzeResult": result,
+        "analyzeResult": resultExtend,
     }
 
     let fileName = `${blobName}.ocr.json`;
@@ -1144,11 +1183,11 @@ const classifyDocument = async (file: ArrayBuffer): Promise<string | null> => {
     }
 };
 
-const uploadToBlobStorage = async (pdfData: ArrayBuffer, fileName: string): Promise<string> => {
+const uploadToBlobStorage = async (pdfData: ArrayBuffer): Promise<string> => {
     try {
         const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
-        const containerClient = blobServiceClient.getContainerClient("docs-prueba");
-        const blobName = fileName + '.pdf';
+        const containerClient = blobServiceClient.getContainerClient(containerName);
+        const blobName = `${uuidv4()}.pdf`;
         const blockBlobClient = containerClient.getBlockBlobClient("formato_civil_2/" + blobName);
 
         const blobResponse = await blockBlobClient.uploadData(pdfData, {
@@ -1172,9 +1211,9 @@ const uploadToBlobStorage = async (pdfData: ArrayBuffer, fileName: string): Prom
 const uploadJsonToBlobStorage = async (jsonData: any, fileName: string): Promise<string> => {
     try {
         const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
-        const containerClient = blobServiceClient.getContainerClient("docs-prueba");
+        const containerClient = blobServiceClient.getContainerClient(containerName);
         const blobName = fileName;
-        const blockBlobClient = containerClient.getBlockBlobClient("formato_civil_2/" + blobName);
+        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
         const blobResponse = await blockBlobClient.upload(JSON.stringify(jsonData), JSON.stringify(jsonData).length);
 

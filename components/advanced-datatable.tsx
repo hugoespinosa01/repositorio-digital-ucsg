@@ -71,7 +71,8 @@ export const MateriasDataTable = ({ fileId, canCreateMateria, canUpdateMateria, 
 
     useEffect(() => {
         fetchAndSetData(); // Carga los datos al montar el componente
-    }, []);
+        console.log('hola')
+    }, [currentPage]);
 
     //APIs
     const getNotas = async () => {

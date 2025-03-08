@@ -115,6 +115,13 @@ export async function GET(request: NextRequest, { params }: Params) {
             take: pageSize,
         });
 
+        const totalMaterias = await prisma.documentoDetalleKardex.count({
+            where: {
+                IdDocumentoKardex: kardex.Id,
+                Estado: 1,
+            }
+        });
+
         if (!data) {
             return NextResponse.json({ message: "Error al obtener materias" }, { status: 404 });
         }
@@ -123,7 +130,7 @@ export async function GET(request: NextRequest, { params }: Params) {
             message: 'Materias obtenidas con éxito',
             status: 200,
             data: data,
-            totalPages: Math.ceil(data.length / pageSize),
+            totalPages: Math.ceil(totalMaterias / pageSize),
             currentPage: page,
         }
         return NextResponse.json(result);
