@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { Documento } from '@/types/file';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
-import { AnalyzeResult, AzureKeyCredential, DocumentAnalysisClient } from "@azure/ai-form-recognizer";
+import { AnalyzedDocument, AnalyzeResult, AzureKeyCredential, DocumentAnalysisClient } from "@azure/ai-form-recognizer";
 import { loadToPinecone } from '@/lib/pinecone';
 import { checkCarrera } from '@/utils/checkCarrera';
 import { Materia } from '@/types/materia';
@@ -27,6 +27,7 @@ interface ExtractedDataFields {
         [field: string]: DocumentField;
     };
     docType: string;
+    labelsJson: LabelField[];
 }
 
 interface ColumnMapping {
@@ -154,12 +155,17 @@ export async function POST(request: NextRequest) {
         let extractedData = null;
 
         // Ya hago la extracción de datos con el modelo compuesto
-        extractedData = await extractData(pdfData, 'kardex-composed-model');
+        extractedData = await extractData(pdfData, 'kardex-composed-model-v2');
         console.log('Extracted data:', extractedData);
 
-        const { docType } = extractedData as ExtractedDataFields;
+        // 7. Proceso los datos extraídos
+        const { docType, fields, labelsJson } = extractedData as ExtractedDataFields;
 
-        await runLayoutAnalysis(pdfData, docType + "/" +  blobName);
+        // 8. Corro el análisis Layout para guardar el ocr.json
+        await runLayoutAnalysis(pdfData, docType + "/" + blobName);
+
+        // PROBAR LA SUBIDA DE LOS LABELS.JSON
+        await saveToLabelsJson(labelsJson, docType + "/" + blobName);
 
         // Ejecutar análisis para Human In The Loop
 
@@ -200,9 +206,6 @@ export async function POST(request: NextRequest) {
             await deleteBlob(blobName);
             throw new Error('Invalid extracted data structure');
         }
-
-        // 7. Proceso los datos extraídos
-        const { fields } = extractedData as ExtractedDataFields;
 
         //8. Validar campos específicos necesarios
         const requiredFields = ['Alumno', 'NoIdentificacion', 'Carrera'];
@@ -334,7 +337,7 @@ export async function POST(request: NextRequest) {
                 Tamano: file.size,
                 Extension: extension,
                 Tipo: "Archivo",
-                RefArchivo: blobName
+                RefArchivo: blobName,
             }
         });
 
@@ -431,34 +434,126 @@ const runLayoutAnalysis = async (pdfData: ArrayBuffer, fileName: string) => {
 }
 
 const modelToLabelsJson = (
-    fields: Record<string, ModelField>,
-    pageDimensions: { width: number; height: number }[]
+    analyzeResult: AnalyzeResult<AnalyzedDocument>,
 ): LabelField[] => {
+    if (!analyzeResult.pages) {
+        throw new Error('No pages found in analyze result');
+    }
 
-    return Object.entries(fields).map(([label, field]) => {
+    if (!analyzeResult.documents) {
+        throw new Error('No documents found in analyze result');
+    }
 
-        const groupedValues = field.boundingRegions.map(region => {
+    // Obtener las dimensiones de las páginas
+    const pageDimensions = analyzeResult.pages.map(page => ({
+        width: page.width,
+        height: page.height,
+        pageNumber: page.pageNumber
+    }));
 
-            const pageDimension = pageDimensions[region.pageNumber - 1];
-            const normalizedBox = normalizeCoordinates(
-                region.polygon,
-                pageDimension.width,
-                pageDimension.height
-            );
+    // Tomar el primer documento
+    const document = analyzeResult.documents[0];
 
-            return {
-                page: region.pageNumber,
-                text: field.valueString,
-                boundingBoxes: [normalizedBox]
-            };
-        });
+    // Mapear los campos del documento al esquema LabelField
+    return Object.entries(document.fields).flatMap(([label, field]) => {
+        if (field.kind === 'array' && Array.isArray(field.values)) {
+            // Manejar campos de tipo array (tablas)
+            return field.values.flatMap((row, rowIndex): LabelField[] => {
 
-        return {
-            label: label,
-            value: groupedValues
-        };
+                if (row.kind === 'object' && row.properties) {
+
+                    // Para cada fila, procesar sus propiedades
+                    const results: LabelField[] = [];
+
+                    // Para cada fila (DocumentObjectField), procesar sus propiedades
+                    Object.entries(row.properties).map(([columnName, columnField]) => {
+
+                        if (!columnField?.boundingRegions?.length) {
+                            return;   // Ignorar campos sin regiones
+                        }
+
+                        const groupedValues = (columnField.boundingRegions || []).map(region => {
+
+                            const pageDimension = pageDimensions.find(dim =>
+                                dim.pageNumber === region.pageNumber
+                            );
+
+                            if (!pageDimension) {
+                                throw new Error(
+                                    `Dimensiones no encontradas para la página ${region.pageNumber}`
+                                );
+                            }
+
+                            if (!pageDimension.width || !pageDimension.height) {
+                                throw new Error(
+                                    `Dimensiones inválidas para la página ${region.pageNumber}`
+                                );
+                            }
+
+                            const normalizedBox = normalizeCoordinates(
+                                region.polygon,
+                                pageDimension.width,
+                                pageDimension.height
+                            );
+
+                            return {
+                                page: region.pageNumber,
+                                text: columnField.content || "",
+                                boundingBoxes: [normalizedBox]
+                            };
+                        });
+
+                        results.push({
+                            label: `${label}/${rowIndex}/${columnName}`,
+                            value: groupedValues
+                        });
+                    });
+
+                    return results;
+
+                }
+                return []; // Si las filas no son objeto, se ignoran
+            });
+        } else {
+            // Manejar campos normales (no arrays)
+            const groupedValues = (field.boundingRegions || []).map(region => {
+                const pageDimension = pageDimensions.find(dim =>
+                    dim.pageNumber === region.pageNumber
+                );
+
+                if (!pageDimension) {
+                    throw new Error(
+                        `Dimensiones no encontradas para la página ${region.pageNumber}`
+                    );
+                }
+
+                if (!pageDimension.width || !pageDimension.height) {
+                    throw new Error(
+                        `Dimensiones inválidas para la página ${region.pageNumber}`
+                    );
+                }
+
+                const normalizedBox = normalizeCoordinates(
+                    region.polygon,
+                    pageDimension.width,
+                    pageDimension.height
+                );
+
+                return {
+                    page: region.pageNumber,
+                    text: field.content || "",
+                    boundingBoxes: [normalizedBox]
+                };
+            });
+
+            return [{
+                label: label,
+                value: groupedValues
+            }];
+        }
     });
 };
+
 
 const populateDetalleMaterias = async (datosExtraidos: any, fields: any) => {
     // Verifica que "detalle-materias" y sus valores existan antes de iterar
@@ -484,9 +579,9 @@ const populateDetalleMaterias = async (datosExtraidos: any, fields: any) => {
 }
 
 function transformDataMatricula(data: Row): number {
-    if (data?.Matr1?.value?.includes("+") || data?.Matr1?.value?.includes("A") || data?.Matr1?.value?.includes("1") || data?.Matr1?.value?.includes("*")) return 1;
-    if (data?.Matr2?.value?.includes("+") || data?.Matr2?.value?.includes("A") || data?.Matr2?.value?.includes("1") || data?.Matr2?.value?.includes("*")) return 2;
-    if (data?.Matr3?.value?.includes("+") || data?.Matr3?.value?.includes("A") || data?.Matr3?.value?.includes("1") || data?.Matr3?.value?.includes("*")) return 3;
+    if (data?.Matr1?.value?.includes("+") || data?.Matr1?.value?.includes("A") || data?.Matr1?.value?.includes("1") || data?.Matr1?.value?.includes("*") || data?.Matr1?.value?.includes("4")) return 1;
+    if (data?.Matr2?.value?.includes("+") || data?.Matr2?.value?.includes("A") || data?.Matr2?.value?.includes("1") || data?.Matr2?.value?.includes("*") || data?.Matr1?.value?.includes("4")) return 2;
+    if (data?.Matr3?.value?.includes("+") || data?.Matr3?.value?.includes("A") || data?.Matr3?.value?.includes("1") || data?.Matr3?.value?.includes("*") || data?.Matr1?.value?.includes("4")) return 3;
     else return 0;
 }
 
@@ -978,22 +1073,23 @@ const extractData = async (file: ArrayBuffer, model: string) => {
 
         console.log('Analysis completed successfully');
 
-
         // Validar campos
         const firstDocument = result.documents[0];
         if (!firstDocument.fields) {
             throw new Error('No fields found in document');
         }
 
-        //Necesito page dimensions (width y height) res.pages[0].width y res.pages[0].height
+        if (!result.pages) {
+            throw new Error('No pages found in document');
+        }
 
-        //const labelsJson = modelToLabelsJson(modelOutput, pageDimensions);
+        const labelsJson = modelToLabelsJson(result);
 
         return {
             fields: firstDocument.fields,
             docType: firstDocument.docType,
+            labelsJson: labelsJson
         };
-
 
     } catch (err) {
         console.error('Error extracting data in function extractData:', err);

@@ -219,6 +219,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                           {
                             results.length > 0 && results.map((res, index) => (
                               <FileCard
+                                showIcons={false}
                                 canEditFile={hasPermission('res:documents', 'update')}
                                 canDeleteFile={hasPermission('res:documents', 'delete')}
                                 key={index}
@@ -322,6 +323,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {results.length > 0 && results.map((res, index) => (
                           <FileCard
+                            showIcons={false}
                             canEditFile={hasPermission('res:documents', 'update')}
                             canDeleteFile={hasPermission('res:documents', 'delete')}
                             orderId={index}

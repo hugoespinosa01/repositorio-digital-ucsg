@@ -71,7 +71,6 @@ export const MateriasDataTable = ({ fileId, canCreateMateria, canUpdateMateria, 
 
     useEffect(() => {
         fetchAndSetData(); // Carga los datos al montar el componente
-        console.log('hola')
     }, [currentPage]);
 
     //APIs
@@ -218,16 +217,6 @@ export const MateriasDataTable = ({ fileId, canCreateMateria, canUpdateMateria, 
         );
     }, [filterMateria]);
 
-    // Group data by Ciclo
-    const groupData = useCallback((data: KardexDetalle[]) => {
-        const groups: { [key: string]: KardexDetalle[] } = {};
-        data.forEach(item => {
-            if (!groups[item.Ciclo]) groups[item.Ciclo] = [];
-            groups[item.Ciclo].push(item);
-        });
-        return groups;
-    }, []);
-
     // Función para procesar y agrupar los datos por ciclo
     const processData = useCallback(() => {
         // Primero, filtramos por materia si hay filtro
@@ -341,10 +330,8 @@ export const MateriasDataTable = ({ fileId, canCreateMateria, canUpdateMateria, 
 
     // Get paginated data
     const getPaginatedData = useCallback((processedData: KardexDetalle[]) => {
-        const startIndex = (currentPage - 1) * rowsPerPage;
-        return processedData.slice(startIndex, startIndex + rowsPerPage);
+        return processedData;
     }, [currentPage]);
-
 
     const processedData = processData();
     const paginatedData = getPaginatedData(processedData);

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { File, Trash2, FolderInput } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,7 @@ interface FileCardProps {
   orderId?: number;
   canEditFile: boolean;
   canDeleteFile: boolean;
+  showIcons?: boolean;
 }
 
 export function FileCard({ 
@@ -26,6 +27,7 @@ export function FileCard({
     orderId,
     canEditFile,
     canDeleteFile,
+    showIcons
   }: FileCardProps) {
   const [showActions, setShowActions] = React.useState(false);
 
@@ -57,7 +59,7 @@ export function FileCard({
 
         </div>
 
-        <div className={`relative ml-2 shrink-0 ${showActions ? 'visible' : 'invisible group-hover:visible'}`}>
+        <div className={`relative ml-2 shrink-0 ${ showIcons == false ? 'invisible' : showActions ? 'visible' : 'invisible group-hover:visible'}`}>
           <div className="absolute right-0 top-0 flex items-center space-x-1">
 
             {
