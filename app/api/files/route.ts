@@ -512,7 +512,7 @@ const modelToLabelsJson = (
                     return results;
 
                 }
-                return []; // Si las filas no son objeto, se ignoran
+                return []; // Si las filas no son objeto o no tienen valores, se ignoran
             });
         } else {
             // Manejar campos normales (no arrays)
