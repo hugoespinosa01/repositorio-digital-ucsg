@@ -5,6 +5,7 @@ import { Documento } from '@/types/file';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 import { AnalyzedDocument, AnalyzeResult, AzureKeyCredential, DocumentAnalysisClient } from "@azure/ai-form-recognizer";
+import {DocumentIntelligenceClient} from "@azure-rest/ai-document-intelligence"
 import { loadToPinecone } from '@/lib/pinecone';
 import { checkCarrera } from '@/utils/checkCarrera';
 import { Materia } from '@/types/materia';

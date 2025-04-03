@@ -15,6 +15,7 @@ import { Hammersmith_One } from 'next/font/google';
 import logosinergIA from '@/public/logo_sinergia.png';
 import { Typewriter } from '@/components/typewriter';
 import { Squares } from '@/components/background';
+import { Mockup, MockupFrame } from '@/components/heroPage/mockup';
 
 const slugs = [
   "typescript",
@@ -54,13 +55,14 @@ export default function Home() {
   }
 
   return (
+    
     <div className="flex flex-col min-h-screen overflow-hidden bg-gradient-to-br from-rose-50 via-white to-red-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ff000008_1px,transparent_1px),linear-gradient(to_bottom,#ff000008_1px,transparent_1px)] bg-[size:24px_24px]"></div>
 
       <main className="min-h-[calc(100vh-57px-97px)] flex-1">
         <div className='container relative pb-10 px-4 sm:px-6 lg:px-8'>
           <div className='flex items-center justify-center min-h-screen'>
-            <section className="mx-auto flex max-w-[980px] flex-col items-center gap-4 py-6 sm:py-10 md:py-12 lg:py-24">
+              <section className="mx-auto flex max-w-[980px] flex-col items-center gap-4 py-6 sm:py-10 md:py-12 lg:py-24">
               {/* Logo y Título */}
               <div className='flex items-center space-x-4'>
                 <Image
@@ -121,7 +123,20 @@ export default function Home() {
                   </Button>
                 )}
               </div>
-            </section>
+              </section>
+              {/* <div className="relative pt-12">
+                <MockupFrame className="animate-appear opacity-0 delay-700">
+                <Mockup type={'responsive'}>
+                  <Image
+                    src={screen}
+                    alt="hero"
+                    width={1500}
+                    height={1000}
+                    priority
+                  />
+                </Mockup>
+                </MockupFrame>
+              </div> */}
           </div>
 
           {/* Sección de Scroll Container */}
@@ -136,7 +151,6 @@ export default function Home() {
                     </span>
                   </h1>
                 </>
-
               }
 
             >

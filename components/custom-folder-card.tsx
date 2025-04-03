@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { FolderArchive, FolderInput, FolderOpen, Pencil, Trash2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { Folder } from '@/types/folder';
+import { cn } from '@/lib/utils';
 import useAuthRoles from '@/hooks/useAuthRoles';
 interface FileCardProps {
     folder: Folder;
@@ -36,7 +37,7 @@ export function FolderCard({ folder, fileName, creationDate, onEdit, onDelete, o
                         <FolderOpen className="w-6 h-6 text-yellow-600" />
                     </div>
                     <div className="min-w-0">
-                        <h3 className="font-medium group-hover:text-yellow-700 transition-colors truncate group-hover:max-w-[90%]">
+                        <h3 className={cn("font-medium group-hover:text-yellow-700 transition-colors truncate", fileName.length > 20 ? "group-hover:max-w-[70%]" : "max-w-full")}>
                             {fileName}
                         </h3>
                         <p className="text-sm text-gray-500 truncate">Creado el: {new Date(creationDate).toLocaleDateString()}</p>
