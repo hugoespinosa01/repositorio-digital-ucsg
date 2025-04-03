@@ -163,10 +163,10 @@ export async function POST(request: NextRequest) {
         const { docType, fields, labelsJson } = extractedData as ExtractedDataFields;
 
         // 8. Corro el análisis Layout para guardar el ocr.json
-        await runLayoutAnalysis(pdfData, docType + "/" + blobName);
+        //await runLayoutAnalysis(pdfData, docType + "/" + blobName);
 
         // PROBAR LA SUBIDA DE LOS LABELS.JSON
-        await saveToLabelsJson(labelsJson, docType + "/" + blobName);
+        //await saveToLabelsJson(labelsJson, docType + "/" + blobName);
 
         // Ejecutar análisis para Human In The Loop
 
@@ -560,7 +560,7 @@ const populateDetalleMaterias = async (datosExtraidos: any, fields: any) => {
     // Verifica que "detalle-materias" y sus valores existan antes de iterar
 
     //Concateno cada array de DetalleMaterias
-    let detalleMaterias = fields.DetalleMaterias1.values?.concat(fields.DetalleMaterias2.values, fields.DetalleMaterias3.values, fields.DetalleMaterias4.values);
+    let detalleMaterias = fields.DetalleMaterias1.values?.concat(fields.DetalleMaterias2?.values, fields.DetalleMaterias3?.values, fields.DetalleMaterias4?.values);
 
     //Remover undefined
     detalleMaterias = detalleMaterias.filter((materia: any) => materia !== undefined);

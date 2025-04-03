@@ -157,29 +157,29 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
         <CardTitle>
           <p className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4">
             {fileData?.NombreArchivo}
-            {fileData && (
+            {/* {fileData && (
               <Pill className='ml-4'>
                 <PillStatus>
                   <File className="mr-2" size={15} />
                 </PillStatus>
                 Borrador
               </Pill>
-            )}
+            )} */}
           </p>
-          <GetBackButton />
+          {fileData && <GetBackButton />}
         </CardTitle>
 
         <div className='flex justify-between space-x-3'>
-          <Button
+          {/* <Button
             size={"sm"}
             variant={"default"}
             className="w-full sm:w-auto mt-2 lg:mt-0"
           >
             <CheckCircle className="mr-2" size={15} />
             Validar
-          </Button>
+          </Button> */}
 
-          {hasPermission("res:documents", "delete") && (
+          {hasPermission("res:documents", "delete") && fileData && (
             <Button
               variant={"destructive"}
               onClick={handleDelete}
