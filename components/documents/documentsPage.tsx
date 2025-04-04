@@ -203,7 +203,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
 
                         {
                           isSearching && (
-                            <div className="flex justify-center mt-4 mb-8">
+                            <div className="flex justify-center mt-5 mb-8">
                               <TextShimmer
                                 duration={1.2}
                                 className='text-sm font-medium color:theme(colors.blue.600)] [--base-gradient-color:theme(colors.blue.200)] dark:[--base-color:theme(colors.blue.700)] dark:[--base-gradient-color:theme(colors.blue.400)]'
@@ -308,7 +308,7 @@ export default function DocumentsPage({ parentId }: { parentId?: string | null }
 
                       {
                         isSearching && (
-                          <div className="flex justify-center mt-4 mb-8">
+                          <div className="flex justify-center mt-5 mb-8">
                             <TextShimmer
                               duration={1.2}
                               className='text-sm font-medium color:theme(colors.blue.600)] [--base-gradient-color:theme(colors.blue.200)] dark:[--base-color:theme(colors.blue.700)] dark:[--base-gradient-color:theme(colors.blue.400)]'

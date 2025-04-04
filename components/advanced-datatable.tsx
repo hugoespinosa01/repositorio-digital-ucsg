@@ -16,7 +16,6 @@ import {
     ChevronLeft,
     ChevronRight,
     Plus,
-    Pencil,
     Check,
     X,
     Trash2,
@@ -365,7 +364,11 @@ export const MateriasDataTable = ({ fileId, canCreateMateria, canUpdateMateria, 
     }
 
     return (
-        <div className="p-4 space-y-4 bg-background rounded-lg shadow-md">
+        <div className="text-xs p-4 space-y-4 bg-background rounded-lg shadow-md">
+            <span className='text-xs font-semibold text-foreground'>
+                Hola
+            </span>
+            
             {/* Table Header with Filter */}
             <div className="flex justify-between items-center">
 
@@ -423,7 +426,7 @@ export const MateriasDataTable = ({ fileId, canCreateMateria, canUpdateMateria, 
                         <TableHead onClick={() => handleSort('Periodo')} className="cursor-pointer">
                             Periodo {sortConfig.key === 'Periodo' && (sortConfig.direction === 'asc' ? <ChevronUp className="inline w-4 h-4" /> : <ChevronDown className="inline w-4 h-4" />)}
                         </TableHead>
-                        <TableHead onClick={() => handleSort('Materia')} className="cursor-pointer">
+                        <TableHead onClick={() => handleSort('Materia')} className="cursor-pointer min-w-max">
                             Materia {sortConfig.key === 'Materia' && (sortConfig.direction === 'asc' ? <ChevronUp className="inline w-4 h-4" /> : <ChevronDown className="inline w-4 h-4" />)}
                         </TableHead>
                         <TableHead onClick={() => handleSort('NoMatricula')} className="cursor-pointer">
@@ -524,11 +527,11 @@ export const MateriasDataTable = ({ fileId, canCreateMateria, canUpdateMateria, 
                                 </>
                             ) : (
                                 <>
-                                    <TableCell>{row.Ciclo}</TableCell>
-                                    <TableCell>{row.Periodo}</TableCell>
-                                    <TableCell>{row.Materia}</TableCell>
-                                    <TableCell>{row.NoMatricula}</TableCell>
-                                    <TableCell>{row.Calificacion}</TableCell>
+                                    <TableCell className='text-xs'>{row.Ciclo}</TableCell>
+                                    <TableCell className='text-xs'>{row.Periodo}</TableCell>
+                                    <TableCell className='text-xs'>{row.Materia}</TableCell>
+                                    <TableCell className='text-xs'>{row.NoMatricula}</TableCell>
+                                    <TableCell className='text-xs'>{row.Calificacion}</TableCell>
                                     <TableCell>
                                         <div className="flex gap-2">
                                             {
