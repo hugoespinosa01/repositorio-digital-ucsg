@@ -49,11 +49,11 @@ export async function POST(request: NextRequest, { params }: Params) {
         return NextResponse.json({ error: 'Error al obtener el JSON' }, { status: 500 });
     }
 
-    Object.keys(documento.TipoDocumentoKardex[0]).map((key) => {
-        if (key !== 'TipoDocumentoKardex') {
-            jsonData.labels.map((item) => item.label == 'Alumno')
-        }
-    })
+    // Object.keys(documento.TipoDocumentoKardex[0]).map((key) => {
+    //     if (key !== 'TipoDocumentoKardex') {
+    //         jsonData.labels.map((item) => item.label == 'Alumno')
+    //     }
+    // })
 
 
 

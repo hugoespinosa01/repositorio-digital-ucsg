@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
             await runLayoutAnalysis(pdfData, blobName);
 
             // Subir el labels.json al blob storage inicial
-            await saveToLabelsJson(labelsJson, blobName);
+            let labelsResultJson = await saveToLabelsJson(labelsJson, blobName);
         }
         
     }
@@ -688,6 +688,8 @@ const saveToLabelsJson = async (result: any, blobName: string) => {
   let fileName = `${blobName}.labels.json`;
 
   await uploadJsonToBlobStorage(labelsResult, fileName);
+
+  return labelsResult;
 };
 
 const uploadToBlobStorage = async (

@@ -1,23 +1,32 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import LoadingDocuments from '@/components/documents/loading';
-import GetBackButton from '../getback-button';
-import { GetColumns } from '../dataTable/Columns';
-import { useRouter } from 'next/navigation';
-import { Button } from '../ui/button';
-import { Check, CheckCircle, DownloadIcon, File, FileDown, Table, Trash, TrashIcon } from 'lucide-react';
-import PDFViewerComponent from '../pdf-viewer';
-import InputDemo from '../inputtext';
-import InputNumber from '../inputnumber';
-import ExpandKardexDetail from '../modals/expand-kardex-detail-datatable';
-import ConfirmDeleteFile from '../modals/confirm-delete-file';
-import { KardexDetalle } from '@/types/kardexDetalle';
-import { useToast } from '@/components/ui/use-toast';
-import { useSession } from 'next-auth/react';
-import useAuthRoles from '@/hooks/useAuthRoles';
-import LoadingFilePage from './loading';
-import MateriasDataTable from '../advanced-datatable';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import LoadingDocuments from "@/components/documents/loading";
+import GetBackButton from "../getback-button";
+import { GetColumns } from "../dataTable/Columns";
+import { useRouter } from "next/navigation";
+import { Button } from "../ui/button";
+import {
+  Check,
+  CheckCircle,
+  DownloadIcon,
+  File,
+  FileDown,
+  Table,
+  Trash,
+  TrashIcon,
+} from "lucide-react";
+import PDFViewerComponent from "../pdf-viewer";
+import InputDemo from "../inputtext";
+import InputNumber from "../inputnumber";
+import ExpandKardexDetail from "../modals/expand-kardex-detail-datatable";
+import ConfirmDeleteFile from "../modals/confirm-delete-file";
+import { KardexDetalle } from "@/types/kardexDetalle";
+import { useToast } from "@/components/ui/use-toast";
+import { useSession } from "next-auth/react";
+import useAuthRoles from "@/hooks/useAuthRoles";
+import LoadingFilePage from "./loading";
+import MateriasDataTable from "../advanced-datatable";
 import {
   Pill,
   PillAvatar,
@@ -27,7 +36,7 @@ import {
   PillDelta,
   PillIcon,
   PillAvatarGroup,
-} from '../pill';
+} from "../pill";
 
 interface FileData {
   Id: number;
@@ -47,7 +56,7 @@ interface FileData {
 export default function FilesPage({ fileId }: { fileId?: string | null }) {
   const [fileData, setFileData] = useState<FileData | null>(null);
   const [detalleMaterias, setDetalleMaterias] = useState<KardexDetalle[]>([]);
-  const [fileUrl, setFileUrl] = useState<string>('');
+  const [fileUrl, setFileUrl] = useState<string>("");
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [openModalDelete, setOpenModalDelete] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -57,12 +66,12 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
     if (fileId) {
       fetchFile(fileId);
     }
-
   }, [fileId]);
 
   const hasPermission = (resource: string, action: string) => {
     return permissions.some(
-      (perm: any) => perm.rsname === resource && perm.scopes.includes(`scope:${action}`)
+      (perm: any) =>
+        perm.rsname === resource && perm.scopes.includes(`scope:${action}`)
     );
   };
 
@@ -87,7 +96,9 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
     const blobResponse = await fetch(`/api/blob/${res.data.RefArchivo}`);
 
     if (!blobResponse.ok) {
-      throw new Error(`Error al obtener el archivo: ${blobResponse.statusText}`);
+      throw new Error(
+        `Error al obtener el archivo: ${blobResponse.statusText}`
+      );
     }
 
     const blob = await blobResponse.blob();
@@ -99,23 +110,23 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
     setFileData(res.data);
     setDetalleMaterias(res.data.DetalleMaterias);
     setLoading(false);
-  }
+  };
 
   const onClickExpand = () => {
     setOpenModal(true);
   };
 
   const handleDownloadFile = () => {
-    window.open(fileUrl, '_blank');
-  }
+    window.open(fileUrl, "_blank");
+  };
 
   const vals = {
-    fileId: fileId
-  }
+    fileId: fileId,
+  };
 
   const handleDelete = () => {
     setOpenModalDelete(true);
-  }
+  };
 
   // const handleAcceptDelete = async () => {
   //   setOpenModalDelete(false);
@@ -138,36 +149,35 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
   // }
 
   const onEdit = useCallback((row: any) => {
-    console.log('Edit', row);
+    console.log("Edit", row);
   }, []);
 
   const onDelete = useCallback((row: any) => {
-    console.log('Delete', row);
+    console.log("Delete", row);
   }, []);
 
   const handleDownloadReport = async () => {
-    window.open(`/files/${fileId}/report`, '_blank');
-  }
+    window.open(`/files/${fileId}/report`, "_blank");
+  };
 
   const handleValidate = async () => {
     try {
-      console.log('Validar', fileId);
+      console.log("Validar", fileId);
 
       const response = await fetch(`/api/files/validate/${fileId}`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
-  
+
       if (!response.ok) {
         throw new Error(`Error al validar el archivo: ${response.statusText}`);
       }
     } catch (error) {
-      console.error('Error al validar el archivo:', error);
+      console.error("Error al validar el archivo:", error);
     }
-  
-  }
+  };
 
   return (
     <Card className="p-2 sm:p-5 mt-5">
@@ -176,7 +186,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
           <p className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4">
             {fileData?.NombreArchivo}
             {fileData && (
-              <Pill className='ml-4'>
+              <Pill className="ml-4">
                 <PillStatus>
                   <File className="mr-2" size={15} />
                 </PillStatus>
@@ -187,16 +197,18 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
           {fileData && <GetBackButton />}
         </CardTitle>
 
-        <div className='flex justify-between space-x-3'>
-          <Button
-            size={"sm"}
-            variant={"default"}
-            className="w-full sm:w-auto mt-2 lg:mt-0"
-            onClick={handleValidate}
-          >
-            <CheckCircle className="mr-2" size={15} />
-            Validar
-          </Button>
+        <div className="flex justify-between space-x-3">
+          {fileData && (
+            <Button
+              size={"sm"}
+              variant={"default"}
+              className="w-full sm:w-auto mt-2 lg:mt-0"
+              onClick={handleValidate}
+            >
+              <CheckCircle className="mr-2" size={15} />
+              Validar
+            </Button>
+          )}
 
           {hasPermission("res:documents", "delete") && fileData && (
             <Button
@@ -308,7 +320,6 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
 
                   {/*Promedios */}
                   <div className="flex flex-col sm:flex-row gap-4">
-
                     <div className="lg:w-[40%] sm:w-1/2">
                       <InputNumber
                         label="Promedio de graduación:"
@@ -331,32 +342,30 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
                   <div className="w-full mt-5">
                     {/* Botón visible solo en móvil */}
 
-                    {
-                      canListMaterias && (
-                        <>
-                          <div className="block lg:hidden mt-5">
-                            <Button
-                              variant="outline"
-                              className="w-full"
-                              onClick={() => setOpenModal(true)}
-                            >
-                              <Table className="mr-2 h-4 w-4" />
-                              Ver materias aprobadas
-                            </Button>
-                          </div>
-                          {/* Datatable visible solo en desktop */}
-                          <div className="hidden mt-5 lg:block overflow-x-auto">
-                            <MateriasDataTable
-                              setOpenModal={setOpenModal}
-                              fileId={fileId}
-                              canCreateMateria={canCreateMateria}
-                              canUpdateMateria={canUpdateMateria}
-                              canDeleteMateria={canDeleteMateria}
-                            />
-                          </div>
-                        </>
-                      )
-                    }
+                    {canListMaterias && (
+                      <>
+                        <div className="block lg:hidden mt-5">
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={() => setOpenModal(true)}
+                          >
+                            <Table className="mr-2 h-4 w-4" />
+                            Ver materias aprobadas
+                          </Button>
+                        </div>
+                        {/* Datatable visible solo en desktop */}
+                        <div className="hidden mt-5 lg:block overflow-x-auto">
+                          <MateriasDataTable
+                            setOpenModal={setOpenModal}
+                            fileId={fileId}
+                            canCreateMateria={canCreateMateria}
+                            canUpdateMateria={canUpdateMateria}
+                            canDeleteMateria={canDeleteMateria}
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Modales */}
