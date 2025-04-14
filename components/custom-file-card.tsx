@@ -55,6 +55,9 @@ export function FileCard({
             <p className="text-sm text-gray-500 truncate">
               Subido el: {new Date(creationDate).toLocaleDateString()}
             </p>
+            <p className="text-sm text-gray-500">
+              Status: {file?.StatusValidacion}
+            </p>
           </div>
 
         </div>

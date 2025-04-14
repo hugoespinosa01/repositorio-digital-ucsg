@@ -7,6 +7,7 @@ import { Button } from "../ui/button";
 import {
   Check,
   CheckCircle,
+  CircleCheck,
   DownloadIcon,
   File,
   FileDown,
@@ -27,6 +28,8 @@ import {
   Pill,
   PillStatus,
 } from "../pill";
+import { useToast } from '@/components/ui/use-toast';
+
 
 interface FileData {
   Id: number;
@@ -41,6 +44,7 @@ interface FileData {
   DetalleMaterias: [];
   PromMateriasAprobadas: number;
   PromGraduacion: number;
+  StatusValidacion: string;
 }
 
 export default function FilesPage({ fileId }: { fileId?: string | null }) {
@@ -51,6 +55,8 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
   const [loading, setLoading] = useState<boolean>(false);
   const [loadingBtnValidar, setLoadingBtnValidar] = useState<boolean>(false);
   const { permissions } = useAuthRoles();
+  const { toast } = useToast();
+
 
   useEffect(() => {
     if (fileId) {
@@ -101,9 +107,6 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
     setLoading(false);
   };
 
-  const onClickExpand = () => {
-    setOpenModal(true);
-  };
 
   const handleDownloadFile = () => {
     window.open(fileUrl, "_blank");
@@ -117,25 +120,6 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
     setOpenModalDelete(true);
   };
 
-  // const handleAcceptDelete = async () => {
-  //   setOpenModalDelete(false);
-
-  //   const response = await fetch(`/api/files/${Number(fileId)}`, {
-  //     method: 'DELETE',
-  //   });
-
-  //   if (!response.ok) {
-  //     throw new Error(`Error al eliminar el archivo: ${response.statusText}`);
-  //   }
-
-  //   toast({
-  //     title: "Confirmación",
-  //     description: "La información ha sido eliminada exitosamente",
-  //     variant: "default",
-  //   });
-
-  //   router.back();
-  // }
 
   const onEdit = useCallback((row: any) => {
     console.log("Edit", row);
@@ -164,10 +148,26 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
       if (!response.ok) {
         throw new Error(`Error al validar el archivo: ${response.statusText}`);
       }
+
+      toast({
+        title: 'Documento validado con éxito', 
+      })
+
     } catch (error) {
       console.error("Error al validar el archivo:", error);
+      toast({
+        title: 'Error al validar el documento',
+        description: "No se pudo validar el documento. Por favor, inténtelo de nuevo más tarde.",
+        variant: 'destructive'
+      })
     } finally {
       setLoadingBtnValidar(false);
+      setFileData((prev) => {
+        if (prev) {
+          return { ...prev, StatusValidacion: "validado" };
+        }
+        return null;
+      });
     }
   };
 
@@ -178,11 +178,17 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
           <p className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4">
             {fileData?.NombreArchivo}
             {fileData && (
-              <Pill className="ml-4">
+              <Pill className="ml-4" variant={'outline'}>
                 <PillStatus>
-                  <File className="mr-2" size={15} />
+                  {
+                    fileData.StatusValidacion === "validado" ? (
+                      <CircleCheck className="mr-2" size={15} color="green" />
+                    ) : (
+                      <File className="mr-2" size={15} color="blue"/>
+                    )
+                  }
                 </PillStatus>
-                Borrador
+                {fileData?.StatusValidacion}
               </Pill>
             )}
           </p>
@@ -190,7 +196,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
         </CardTitle>
 
         <div className="flex justify-between space-x-3">
-          {fileData && !loadingBtnValidar && (
+          {fileData && fileData?.StatusValidacion !== 'validado' && !loadingBtnValidar && (
             <Button
               size={"sm"}
               variant={"default"}

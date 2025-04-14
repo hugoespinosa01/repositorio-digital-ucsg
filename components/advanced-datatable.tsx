@@ -364,11 +364,7 @@ export const MateriasDataTable = ({ fileId, canCreateMateria, canUpdateMateria, 
     }
 
     return (
-        <div className="text-xs p-4 space-y-4 bg-background rounded-lg shadow-md">
-            <span className='text-xs font-semibold text-foreground'>
-                Hola
-            </span>
-            
+        <div className="text-xs p-4 space-y-4 bg-background rounded-lg shadow-md">            
             {/* Table Header with Filter */}
             <div className="flex justify-between items-center">
 
