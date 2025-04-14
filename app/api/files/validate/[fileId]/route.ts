@@ -86,7 +86,11 @@ export async function POST(request: NextRequest, { params }: Params) {
     //Crear modelo en Azure Document Intelligence
 
 
-    return NextResponse.json({ fileId }, { status: 200 });
+    return NextResponse.json({ 
+            message: "Documento validado con éxito",
+            modelId: "modelId", // Reemplazar con el ID del modelo creado
+            jsonData: jsonData, // Devolver el JSON actualizado
+    }, { status: 200 });
 
    } catch (error) {
     console.error('Error in POST request:', error);
