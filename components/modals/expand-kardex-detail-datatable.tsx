@@ -12,13 +12,11 @@ interface ExpandKardexDetailProps {
     canDeleteMateria: boolean;
     openModal: boolean;
     setOpenModal: (open: boolean) => void;
-    data: any;
     onEdit: (row: any) => void;
     onDelete: (row: any) => void;
-    setData: Dispatch<React.SetStateAction<KardexDetalle[]>>;
 }
 
-export default function ExpandKardexDetail({ openModal, setOpenModal, data, onEdit, onDelete, setData, fileId, canCreateMateria, canDeleteMateria, canUpdateMateria }: ExpandKardexDetailProps) {
+export default function ExpandKardexDetail({ openModal, setOpenModal, onEdit, onDelete, fileId, canCreateMateria, canDeleteMateria, canUpdateMateria }: ExpandKardexDetailProps) {
     const columns = useMemo(() => GetColumns({ onEdit, onDelete }), []);
 
     return (

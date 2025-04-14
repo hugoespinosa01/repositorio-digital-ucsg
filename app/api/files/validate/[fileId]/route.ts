@@ -15,6 +15,12 @@ interface DocumentLabel {
     }];
   }
 
+interface Document {
+    $schema: string;
+    labels: DocumentLabel[];
+    document: any[];
+}
+
 export async function POST(request: NextRequest, { params }: Params) {
    try {
     
@@ -43,24 +49,39 @@ export async function POST(request: NextRequest, { params }: Params) {
     }
 
     //Actualizar JSON con campos de bd
-    let jsonData = await getBlobJsonData('docs-prueba', documento);
+    let jsonData = await getBlobJsonData('docs-prueba', documento) as Document;
 
     if (!jsonData) {
         return NextResponse.json({ error: 'Error al obtener el JSON' }, { status: 500 });
     }
 
-    // Object.keys(documento.TipoDocumentoKardex[0]).map((key) => {
-    //     if (key !== 'TipoDocumentoKardex') {
-    //         jsonData.labels.map((item) => item.label == 'Alumno')
-    //     }
-    // })
-
-
-
+    //Actualizar los campos del JSON con los valores de la base de datos
+    if (documento.TipoDocumentoKardex && documento.TipoDocumentoKardex.length > 0) {
+        const tipoDocumento = documento.TipoDocumentoKardex[0] as Record<string, any>;
+        for (const key in tipoDocumento) {
+            if (key !== 'DocumentoDetalleKardex') {
+                const labelItemIndex = jsonData.labels.findIndex((item: DocumentLabel) => item.label === key);
+                if (labelItemIndex !== -1) {
+                    const labelItem = jsonData.labels[labelItemIndex];
+                    if (labelItem.value && labelItem.value.length > 0) {
+                        for (const value of labelItem.value) {
+                            value.text = tipoDocumento[key] as string;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     //Subir JSON actualizado a Azure Blob Storage
 
-    //Actualizar el JSON en la base de datos
+    //Actualizar el status del documento
+    await prisma.documento.update({
+        where: { Id: fileId },
+        data: {
+            StatusValidacion: 'validado',
+        },
+    });
 
     //Crear modelo en Azure Document Intelligence
 

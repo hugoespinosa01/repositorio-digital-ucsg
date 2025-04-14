@@ -3,8 +3,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import LoadingDocuments from "@/components/documents/loading";
 import GetBackButton from "../getback-button";
-import { GetColumns } from "../dataTable/Columns";
-import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 import {
   Check,
@@ -12,6 +10,7 @@ import {
   DownloadIcon,
   File,
   FileDown,
+  LoaderCircle,
   Table,
   Trash,
   TrashIcon,
@@ -21,21 +20,12 @@ import InputDemo from "../inputtext";
 import InputNumber from "../inputnumber";
 import ExpandKardexDetail from "../modals/expand-kardex-detail-datatable";
 import ConfirmDeleteFile from "../modals/confirm-delete-file";
-import { KardexDetalle } from "@/types/kardexDetalle";
-import { useToast } from "@/components/ui/use-toast";
-import { useSession } from "next-auth/react";
 import useAuthRoles from "@/hooks/useAuthRoles";
 import LoadingFilePage from "./loading";
 import MateriasDataTable from "../advanced-datatable";
 import {
   Pill,
-  PillAvatar,
-  PillButton,
   PillStatus,
-  PillIndicator,
-  PillDelta,
-  PillIcon,
-  PillAvatarGroup,
 } from "../pill";
 
 interface FileData {
@@ -55,11 +45,11 @@ interface FileData {
 
 export default function FilesPage({ fileId }: { fileId?: string | null }) {
   const [fileData, setFileData] = useState<FileData | null>(null);
-  const [detalleMaterias, setDetalleMaterias] = useState<KardexDetalle[]>([]);
   const [fileUrl, setFileUrl] = useState<string>("");
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [openModalDelete, setOpenModalDelete] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const [loadingBtnValidar, setLoadingBtnValidar] = useState<boolean>(false);
   const { permissions } = useAuthRoles();
 
   useEffect(() => {
@@ -108,7 +98,6 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
 
     //Seteo los datos del archivo
     setFileData(res.data);
-    setDetalleMaterias(res.data.DetalleMaterias);
     setLoading(false);
   };
 
@@ -162,6 +151,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
 
   const handleValidate = async () => {
     try {
+      setLoadingBtnValidar(true);
       console.log("Validar", fileId);
 
       const response = await fetch(`/api/files/validate/${fileId}`, {
@@ -176,6 +166,8 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
       }
     } catch (error) {
       console.error("Error al validar el archivo:", error);
+    } finally {
+      setLoadingBtnValidar(false);
     }
   };
 
@@ -198,7 +190,7 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
         </CardTitle>
 
         <div className="flex justify-between space-x-3">
-          {fileData && (
+          {fileData && !loadingBtnValidar && (
             <Button
               size={"sm"}
               variant={"default"}
@@ -209,6 +201,20 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
               Validar
             </Button>
           )}
+
+          {
+            loadingBtnValidar && (
+              <Button
+                size={"sm"}
+                variant={"default"}
+                className="w-full sm:w-auto mt-2 lg:mt-0"
+                disabled={true}
+              >
+                <LoaderCircle className="mr-2 animate-spin" size={15} />
+                Validando...
+              </Button>
+            )
+          }
 
           {hasPermission("res:documents", "delete") && fileData && (
             <Button
@@ -374,8 +380,6 @@ export default function FilesPage({ fileId }: { fileId?: string | null }) {
                     canCreateMateria={canCreateMateria}
                     canUpdateMateria={canUpdateMateria}
                     canDeleteMateria={canDeleteMateria}
-                    data={detalleMaterias || []}
-                    setData={setDetalleMaterias}
                     openModal={openModal}
                     setOpenModal={setOpenModal}
                     onEdit={onEdit}

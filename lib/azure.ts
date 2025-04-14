@@ -15,7 +15,7 @@ interface DocumentLabel {
 export async function getContainerSize(containerName: string, folder: string) {
     
     const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING || '');
-    const containerClient = blobServiceClient.getContainerClient(containerName);
+    const containerClient = blobServiceClient.getContainerClient(process.env.AZURE_STORAGE_CONTAINER_NAME || '');
     
     let totalSize = 0;
 
@@ -46,7 +46,7 @@ export async function getBlobJsonData (containerName: string, documento: Documen
         if (downloaded) {
           console.log('Downloaded blob content:', downloaded.toString());
         }
-        const jsonData: DocumentLabel[] = JSON.parse(downloaded.toString());
+        const jsonData = JSON.parse(downloaded.toString());
         console.log('JSON Data:', jsonData);
         return jsonData;
     } else {

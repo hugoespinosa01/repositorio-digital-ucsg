@@ -162,8 +162,7 @@ export async function POST(request: NextRequest) {
     let extractedData = await extractData(pdfData, "kardex-composed-model-v2");
 
     // 4. Proceso los datos extraídos
-    const { docType, fields, labelsJson, confidence } =
-      extractedData as ExtractedDataFields;
+    const { docType, fields, labelsJson, confidence } = extractedData as ExtractedDataFields;
 
     if (!extractedData) {
       throw new Error("Invalid extracted data structure");
@@ -184,7 +183,7 @@ export async function POST(request: NextRequest) {
             await runLayoutAnalysis(pdfData, blobName);
 
             // Subir el labels.json al blob storage inicial
-            let labelsResultJson = await saveToLabelsJson(labelsJson, blobName);
+            await saveToLabelsJson(labelsJson, blobName);
         }
         
     }
@@ -326,6 +325,7 @@ export async function POST(request: NextRequest) {
         Extension: extension,
         Tipo: "Archivo",
         RefArchivo: blobName,
+        StatusValidacion: 'borrador',
       },
     });
 

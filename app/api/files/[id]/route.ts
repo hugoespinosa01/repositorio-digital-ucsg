@@ -103,33 +103,14 @@ export async function GET(request: Request, { params }: Params) {
             where: {
                 Id: Number(params.id),
                 Estado: 1
+            },
+            include: {
+                TipoDocumentoKardex: true
             }
         });
 
         if (!file) {
             throw new Error('Documento no encontrado');
-        }
-
-        const kardex = await prisma.tipoDocumentoKardex.findFirst({
-            where: {
-                IdDocumento: file.Id,
-                Estado: 1
-            }
-        });
-
-        if (!kardex) {
-            throw new Error('Documento kardex no encontrado');
-        }
-
-        const kardexDetalle = await prisma.documentoDetalleKardex.findMany({
-            where: {
-                IdDocumentoKardex: kardex.Id,
-                Estado: 1
-            },
-        });
-
-        if (!kardexDetalle) {
-            throw new Error('Detalles de documento kardex no encontrados');
         }
 
         const response = {
@@ -140,13 +121,13 @@ export async function GET(request: Request, { params }: Params) {
                 Ruta: file?.Ruta,
                 FechaCarga: file?.FechaCarga,
                 RefArchivo: file?.RefArchivo,
-                Alumno: kardex?.Alumno,
-                Carrera: kardex?.Carrera,
-                NoIdentificacion: kardex?.NoIdentificacion,
-                DetalleMaterias: kardexDetalle,
-                NotaGraduacionSeminario: kardex?.NotaGraduacionSeminario,
-                PromMateriasAprobadas: kardex?.PromMateriasAprobadas,
-                PromGraduacion: kardex?.PromGraduacion,
+                Alumno: file?.TipoDocumentoKardex[0].Alumno,
+                Carrera: file?.TipoDocumentoKardex[0].Carrera,
+                NoIdentificacion: file?.TipoDocumentoKardex[0].NoIdentificacion,
+                NotaGraduacionSeminario: file?.TipoDocumentoKardex[0].NotaGraduacionSeminario,
+                PromMateriasAprobadas: file?.TipoDocumentoKardex[0].PromMateriasAprobadas,
+                PromGraduacion: file?.TipoDocumentoKardex[0].PromGraduacion,
+                StatusValidacion: file?.StatusValidacion,
             }
         }
 

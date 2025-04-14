@@ -27,7 +27,8 @@ BEGIN
         Tamano decimal(18, 2),
         Extension varchar(10),
         Estado int,
-        Tipo VARCHAR(15)
+        Tipo VARCHAR(15),
+        StatusValidacion VARCHAR(30),
     );
 END;
 

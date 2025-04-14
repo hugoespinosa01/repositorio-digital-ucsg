@@ -42,6 +42,7 @@ model Documento {
   Extension           String?               @db.VarChar(10)
   Estado              Int?
   Tipo                String?               @db.VarChar(15)
+  StatusValidacion    String?               @db.VarChar(30)
   Carpeta             Carpeta?              @relation(fields: [IdCarpeta], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "Documento_IdCarpeta_fk")
   TipoDocumentoKardex TipoDocumentoKardex[]
 }
