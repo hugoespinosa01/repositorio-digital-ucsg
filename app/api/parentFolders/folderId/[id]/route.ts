@@ -14,7 +14,7 @@ export async function GET(request: Request, { params }: Params) {
 
         const session = await getServerSession(auth);
 
-        if (!session) {
+        if (session?.error) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
         }
 

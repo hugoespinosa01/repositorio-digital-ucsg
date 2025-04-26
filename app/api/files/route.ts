@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
         // Calcular el tamaño del contenedor para el dataset de entrenamiento, ya que solo es permitido máx. 2GB
         const containerSize = await getContainerSize(containerName, docType);
 
-        if (!((containerSize + file.size) > 2 * 1024 * 1024 * 1024)) {
+        if (!((containerSize + file.size) > 1 * 1024 * 1024 * 1024)) {
             // 6. Subo una copia del documento al contenedor del dataset de entrenamiento
             const blobName = await uploadToBlobStorage(pdfData, docType);
 
